@@ -1,12 +1,10 @@
 # Wabrix AI
 
-[![CI](https://github.com/ryanakml/wabrix-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ryanakml/wabrix-ai/actions/workflows/ci.yml)
+![Wabrix AI landing page with the "Scale your WhatsApp with AI" headline](apps/web/public/landing-hero.webp)
 
 **A shared WhatsApp inbox with AI-assisted replies, backed by a durable PostgreSQL message pipeline.**
 
 Support teams can connect WhatsApp Business numbers, route incoming conversations to queues and agents, and draft replies from their workspace knowledge base. The backend verifies and stores incoming webhooks before acknowledging them, then lets workers handle normalization, routing, AI, and delivery.
-
-This repository is the **React, Express, and PostgreSQL implementation** of Wabrix AI, previously named FlowDesk AI. The [original Wabrix repository](https://github.com/ryanakml/wabrix) is a separate Next.js, Convex, Clerk, and Cloudflare Workers implementation of the same product.
 
 [Product preview](#product-preview) · [Architecture](#architecture) · [Stack](#stack-and-repository-layout) · [Run locally](#run-locally) · [Testing](#testing) · [Documentation](#documentation) · [Contributing](#contributing)
 
@@ -25,8 +23,6 @@ This repository is the **React, Express, and PostgreSQL implementation** of Wabr
 | Inbox                                                                                                                             | Analytics                                                                                                                      |
 | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | ![Wabrix AI inbox with a conversation list, an open thread, and automation controls](apps/web/public/landing-dashboard-dark.webp) | ![Wabrix AI analytics dashboard with conversation, automation, and SLA metrics](apps/web/public/landing-dashboard-dark-1.webp) |
-
-_Local captures of the React UI using a mock API and synthetic conversations. The [original Wabrix site](https://wabrix.nylo.me/) is a separate application._
 
 ## Architecture
 
@@ -80,7 +76,7 @@ sequenceDiagram
 | Local infrastructure  | [`infra/compose`](infra/compose) — Docker Compose, Redis, MinIO, ClamAV, Mailpit, OpenTelemetry Collector, Prometheus and Grafana; application logs use pino                                                                                                       |
 | Deployment reference  | [`infra/docker`](infra/docker), [`infra/deploy`](infra/deploy), and [`infra/terraform`](infra/terraform) — service images, a [single-host Compose staging runbook](docs/runbooks/single-host-staging.md), and AWS/ECS reference infrastructure and release tooling |
 
-The repository retains `@flowdesk/*` package names, the `flowdesk` database schema, and existing integration identifiers for compatibility.
+The repository retains internal package, schema, and integration identifiers for compatibility.
 
 ## Run locally
 
@@ -116,8 +112,8 @@ Use `make compose-down` to stop local services. Use `make db-reset` only for dis
 
 ```bash
 make verify                          # format, OpenAPI drift, lint, types, tests, and build
-pnpm --filter @flowdesk/web test      # web component and route tests
-pnpm --filter @flowdesk/web test:e2e  # Playwright browser tests (install a browser first)
+pnpm --filter ./apps/web test      # web component and route tests
+pnpm --filter ./apps/web test:e2e  # Playwright browser tests (install a browser first)
 ```
 
 Vitest covers signature validation, webhook deduplication, routing, delivery retries, tenant isolation, and AI policy. PostgreSQL and Redis integration cases require the corresponding test services and environment variables; see the [testing guide](docs/delivery/TESTING.md) and [CI configuration](.github/workflows/ci.yml).
