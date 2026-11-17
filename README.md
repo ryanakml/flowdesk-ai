@@ -1,12 +1,14 @@
 # Wabrix AI
 
+[![CI](https://github.com/ryanakml/wabrix-ai/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ryanakml/wabrix-ai/actions/workflows/ci.yml)
+
 **A shared WhatsApp inbox with AI-assisted replies, backed by a durable PostgreSQL message pipeline.**
 
 Support teams can connect WhatsApp Business numbers, route incoming conversations to queues and agents, and draft replies from their workspace knowledge base. The backend verifies and stores incoming webhooks before acknowledging them, then lets workers handle normalization, routing, AI, and delivery.
 
-[Product preview](#product-preview) · [Architecture](#architecture) · [Run locally](#run-locally) · [Testing](#testing)
+This repository is the **React, Express, and PostgreSQL implementation** of Wabrix AI, previously named FlowDesk AI. The [original Wabrix repository](https://github.com/ryanakml/wabrix) is a separate Next.js, Convex, Clerk, and Cloudflare Workers implementation of the same product.
 
-This repository contains the **React, Express, and PostgreSQL implementation**, previously named FlowDesk AI. The [original Wabrix repository](https://github.com/ryanakml/wabrix) addresses the same product problem with a separate Next.js, Convex, Clerk, and Cloudflare Workers implementation.
+[Product preview](#product-preview) · [Architecture](#architecture) · [Stack](#stack-and-repository-layout) · [Run locally](#run-locally) · [Testing](#testing) · [Documentation](#documentation) · [Contributing](#contributing)
 
 ## Product workflows
 
@@ -20,9 +22,11 @@ This repository contains the **React, Express, and PostgreSQL implementation**, 
 
 ## Product preview
 
-![Wabrix AI inbox with a conversation list and an open thread](apps/web/public/landing-dashboard-dark.webp)
+| Inbox                                                                                                                             | Analytics                                                                                                                      |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| ![Wabrix AI inbox with a conversation list, an open thread, and automation controls](apps/web/public/landing-dashboard-dark.webp) | ![Wabrix AI analytics dashboard with conversation, automation, and SLA metrics](apps/web/public/landing-dashboard-dark-1.webp) |
 
-_Local capture of the React UI using a mock API and synthetic conversations. The [original Wabrix site](https://wabrix.nylo.me/) is a separate application._
+_Local captures of the React UI using a mock API and synthetic conversations. The [original Wabrix site](https://wabrix.nylo.me/) is a separate application._
 
 ## Architecture
 
@@ -94,13 +98,17 @@ make dev
 
 `make bootstrap` installs from the lockfile and copies [`.env.example`](.env.example) to `.env` if needed. Wait for local PostgreSQL to become healthy before migrating. The sample environment enables local mock sign-in and mock AI. Real OIDC, WhatsApp, and AI provider calls require their own credentials and settings; see the [configuration guide](docs/delivery/CONFIGURATION.md) and [Meta signup runbook](docs/runbooks/meta-embedded-signup.md).
 
-| Service                      | Default local address                                |
-| ---------------------------- | ---------------------------------------------------- |
-| Web, API, ingress            | `localhost:3000`, `localhost:4000`, `localhost:4001` |
-| Worker and scheduler health  | `localhost:4002`, `localhost:4003`                   |
-| PostgreSQL and Redis         | `localhost:5433`, `localhost:6379`                   |
-| MinIO API and console        | `localhost:9000`, `localhost:9001`                   |
-| Mailpit, Prometheus, Grafana | `localhost:8025`, `localhost:9090`, `localhost:3001` |
+| Service                     | Default local address                            |
+| --------------------------- | ------------------------------------------------ |
+| Web                         | `http://localhost:3000`                          |
+| API                         | `http://localhost:4000`                          |
+| Webhook ingress             | `http://localhost:4001`                          |
+| Worker and scheduler health | `http://localhost:4002`, `http://localhost:4003` |
+| PostgreSQL                  | `localhost:5433`                                 |
+| Redis                       | `localhost:6379`                                 |
+| MinIO API and console       | `http://localhost:9000`, `http://localhost:9001` |
+| Mailpit                     | `http://localhost:8025`                          |
+| Prometheus and Grafana      | `http://localhost:9090`, `http://localhost:3001` |
 
 Use `make compose-down` to stop local services. Use `make db-reset` only for disposable local data; it wipes and recreates the local database volume. See the [migration runbook](docs/runbooks/database-migrations.md).
 
@@ -112,4 +120,17 @@ pnpm --filter @flowdesk/web test      # web component and route tests
 pnpm --filter @flowdesk/web test:e2e  # Playwright browser tests (install a browser first)
 ```
 
-Vitest covers signature validation, webhook deduplication, routing, delivery retries, tenant isolation, and AI policy. PostgreSQL and Redis integration cases require the corresponding test services and environment variables; see the [testing guide](docs/delivery/TESTING.md) and [CI configuration](.github/workflows/ci.yml). See [contributing](CONTRIBUTING.md) and the [OpenAPI specification](docs/api/openapi.json) for developer workflow and API details.
+Vitest covers signature validation, webhook deduplication, routing, delivery retries, tenant isolation, and AI policy. PostgreSQL and Redis integration cases require the corresponding test services and environment variables; see the [testing guide](docs/delivery/TESTING.md) and [CI configuration](.github/workflows/ci.yml).
+
+## Documentation
+
+- [Architecture decision records](docs/adr) — decisions that are expensive to reverse.
+- [Operations runbooks](docs/runbooks) — migrations, delivery recovery, realtime, media quarantine, and staging.
+- [Configuration guide](docs/delivery/CONFIGURATION.md) — environment variables and provider credentials.
+- [Testing guide](docs/delivery/TESTING.md) — unit, integration, and end-to-end test setup.
+- [OpenAPI specification](docs/api/openapi.json) — REST API contract.
+- [Security policy](SECURITY.md) — how to report vulnerabilities.
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow and commit conventions. Run `make verify` before opening a pull request.
