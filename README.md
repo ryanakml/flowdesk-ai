@@ -4,6 +4,8 @@
 
 **A shared WhatsApp inbox with AI-assisted replies, backed by a durable PostgreSQL message pipeline.**
 
+Wabrix AI is a re-architecture of an earlier version of Wabrix (Next.js, Convex, Clerk, Cloudflare Workers; hosted demo at wabrix.nylo.me, source at github.com/ryanakml/wabrix). This repository rebuilds the same product on Express and PostgreSQL with a transactional outbox. The hosted demo runs the earlier stack, not this codebase. This version runs locally with `make compose-up`.
+
 Support teams can connect WhatsApp Business numbers, route incoming conversations to queues and agents, and draft replies from their workspace knowledge base. The backend verifies and stores incoming webhooks before acknowledging them, then lets workers handle normalization, routing, AI, and delivery.
 
 [Product preview](#product-preview) · [Architecture](#architecture) · [Stack](#stack-and-repository-layout) · [Run locally](#run-locally) · [Testing](#testing) · [Documentation](#documentation) · [Contributing](#contributing)
