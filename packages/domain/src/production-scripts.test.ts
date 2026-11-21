@@ -899,12 +899,12 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
       }).toThrow(/Production promotion strictly requires an immutable 40-character commit SHA/);
     });
 
-    it.each(["wabrix", "flowdesk"])("verifies six digests in the %s image family", (family) => {
+    it.each(["flowdesk", "wabrix"])("verifies six digests in the %s image family", (family) => {
       const outFile = path.join(os.tmpdir(), "provenance-test-" + Date.now() + ".json");
       const sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2";
       execFileSync(
         provenanceScript,
-        family === "wabrix" ? [sha, outFile] : [sha, outFile, family],
+        family === "flowdesk" ? [sha, outFile] : [sha, outFile, family],
         {
           cwd: repoRoot,
           encoding: "utf8",
