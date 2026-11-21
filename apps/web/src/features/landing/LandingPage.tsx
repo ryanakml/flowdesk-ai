@@ -16,7 +16,7 @@ import {
   Zap
 } from "lucide-react";
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Separator } from "@wabrix/ui";
-import { WabrixIcon } from "../../components/layout/AppSidebar.js";
+import { FlowDeskIcon } from "../../components/layout/AppSidebar.js";
 import { useTheme } from "../../components/theme-provider.js";
 
 const navItems = [
@@ -76,9 +76,9 @@ export function LandingPage() {
             className="flex items-center gap-2 font-bold tracking-tight"
           >
             <span className="rounded-lg bg-primary/10 p-2">
-              <WabrixIcon size={22} />
+              <FlowDeskIcon size={22} />
             </span>
-            Wabrix AI
+            FlowDesk
           </a>
 
           <nav className="hidden items-center gap-1 lg:flex">
@@ -129,7 +129,7 @@ export function LandingPage() {
         <div className="fixed inset-0 z-[60] bg-background lg:hidden">
           <div className="flex h-16 items-center justify-between border-b px-4">
             <span className="flex items-center gap-2 font-semibold">
-              <WabrixIcon size={20} /> Wabrix AI
+              <FlowDeskIcon size={20} /> FlowDesk
             </span>
             <Button
               variant="ghost"
@@ -187,13 +187,13 @@ export function LandingPage() {
                 </span>
               </h1>
               <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground sm:text-xl">
-                Wabrix AI gives your team one calm place to manage WhatsApp conversations, use
+                FlowDesk gives your team one calm place to manage WhatsApp conversations, use
                 grounded AI assistance, and keep customer operations moving.
               </p>
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
                 <Button size="lg" className="text-base" asChild>
                   <a href={loginHref}>
-                    Open Wabrix AI <ArrowRight />
+                    Open FlowDesk <ArrowRight />
                   </a>
                 </Button>
                 <Button variant="outline" size="lg" className="text-base" asChild>
@@ -210,7 +210,7 @@ export function LandingPage() {
                 <div className="relative overflow-hidden rounded-xl border bg-card shadow-2xl">
                   <img
                     src="/landing-dashboard-dark.webp"
-                    alt="Wabrix AI inbox with synthetic conversations"
+                    alt="FlowDesk inbox with synthetic conversations"
                     className="block w-full object-cover"
                   />
                   <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background sm:h-48" />
@@ -320,7 +320,7 @@ export function LandingPage() {
               <CardContent className="p-0">
                 <img
                   src="/landing-dashboard-dark-1.webp"
-                  alt="Wabrix AI analytics dashboard with synthetic activity"
+                  alt="FlowDesk analytics dashboard with synthetic activity"
                   className="w-full object-cover"
                 />
                 <p className="px-4 py-3 text-xs text-muted-foreground">
@@ -340,7 +340,7 @@ export function LandingPage() {
               Your customer data belongs in a system your team can explain.
             </h2>
             <p className="mx-auto mt-5 max-w-2xl text-muted-foreground sm:text-lg">
-              Wabrix AI keeps workspace boundaries, permissions, delivery state, and human approval
+              FlowDesk keeps workspace boundaries, permissions, delivery state, and human approval
               visible in the product.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
@@ -376,7 +376,7 @@ export function LandingPage() {
                   "Yes. The inbox preserves service-window restrictions and approved template flows."
                 ],
                 [
-                  "Is Wabrix AI only for support?",
+                  "Is FlowDesk only for support?",
                   "No. It is a shared customer operations workspace for support, sales handoff, and follow-up workflows."
                 ]
               ].map(([question, answer]) => (
@@ -405,7 +405,7 @@ export function LandingPage() {
             </p>
             <Button size="lg" className="mt-8 px-8 text-base" asChild>
               <a href={loginHref}>
-                Open Wabrix AI <ArrowRight />
+                Open FlowDesk <ArrowRight />
               </a>
             </Button>
           </div>
@@ -417,7 +417,7 @@ export function LandingPage() {
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div className="sm:col-span-2">
               <div className="flex items-center gap-2 font-bold">
-                <WabrixIcon size={24} /> Wabrix AI
+                <FlowDeskIcon size={24} /> FlowDesk
               </div>
               <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">
                 AI customer operations for teams that run on WhatsApp.
@@ -454,7 +454,7 @@ export function LandingPage() {
           </div>
           <Separator className="my-8" />
           <div className="flex flex-col justify-between gap-3 text-sm text-muted-foreground sm:flex-row">
-            <span>© {new Date().getFullYear()} Wabrix AI</span>
+            <span>© {new Date().getFullYear()} FlowDesk</span>
             <span>Customer operations, made clearer.</span>
           </div>
         </div>

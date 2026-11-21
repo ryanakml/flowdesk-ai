@@ -1,5 +1,5 @@
 import * as React from "react";
-import { WabrixIcon } from "../../components/layout/AppSidebar.js";
+import { FlowDeskIcon } from "../../components/layout/AppSidebar.js";
 import { useAuth } from "../auth/context.js";
 
 export function InvitationView() {
@@ -11,9 +11,9 @@ export function InvitationView() {
         <div className="brand-section">
           <span className="logo-badge">
             <span className="logo-icon" style={{ display: "inline-flex", alignItems: "center" }}>
-              <WabrixIcon size={20} />
+              <FlowDeskIcon size={20} />
             </span>
-            Wabrix AI
+            FlowDesk
           </span>
         </div>
         <div className="user-controls">
