@@ -1,4 +1,4 @@
-# Wabrix Provider Outage & Degraded Mode Playbook
+# FlowDesk Provider Outage & Degraded Mode Playbook
 
 This playbook outlines recovery procedures, safe-mode transitions, and mitigation tactics when external providers (Meta WhatsApp Cloud API, Google Gemini AI, PostgreSQL, Redis) experience degradation, rate limiting, or total outages.
 
@@ -11,7 +11,7 @@ This playbook outlines recovery procedures, safe-mode transitions, and mitigatio
 - **Symptom:** Worker logs `whatsapp.dispatch_failed: HTTP 429 Too Many Requests`.
 - **System Behavior:**
   - The outbox dispatcher detects 429 and applies exponential backoff with randomized jitter.
-  - The outbound event remains in `wabrix.outbox_events` with status `pending` and incremented `retry_count`.
+  - The outbound event remains in `flowdesk.outbox_events` with status `pending` and incremented `retry_count`.
   - Messages are NOT dead-lettered prematurely.
 - **Operator Action:**
   1. Inspect `whatsapp_outbound_dispatch_total{result="failed"}`.
@@ -20,7 +20,7 @@ This playbook outlines recovery procedures, safe-mode transitions, and mitigatio
 
 ### Scenario B: HTTP 500 / 503 (Meta Cloud API Outage)
 
-- **Symptom:** Elevated error rates, `WabrixOutboxBacklogCritical` alert fires.
+- **Symptom:** Elevated error rates, `FlowDeskOutboxBacklogCritical` alert fires.
 - **Safe Mode Transition:**
   1. Inbound messages continue to be accepted by ingress and safely stored in PostgreSQL.
   2. Outbox dispatch throttles poll interval from 500ms to 5,000ms to prevent connection thrashing.
@@ -35,7 +35,7 @@ This playbook outlines recovery procedures, safe-mode transitions, and mitigatio
 
 ### Scenario A: Gemini API 429 / 5xx / Timeout
 
-- **Symptom:** `WabrixAiDraftFailureRateHigh` fires; `ai_draft_runs_total{status="failed"}` increases.
+- **Symptom:** `FlowDeskAiDraftFailureRateHigh` fires; `ai_draft_runs_total{status="failed"}` increases.
 - **Safe Mode Behavior:**
   - The system fails closed for AUTO send: If an AI draft run fails or times out, AUTO cannot proceed.
   - Inbound messages are still routed to queues and agent teams with zero loss.
@@ -63,7 +63,7 @@ This playbook outlines recovery procedures, safe-mode transitions, and mitigatio
 
 ## 4. Redis Failures
 
-Redis serves two independent roles in Wabrix:
+Redis serves two independent roles in FlowDesk:
 
 1. **Socket.IO pub/sub adapter** — multi-node realtime broadcast fan-out (`api` service).
 2. **Query embedding cache** — optional tenant-scoped vector cache in the `worker` service.

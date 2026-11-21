@@ -10,9 +10,9 @@ import { AiProviderError } from "./ai-error.js";
 describe("Document Chunker & Embedding Providers", () => {
   describe("chunkText", () => {
     it("chunks text into token-bounded blocks with unique content hashes", () => {
-      const sampleText = `Paragraph 1: Welcome to Wabrix support.
+      const sampleText = `Paragraph 1: Welcome to FlowDesk support.
       
-Paragraph 2: Wabrix is a multi-tenant messaging SaaS platform.
+Paragraph 2: FlowDesk is a multi-tenant messaging SaaS platform.
 
 Paragraph 3: All tenant data is isolated via Row-Level Security.`;
 
@@ -34,7 +34,7 @@ Paragraph 3: All tenant data is isolated via Row-Level Security.`;
     it("generates 1536-dimensional normalized vectors deterministically", async () => {
       const provider = new FakeEmbeddingProvider();
       const results = await provider.generateEmbeddings([
-        "Wabrix SLA Policy",
+        "FlowDesk SLA Policy",
         "WhatsApp Business API Integration"
       ]);
 
@@ -46,7 +46,7 @@ Paragraph 3: All tenant data is isolated via Row-Level Security.`;
       expect(norm).toBeCloseTo(1.0, 2);
 
       // Verify deterministic output for same text
-      const reRun = await provider.generateEmbeddings(["Wabrix SLA Policy"]);
+      const reRun = await provider.generateEmbeddings(["FlowDesk SLA Policy"]);
       expect(reRun[0]?.embedding).toEqual(results[0]?.embedding);
     });
   });
@@ -69,7 +69,7 @@ Paragraph 3: All tenant data is isolated via Row-Level Security.`;
         customFetcher: mockFetcher
       });
 
-      const results = await provider.generateEmbeddings(["Wabrix documentation"]);
+      const results = await provider.generateEmbeddings(["FlowDesk documentation"]);
 
       expect(results).toHaveLength(1);
       expect(results[0]?.embedding).toHaveLength(1536);
@@ -94,7 +94,7 @@ Paragraph 3: All tenant data is isolated via Row-Level Security.`;
         )
       });
 
-      await expect(provider.generateEmbeddings(["Wabrix documentation"])).rejects.toMatchObject({
+      await expect(provider.generateEmbeddings(["FlowDesk documentation"])).rejects.toMatchObject({
         code: "AI_PROVIDER_INVALID_RESPONSE"
       } satisfies Partial<AiProviderError>);
     });

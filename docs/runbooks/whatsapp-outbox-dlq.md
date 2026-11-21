@@ -1,6 +1,6 @@
 # Operational Runbook: WhatsApp Outbox & Dead-Letter Queue (DLQ)
 
-- **Service:** `@wabrix/worker`, `@wabrix/api`, `@wabrix/db`
+- **Service:** `@flowdesk/worker`, `@flowdesk/api`, `@flowdesk/db`
 - **Ownership:** Engineering & SRE (`@Ryanakml`)
 - **Severity Tier:** Tier 1 (Critical Customer Messaging Pipeline)
 - **Last Updated:** 2026-08-28
@@ -9,7 +9,7 @@
 
 ## 1. Overview & Architecture
 
-Wabrix uses the **Transactional Outbox Pattern** to decouple operator API message creation from external WhatsApp Meta Cloud API HTTP calls. This architecture guarantees:
+FlowDesk uses the **Transactional Outbox Pattern** to decouple operator API message creation from external WhatsApp Meta Cloud API HTTP calls. This architecture guarantees:
 
 - **Durable, duplicate-safe dispatch**: A committed `dispatching` intent surrounds the external provider call. Safe classified failures can retry; an interruption or ambiguous response becomes `reconcile_required` and is never blindly resent.
 - **Strict Isolation**: Outbox claims execute under tenant Row-Level Security (`SET LOCAL app.organization_id = ...`).
@@ -19,9 +19,9 @@ Wabrix uses the **Transactional Outbox Pattern** to decouple operator API messag
 sequenceDiagram
     autonumber
     actor Operator as Agent / Operator
-    participant API as @wabrix/api
-    participant DB as PostgreSQL (wabrix)
-    participant Worker as @wabrix/worker
+    participant API as @flowdesk/api
+    participant DB as PostgreSQL (flowdesk)
+    participant Worker as @flowdesk/worker
     participant Meta as Meta WhatsApp Cloud API
 
     Operator->>API: POST /api/v1/organizations/:orgId/conversations/:id/messages
@@ -82,7 +82,7 @@ SELECT
     count(*) AS pending_events,
     min(occurred_at) AS oldest_pending_event,
     avg(attempts) AS average_attempts
-FROM wabrix.outbox_events
+FROM flowdesk.outbox_events
 WHERE published_at IS NULL;
 ```
 
@@ -99,7 +99,7 @@ SELECT
     attempts,
     last_error,
     occurred_at
-FROM wabrix.outbox_events
+FROM flowdesk.outbox_events
 WHERE published_at IS NULL AND attempts > 0
 ORDER BY attempts DESC, occurred_at ASC
 LIMIT 25;
@@ -115,8 +115,8 @@ SELECT
     m.content,
     m.error_detail,
     m.updated_at
-FROM wabrix.messages m
-JOIN wabrix.conversations c ON c.id = m.conversation_id
+FROM flowdesk.messages m
+JOIN flowdesk.conversations c ON c.id = m.conversation_id
 WHERE m.status = 'failed'
   AND m.updated_at > now() - INTERVAL '24 hours'
 ORDER BY m.updated_at DESC
@@ -127,7 +127,7 @@ LIMIT 50;
 
 ```sql
 SELECT message_id, organization_id, attempt_count, claimed_at, last_error, updated_at
-FROM wabrix.outbound_intents
+FROM flowdesk.outbound_intents
 WHERE state = 'reconcile_required'
 ORDER BY updated_at ASC;
 ```
@@ -142,14 +142,14 @@ Never reset these rows for replay until Meta delivery evidence confirms that the
 
 When Meta WhatsApp API recovers from an outage and you need to replay messages that exhausted retries:
 
-1. **Verify Outage Resolution**: Use the provider sandbox/test sender and confirm Meta accepts a synthetic message. Wabrix does not expose an unaudited channel-ping endpoint.
+1. **Verify Outage Resolution**: Use the provider sandbox/test sender and confirm Meta accepts a synthetic message. FlowDesk does not expose an unaudited channel-ping endpoint.
 2. **Open an Audited Support Session**: Record the ticket and reason with `pnpm db:break-glass`; use the environment's controlled break-glass connection for the approved tenant only.
 3. **Re-enqueue Dead-Lettered Events**: Execute the following transaction with the approved organization and message IDs:
 
 ```sql
 BEGIN;
 -- Select target messages to re-enqueue
-UPDATE wabrix.messages
+UPDATE flowdesk.messages
 SET status = 'queued',
     error_detail = NULL,
     updated_at = clock_timestamp()
@@ -158,7 +158,7 @@ WHERE id IN ('<message_id_1>', '<message_id_2>')
   AND status = 'failed';
 
 -- Reset corresponding outbox events for immediate worker pickup
-UPDATE wabrix.outbox_events
+UPDATE flowdesk.outbox_events
 SET published_at = NULL,
     dead_lettered_at = NULL,
     claimed_until = NULL,
@@ -188,7 +188,7 @@ If messages fail with `OAuthException` (Code `190`):
    curl --fail-with-body \
      --request PATCH \
      --header 'Content-Type: application/json' \
-     --header 'Cookie: wabrix_session=<session>' \
+     --header 'Cookie: flowdesk_session=<session>' \
      --data '{"accessToken":"<new-permanent-system-user-token>"}' \
      'https://<api-host>/api/v1/organizations/<organization_id>/channels/<channel_id>/credentials'
    ```

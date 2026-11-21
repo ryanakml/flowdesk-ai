@@ -35,41 +35,41 @@
 
 ### M2-01 (Issue [#33](https://github.com/Ryanakml/flow-desk-ai/issues/33), PR [#43](https://github.com/Ryanakml/flow-desk-ai/pull/43)): Channel Schema, Encryption & State Machine
 
-- Created migration `0006_channels.sql` establishing table `wabrix.channels` with tenant RLS policies.
-- Implemented AES-256-GCM credential envelope encryption (`encryptSecret`, `decryptSecret`) in `@wabrix/security`.
-- Added database client operations in `@wabrix/db`: `createChannel`, `getChannelById`, `getChannelByPhoneNumberId`, `updateChannelStatus`, `listChannels`.
-- Added unit and RLS isolation tests in `@wabrix/db` and `@wabrix/security`.
+- Created migration `0006_channels.sql` establishing table `flowdesk.channels` with tenant RLS policies.
+- Implemented AES-256-GCM credential envelope encryption (`encryptSecret`, `decryptSecret`) in `@flowdesk/security`.
+- Added database client operations in `@flowdesk/db`: `createChannel`, `getChannelById`, `getChannelByPhoneNumberId`, `updateChannelStatus`, `listChannels`.
+- Added unit and RLS isolation tests in `@flowdesk/db` and `@flowdesk/security`.
 
 ### M2-02 (Issue [#34](https://github.com/Ryanakml/flow-desk-ai/issues/34), PR [#44](https://github.com/Ryanakml/flow-desk-ai/pull/44)): WhatsApp Provider Adapter Contract & Fake Adapter
 
-- Defined provider contract `WhatsAppProvider` in `@wabrix/providers`.
+- Defined provider contract `WhatsAppProvider` in `@flowdesk/providers`.
 - Implemented `MetaWhatsAppProvider` targeting the Graph API v21.0 with classified errors (`AUTH_FAILED`, `RATE_LIMIT_EXCEEDED`, `USER_NOT_OPTED_IN`, `OUTSIDE_WINDOW`, `TRANSIENT`, `INVALID_PAYLOAD`).
 - Implemented `FakeWhatsAppProvider` with deterministic test fixtures (`createInboundTextWebhook`, `createStatusWebhook`, `sendTextMessage`).
-- Added complete test coverage in `@wabrix/providers`.
+- Added complete test coverage in `@flowdesk/providers`.
 
 ### M2-03 (Issue [#35](https://github.com/Ryanakml/flow-desk-ai/issues/35), PR [#45](https://github.com/Ryanakml/flow-desk-ai/pull/45)): Raw-Body Webhook Ingress Route & HMAC Verification
 
 - Configured raw request body capture in `apps/ingress` to preserve raw byte payload for cryptographic verification.
-- Added constant-time HMAC-SHA256 signature verification in `@wabrix/security` (`computeMetaSignature`, `verifyMetaSignature`).
+- Added constant-time HMAC-SHA256 signature verification in `@flowdesk/security` (`computeMetaSignature`, `verifyMetaSignature`).
 - Built webhook ingress router supporting GET verification challenge (`hub.mode`, `hub.verify_token`, `hub.challenge`) and POST payload ingestion.
 - Added supertest verification suite covering valid signatures, invalid/forged signatures, missing headers, and malformed bodies.
 
 ### M2-04 (Issue [#36](https://github.com/Ryanakml/flow-desk-ai/issues/36), PR [#46](https://github.com/Ryanakml/flow-desk-ai/pull/46)): Durable Webhook Persistence & SHA-256 Deduplication
 
-- Created migration `0007_webhook_events.sql` introducing `wabrix.webhook_events` with unique `payload_hash` constraint.
-- Implemented `persistWebhookEvent` in `@wabrix/db` storing inbound payloads durably.
+- Created migration `0007_webhook_events.sql` introducing `flowdesk.webhook_events` with unique `payload_hash` constraint.
+- Implemented `persistWebhookEvent` in `@flowdesk/db` storing inbound payloads durably.
 - Deduplication logic: duplicate webhook payloads return existing event with `isDuplicate = true`, preventing duplicate downstream side-effects.
 - Integrated persistence into `apps/ingress/src/routes/whatsapp.ts`.
 
 ### M2-05 (Issue [#37](https://github.com/Ryanakml/flow-desk-ai/issues/37), PR [#47](https://github.com/Ryanakml/flow-desk-ai/pull/47)): Message Domain Tables, State Machine & RLS Policies
 
-- Created migration `0008_conversations_and_messages.sql` establishing `wabrix.conversations` and `wabrix.messages`.
+- Created migration `0008_conversations_and_messages.sql` establishing `flowdesk.conversations` and `flowdesk.messages`.
 - Added completion migration `0009_m2_completion_hardening.sql` for `contacts`, `message_status_events`, `conversation_events`, `outbound_intents`, provider-message uniqueness, queue leases, and RLS.
 - Row-Level Security policies enforcing `app.current_organization_id`.
 - Implemented state machines:
   - Conversation status: `open` -> `pending` -> `resolved` -> `closed` (auto-reopens on customer reply).
   - Message delivery status: `queued` -> `sent` -> `delivered` -> `read` | `failed`.
-- Added domain validation rules in `@wabrix/domain` and DB access methods in `@wabrix/db`.
+- Added domain validation rules in `@flowdesk/domain` and DB access methods in `@flowdesk/db`.
 
 ### M2-06 (Issue [#38](https://github.com/Ryanakml/flow-desk-ai/issues/38), PR [#48](https://github.com/Ryanakml/flow-desk-ai/pull/48)): Worker Message Normalization & Thread Matching
 
@@ -88,13 +88,13 @@
   - `GET /api/v1/organizations/:orgId/conversations/:id`: Retrieve conversation and messages.
   - `PATCH /api/v1/organizations/:orgId/conversations/:id`: Update status/assignment with optimistic concurrency `version` checks (409 Conflict).
   - `POST /api/v1/organizations/:orgId/conversations/:id/messages`: Atomic reply creation in `queued` status and transactional outbox event.
-- Outbound sends require an `Idempotency-Key`; tenant operations run in a single transaction as the `wabrix_runtime` `NOBYPASSRLS` role.
+- Outbound sends require an `Idempotency-Key`; tenant operations run in a single transaction as the `flowdesk_runtime` `NOBYPASSRLS` role.
 - Added comprehensive supertest suite in `apps/api/src/conversations.test.ts`.
 
 ### M2-08 (Issue [#40](https://github.com/Ryanakml/flow-desk-ai/issues/40), PR [#50](https://github.com/Ryanakml/flow-desk-ai/pull/50)): Outbound Dispatch Worker & Status Reconciliation
 
 - Implemented outbound dispatch worker in `apps/worker/src/dispatch.ts`:
-  - Polls `wabrix.outbox_events` for `message.outbound.created` intents.
+  - Polls `flowdesk.outbox_events` for `message.outbound.created` intents.
   - Sets transaction-scoped tenant RLS context (`SET LOCAL app.organization_id = ...`).
   - Decrypts channel credentials, invokes provider `sendTextMessage`.
   - Transitions message to `sent` with `provider_message_id = 'wamid...'`.
@@ -154,7 +154,7 @@
 
 ## 4. Security, Isolation & Architectural Sign-Off
 
-1. **Multi-Tenant Isolation**: Tenant operations execute in transactions as PostgreSQL role `wabrix_runtime` (`NOBYPASSRLS`) with transaction-scoped `app.organization_id`. Public ingress uses only the audited `record_whatsapp_webhook` security-definer capability to map a Meta phone ID and atomically persist the event/outbox record.
+1. **Multi-Tenant Isolation**: Tenant operations execute in transactions as PostgreSQL role `flowdesk_runtime` (`NOBYPASSRLS`) with transaction-scoped `app.organization_id`. Public ingress uses only the audited `record_whatsapp_webhook` security-definer capability to map a Meta phone ID and atomically persist the event/outbox record.
 2. **Cryptographic Protection**:
    - Webhook ingress validates Meta signatures using `crypto.timingSafeEqual` to prevent timing attacks.
    - Provider credentials (access tokens) are encrypted at rest using AES-256-GCM with distinct IVs and authentication tags.

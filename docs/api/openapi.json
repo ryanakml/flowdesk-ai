@@ -1,9 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Wabrix API",
+    "title": "FlowDesk API",
     "version": "1.0.0",
-    "description": "Wabrix secure multi-tenant customer engagement API."
+    "description": "FlowDesk secure multi-tenant customer engagement API."
   },
   "servers": [
     {
@@ -11,7 +11,7 @@
       "description": "Local Development API Server"
     },
     {
-      "url": "https://api.wabrix.dev",
+      "url": "https://api.flowdesk.dev",
       "description": "Production API Server"
     }
   ],

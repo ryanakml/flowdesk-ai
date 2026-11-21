@@ -1,4 +1,4 @@
-import type { DbClient, ClaimedOutboxEvent } from "@wabrix/db";
+import type { DbClient, ClaimedOutboxEvent } from "@flowdesk/db";
 import {
   getChannelById,
   getAttachmentById,
@@ -9,16 +9,16 @@ import {
   resolveAutomationSafety,
   runInTenantTransaction,
   updateMessageStatus
-} from "@wabrix/db";
-import { isTemplateApprovedForSending } from "@wabrix/domain";
+} from "@flowdesk/db";
+import { isTemplateApprovedForSending } from "@flowdesk/domain";
 import {
   type WhatsAppProvider,
   type ObjectStore,
   FakeWhatsAppProvider,
   WhatsAppProviderError
-} from "@wabrix/providers";
-import { recordWhatsAppOutboundDispatch } from "@wabrix/observability";
-import { decryptWhatsAppChannelCredentials, WhatsAppCredentialError } from "@wabrix/security";
+} from "@flowdesk/providers";
+import { recordWhatsAppOutboundDispatch } from "@flowdesk/observability";
+import { decryptWhatsAppChannelCredentials, WhatsAppCredentialError } from "@flowdesk/security";
 
 export interface OutboundMessagePayload {
   messageId: string;
@@ -117,11 +117,11 @@ async function getBotDispatchSafetyState(
   const result = await db.query<BotDispatchSafetyState>(
     `SELECT run.bot_config_id, conversation.bot_paused, conversation.assigned_to_user_id,
             config.emergency_disabled
-     FROM wabrix.bot_runs AS run
-     JOIN wabrix.conversations AS conversation
+     FROM flowdesk.bot_runs AS run
+     JOIN flowdesk.conversations AS conversation
        ON conversation.organization_id = run.organization_id
       AND conversation.id = run.conversation_id
-     LEFT JOIN wabrix.bot_configs AS config
+     LEFT JOIN flowdesk.bot_configs AS config
        ON config.organization_id = run.organization_id AND config.id = run.bot_config_id
      WHERE run.organization_id = $1 AND run.id = $2 AND conversation.id = $3
      FOR SHARE OF run, conversation`,
@@ -221,7 +221,7 @@ export async function dispatchOutboundMessage(
     if (blocked) {
       await updateMessageStatus(client, orgId, message.id, "failed", { errorDetail: blocked });
       await client.query(
-        `UPDATE wabrix.outbound_intents
+        `UPDATE flowdesk.outbound_intents
          SET state = 'failed', last_error = $2, updated_at = clock_timestamp()
          WHERE organization_id = $1 AND message_id = $3 AND state = 'queued'`,
         [orgId, blocked, message.id]
@@ -417,9 +417,9 @@ export async function dispatchOutboundMessageCrashSafe(
                 channel.id AS channel_id, channel.phone_number_id, channel.waba_id,
                 channel.encrypted_credentials, channel.status AS channel_status,
                 intent.state AS intent_state
-         FROM wabrix.messages AS message
-         JOIN wabrix.channels AS channel ON channel.id = message.channel_id
-         JOIN wabrix.outbound_intents AS intent ON intent.message_id = message.id
+         FROM flowdesk.messages AS message
+         JOIN flowdesk.channels AS channel ON channel.id = message.channel_id
+         JOIN flowdesk.outbound_intents AS intent ON intent.message_id = message.id
          WHERE message.organization_id = $1 AND message.id = $2
          FOR UPDATE OF message, intent`,
         [event.organizationId, event.payload.messageId]
@@ -455,7 +455,7 @@ export async function dispatchOutboundMessageCrashSafe(
         const error =
           "Provider delivery outcome is uncertain after worker interruption; manual reconciliation required.";
         await tenantDb.query(
-          `UPDATE wabrix.outbound_intents
+          `UPDATE flowdesk.outbound_intents
            SET state = 'reconcile_required', last_error = $2, updated_at = clock_timestamp()
            WHERE organization_id = $1 AND message_id = $3`,
           [event.organizationId, error, row.message_id]
@@ -488,7 +488,7 @@ export async function dispatchOutboundMessageCrashSafe(
             errorDetail: blocked
           });
           await tenantDb.query(
-            `UPDATE wabrix.outbound_intents
+            `UPDATE flowdesk.outbound_intents
              SET state = 'failed', last_error = $2, updated_at = clock_timestamp()
              WHERE organization_id = $1 AND message_id = $3`,
             [event.organizationId, blocked, row.message_id]
@@ -539,7 +539,7 @@ export async function dispatchOutboundMessageCrashSafe(
       }
 
       await tenantDb.query(
-        `UPDATE wabrix.outbound_intents
+        `UPDATE flowdesk.outbound_intents
          SET state = 'dispatching', attempt_count = attempt_count + 1,
              claimed_at = clock_timestamp(), last_error = NULL,
              updated_at = clock_timestamp()
@@ -656,7 +656,7 @@ export async function dispatchOutboundMessageCrashSafe(
     return runInTenantTransaction(client, { organizationId: event.organizationId }, async (db) => {
       if (uncertain) {
         await db.query(
-          `UPDATE wabrix.outbound_intents
+          `UPDATE flowdesk.outbound_intents
            SET state = 'reconcile_required', last_error = $2, updated_at = clock_timestamp()
            WHERE organization_id = $1 AND message_id = $3`,
           [event.organizationId, detail, prepared.messageId]
@@ -664,7 +664,7 @@ export async function dispatchOutboundMessageCrashSafe(
         await markOutboxEventPublished(db, event.id);
       } else if (retryable) {
         await db.query(
-          `UPDATE wabrix.outbound_intents
+          `UPDATE flowdesk.outbound_intents
            SET state = 'queued', last_error = $2, updated_at = clock_timestamp()
            WHERE organization_id = $1 AND message_id = $3`,
           [event.organizationId, detail, prepared.messageId]
@@ -700,7 +700,7 @@ export async function processOutboxOutboundBatch(
     causation_id: string | null;
     occurred_at: Date;
     attempts: number;
-  }>(`SELECT * FROM wabrix.claim_outbox_events('message.outbound.created'::text, $1::integer)`, [
+  }>(`SELECT * FROM flowdesk.claim_outbox_events('message.outbound.created'::text, $1::integer)`, [
     batchSize
   ]);
 

@@ -1,7 +1,7 @@
 import { setTimeout as delay } from "node:timers/promises";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AiProviderError, type AiEmbeddingProvider } from "@wabrix/providers";
-import { getPrometheusMetrics, resetMetrics } from "@wabrix/observability";
+import { AiProviderError, type AiEmbeddingProvider } from "@flowdesk/providers";
+import { getPrometheusMetrics, resetMetrics } from "@flowdesk/observability";
 import {
   createQueryEmbeddingCache,
   type EmbeddingCacheStore,

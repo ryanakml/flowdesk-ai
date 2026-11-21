@@ -1,8 +1,8 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@wabrix/config";
-import type { DbClient } from "@wabrix/db";
-import { hashSessionToken, serializeSessionCookie } from "@wabrix/security";
+import { loadAuthConfig } from "@flowdesk/config";
+import type { DbClient } from "@flowdesk/db";
+import { hashSessionToken, serializeSessionCookie } from "@flowdesk/security";
 import { createApiApp } from "./app.js";
 
 function createMockDb(roleKey = "owner") {
@@ -12,7 +12,7 @@ function createMockDb(roleKey = "owner") {
   const db = {
     async query(sql: string, params: unknown[] = []) {
       await Promise.resolve();
-      if (sql.includes("FROM wabrix.auth_sessions") || sql.includes("wabrix.sessions")) {
+      if (sql.includes("FROM flowdesk.auth_sessions") || sql.includes("flowdesk.sessions")) {
         return result(
           params[0] === tokenHash
             ? [
@@ -31,7 +31,7 @@ function createMockDb(roleKey = "owner") {
             : []
         );
       }
-      if (sql.includes("wabrix.memberships")) {
+      if (sql.includes("flowdesk.memberships")) {
         return result(
           params[0] === "org-1"
             ? [
@@ -48,7 +48,7 @@ function createMockDb(roleKey = "owner") {
             : []
         );
       }
-      if (sql.includes("INSERT INTO wabrix.knowledge_sources")) {
+      if (sql.includes("INSERT INTO flowdesk.knowledge_sources")) {
         const existing = rows.find((row) => row["dedupe_key"] === params[5]);
         if (existing) return result([existing]);
         const source = {
@@ -72,7 +72,7 @@ function createMockDb(roleKey = "owner") {
         rows.push(source);
         return result([source]);
       }
-      if (sql.includes("INSERT INTO wabrix.knowledge_ingestion_jobs")) {
+      if (sql.includes("INSERT INTO flowdesk.knowledge_ingestion_jobs")) {
         return result([
           {
             id: "20000000-0000-4000-8000-000000000001",
@@ -89,8 +89,8 @@ function createMockDb(roleKey = "owner") {
           }
         ]);
       }
-      if (sql.includes("SELECT * FROM wabrix.knowledge_sources")) return result(rows);
-      if (sql.includes("INSERT INTO wabrix.audit_logs")) {
+      if (sql.includes("SELECT * FROM flowdesk.knowledge_sources")) return result(rows);
+      if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
         return result([{ id: "audit-1", occurred_at: now }]);
       }
       return result([]);

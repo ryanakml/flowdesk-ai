@@ -1,8 +1,8 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@wabrix/config";
-import type { DbClient } from "@wabrix/db";
-import { serializeSessionCookie, hashSessionToken } from "@wabrix/security";
+import { loadAuthConfig } from "@flowdesk/config";
+import type { DbClient } from "@flowdesk/db";
+import { serializeSessionCookie, hashSessionToken } from "@flowdesk/security";
 import { createApiApp } from "./app.js";
 
 function createMockDb(): DbClient {
@@ -45,13 +45,13 @@ function createMockDb(): DbClient {
     async query(sql: string, params: unknown[] = []) {
       await Promise.resolve();
       if (
-        sql.includes("wabrix.api_keys") ||
+        sql.includes("flowdesk.api_keys") ||
         sql.includes("webhook") ||
         sql.includes("deliveries")
       ) {
         // debug
       }
-      if (sql.includes("FROM wabrix.auth_sessions") || sql.includes("wabrix.sessions")) {
+      if (sql.includes("FROM flowdesk.auth_sessions") || sql.includes("flowdesk.sessions")) {
         const tokenHashParam = params[0] as string;
         if (tokenHashParam === expectedHash) {
           return {
@@ -63,7 +63,7 @@ function createMockDb(): DbClient {
                 created_at: new Date(),
                 expires_at: new Date(Date.now() + 86400000),
                 revoked_at: null,
-                user_email: "admin@wabrix.dev",
+                user_email: "admin@flowdesk.dev",
                 user_display_name: "Admin Developer",
                 user_status: "active"
               }
@@ -76,7 +76,10 @@ function createMockDb(): DbClient {
         }
       }
 
-      if (sql.includes("SELECT * FROM wabrix.memberships") || sql.includes("wabrix.memberships")) {
+      if (
+        sql.includes("SELECT * FROM flowdesk.memberships") ||
+        sql.includes("flowdesk.memberships")
+      ) {
         return {
           rows: [
             {
@@ -110,7 +113,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("SELECT * FROM wabrix.api_keys")) {
+      if (sql.includes("SELECT * FROM flowdesk.api_keys")) {
         return {
           rows: Array.from(apiKeys.values()),
           rowCount: apiKeys.size,
@@ -120,7 +123,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO wabrix.api_keys")) {
+      if (sql.includes("INSERT INTO flowdesk.api_keys")) {
         const newId = `key-${apiKeys.size + 1}`;
         const row = {
           id: newId,
@@ -139,7 +142,7 @@ function createMockDb(): DbClient {
         return { rows: [row], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.api_keys")) {
+      if (sql.includes("UPDATE flowdesk.api_keys")) {
         const idParam = params[0] as string;
         const k = apiKeys.get(idParam);
         if (k) {
@@ -150,7 +153,7 @@ function createMockDb(): DbClient {
         return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("SELECT * FROM wabrix.webhook_subscriptions WHERE id = $1")) {
+      if (sql.includes("SELECT * FROM flowdesk.webhook_subscriptions WHERE id = $1")) {
         const idParam = params[0] as string;
         const w = webhooks.get(idParam);
         return {
@@ -162,7 +165,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("SELECT * FROM wabrix.webhook_subscriptions")) {
+      if (sql.includes("SELECT * FROM flowdesk.webhook_subscriptions")) {
         return {
           rows: Array.from(webhooks.values()),
           rowCount: webhooks.size,
@@ -172,7 +175,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO wabrix.webhook_subscriptions")) {
+      if (sql.includes("INSERT INTO flowdesk.webhook_subscriptions")) {
         const newId = `wh-${webhooks.size + 1}`;
         const row = {
           id: newId,
@@ -189,13 +192,13 @@ function createMockDb(): DbClient {
         return { rows: [row], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("DELETE FROM wabrix.webhook_subscriptions")) {
+      if (sql.includes("DELETE FROM flowdesk.webhook_subscriptions")) {
         const idParam = params[0] as string;
         const deleted = webhooks.delete(idParam);
         return { rows: [], rowCount: deleted ? 1 : 0, command: "DELETE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("FROM wabrix.webhook_deliveries")) {
+      if (sql.includes("FROM flowdesk.webhook_deliveries")) {
         return {
           rows: [
             {
@@ -223,7 +226,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("wabrix.outbox_events")) {
+      if (sql.includes("flowdesk.outbox_events")) {
         return {
           rows: [{ id: "outbox-evt-1" }],
           rowCount: 1,
@@ -233,7 +236,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("wabrix.audit_events") || sql.includes("audit")) {
+      if (sql.includes("flowdesk.audit_events") || sql.includes("audit")) {
         return {
           rows: [{ id: "audit-1", occurred_at: new Date() }],
           rowCount: 1,
@@ -243,7 +246,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("FROM wabrix.conversations WHERE organization_id = $1 AND id = $2")) {
+      if (sql.includes("FROM flowdesk.conversations WHERE organization_id = $1 AND id = $2")) {
         return {
           rows: [
             {
@@ -268,7 +271,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("FROM wabrix.conversations")) {
+      if (sql.includes("FROM flowdesk.conversations")) {
         return {
           rows: [
             {
@@ -293,7 +296,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO wabrix.messages")) {
+      if (sql.includes("INSERT INTO flowdesk.messages")) {
         return {
           rows: [
             {
@@ -410,13 +413,13 @@ describe("Developer API Keys & Webhooks REST API (M6-02)", () => {
       .set("Cookie", adminCookie)
       .send({
         name: "Production Webhook",
-        url: "https://example.com/webhooks/wabrix",
+        url: "https://example.com/webhooks/flowdesk",
         events: ["conversation.created", "message.received"]
       })) as unknown as { status: number; body: Record<string, unknown> };
 
     expect(res.status).toBe(201);
     expect(res.body["id"]).toBeDefined();
-    expect(res.body["url"]).toBe("https://example.com/webhooks/wabrix");
+    expect(res.body["url"]).toBe("https://example.com/webhooks/flowdesk");
     expect((res.body["secret"] as string).startsWith("whsec_")).toBe(true);
   });
 

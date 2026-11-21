@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Milestone 6 expands Wabrix into an extensible, open, free community platform with self-service WhatsApp channels, scoped developer API key management, external REST APIs authenticated via SHA-256 hashed keys, outbound webhooks with HMAC-SHA256 signatures, an hourly analytics aggregation engine, and CSV compliance export. Stripe billing has been set aside as an optional modular extension (on-hold) for future monetization.
+Milestone 6 expands FlowDesk into an extensible, open, free community platform with self-service WhatsApp channels, scoped developer API key management, external REST APIs authenticated via SHA-256 hashed keys, outbound webhooks with HMAC-SHA256 signatures, an hourly analytics aggregation engine, and CSV compliance export. Stripe billing has been set aside as an optional modular extension (on-hold) for future monetization.
 
 ## Completed Capability Matrix
 
@@ -26,11 +26,11 @@ Milestone 6 expands Wabrix into an extensible, open, free community platform wit
    - Transactional outbox event publishing (`developer.webhook.dispatch`) and worker dispatch engine with exponential backoff and dead-letter queue (`dead_letter`) upon max retry exhaustion.
    - Masked secret display on retrieval (`whsec_...****************`).
 3. **Analytics Engine & Aggregates**:
-   - Migration `0035_m6_developer_webhooks_and_analytics.sql` creating `wabrix.webhook_deliveries`, `wabrix.analytics_aggregates_hourly`, and `wabrix.analytics_watermarks`.
+   - Migration `0035_m6_developer_webhooks_and_analytics.sql` creating `flowdesk.webhook_deliveries`, `flowdesk.analytics_aggregates_hourly`, and `flowdesk.analytics_watermarks`.
    - Hourly rollup calculation for conversations, messages, FRT, resolution time, and SLA compliance with transactional fallback when aggregate data is absent.
    - Background scheduler job (`runAnalyticsAggregationJob`) executing tenant-isolated rollups.
 4. **Open Community Model**:
-   - Wabrix runs out-of-the-box as an open community platform with multi-tenant isolation, without paywall restrictions.
+   - FlowDesk runs out-of-the-box as an open community platform with multi-tenant isolation, without paywall restrictions.
 
 ## Verification Evidence
 

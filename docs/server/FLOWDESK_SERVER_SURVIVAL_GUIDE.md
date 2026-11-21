@@ -1,10 +1,10 @@
-# Wabrix Server Survival Guide
+# Flowdesk Server Survival Guide
 
-Reference guide operasional untuk server staging Wabrix di Ubuntu/Docker.
+Reference guide operasional untuk server staging Flowdesk di Ubuntu/Docker.
 
 > Server contoh: `206.189.89.33`  
-> User utama: `wabrix`  
-> Root project: `/opt/wabrix`  
+> User utama: `flowdesk`  
+> Root project: `/opt/flowdesk`  
 > Environment: `staging`
 
 ## Cara membaca panduan ini
@@ -22,7 +22,7 @@ Command dalam panduan ini diasumsikan dijalankan setelah login ke server, kecual
 1. [Quick start](#1-quick-start)
 2. [SSH dan orientasi server](#2-ssh-dan-orientasi-server)
 3. [Lokasi project dan release](#3-lokasi-project-dan-release)
-4. [Daftar container Wabrix](#4-daftar-container-wabrix)
+4. [Daftar container Flowdesk](#4-daftar-container-flowdesk)
 5. [Status dan logs](#5-status-dan-logs)
 6. [Restart, stop, start, exec, dan inspect](#6-restart-stop-start-exec-dan-inspect)
 7. [PostgreSQL dan `flowdb`](#7-postgresql-dan-flowdb)
@@ -46,10 +46,10 @@ Command dalam panduan ini diasumsikan dijalankan setelah login ke server, kecual
 
 ## 1. Quick start
 
-Urutan pemeriksaan tercepat ketika Wabrix terasa bermasalah:
+Urutan pemeriksaan tercepat ketika Flowdesk terasa bermasalah:
 
 ```bash
-ssh wabrix@206.189.89.33
+ssh flowdesk@206.189.89.33
 ```
 
 ```bash
@@ -61,9 +61,9 @@ docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}'
 ```
 
 ```bash
-docker logs --tail 100 --timestamps wabrix-staging-api-1
-docker logs --tail 100 --timestamps wabrix-staging-web-1
-docker logs --tail 100 --timestamps wabrix-staging-caddy-1
+docker logs --tail 100 --timestamps flowdesk-staging-api-1
+docker logs --tail 100 --timestamps flowdesk-staging-web-1
+docker logs --tail 100 --timestamps flowdesk-staging-caddy-1
 ```
 
 ```bash
@@ -86,19 +86,19 @@ flowdb
 ### Masuk dari Mac
 
 ```bash
-ssh wabrix@206.189.89.33
+ssh flowdesk@206.189.89.33
 ```
 
 Kalau SSH key tertentu harus dipakai:
 
 ```bash
-ssh -i ~/.ssh/NAMA_PRIVATE_KEY wabrix@206.189.89.33
+ssh -i ~/.ssh/NAMA_PRIVATE_KEY flowdesk@206.189.89.33
 ```
 
 Mode verbose untuk mendiagnosis kegagalan koneksi:
 
 ```bash
-ssh -v wabrix@206.189.89.33
+ssh -v flowdesk@206.189.89.33
 ```
 
 Gunakan `-vvv` hanya jika detail `-v` belum cukup. Output verbose dapat memuat nama file, user, dan detail konfigurasi; jangan unggah mentah ke tempat publik.
@@ -109,7 +109,7 @@ Gunakan `-vvv` hanya jika detail `-v` belum cukup. Output verbose dapat memuat n
 ssh root@206.189.89.33
 ```
 
-Gunakan root hanya jika memang diperlukan. Normalnya lebih aman login sebagai `wabrix`, lalu gunakan `sudo` untuk command administratif tertentu.
+Gunakan root hanya jika memang diperlukan. Normalnya lebih aman login sebagai `flowdesk`, lalu gunakan `sudo` untuk command administratif tertentu.
 
 ### Kenali posisi saat ini
 
@@ -142,9 +142,9 @@ Atau tekan `Ctrl+D`.
 Tambahkan ke `~/.ssh/config` di Mac:
 
 ```sshconfig
-Host wabrix-staging
+Host flowdesk-staging
     HostName 206.189.89.33
-    User wabrix
+    User flowdesk
     IdentityFile ~/.ssh/NAMA_PRIVATE_KEY
     IdentitiesOnly yes
 ```
@@ -152,7 +152,7 @@ Host wabrix-staging
 Setelah itu cukup:
 
 ```bash
-ssh wabrix-staging
+ssh flowdesk-staging
 ```
 
 ---
@@ -162,38 +162,38 @@ ssh wabrix-staging
 Lihat struktur utama:
 
 ```bash
-ls -lah /opt/wabrix
+ls -lah /opt/flowdesk
 ```
 
 Masuk ke root deployment:
 
 ```bash
-cd /opt/wabrix
+cd /opt/flowdesk
 ```
 
 Lihat release yang tersedia:
 
 ```bash
-ls -lah /opt/wabrix/releases
+ls -lah /opt/flowdesk/releases
 ```
 
 Cari release aktif melalui symlink `current`:
 
 ```bash
-readlink -f /opt/wabrix/current
+readlink -f /opt/flowdesk/current
 ```
 
 Masuk ke release aktif tanpa mengetik hash:
 
 ```bash
-cd /opt/wabrix/current
+cd /opt/flowdesk/current
 pwd
 ```
 
 Contoh release yang pernah aktif:
 
 ```text
-/opt/wabrix/releases/1441e8a41223cf5ff5ad2955bbba64e0347c771a
+/opt/flowdesk/releases/1441e8a41223cf5ff5ad2955bbba64e0347c771a
 ```
 
 Release directory dapat berasal dari deployment artifact dan belum tentu memiliki folder `.git`. Karena itu, image Docker yang sedang digunakan sering menjadi sumber paling akurat untuk mengetahui Git SHA aktif.
@@ -201,30 +201,30 @@ Release directory dapat berasal dari deployment artifact dan belum tentu memilik
 Lihat target symlink dan beberapa release terbaru:
 
 ```bash
-ls -ld /opt/wabrix/current
-ls -lht /opt/wabrix/releases | head -n 10
+ls -ld /opt/flowdesk/current
+ls -lht /opt/flowdesk/releases | head -n 10
 ```
 
 > Jangan mengubah symlink `current`, menghapus release, atau mengedit file release aktif secara manual tanpa memahami prosedur deployment dan rollback.
 
 ---
 
-## 4. Daftar container Wabrix
+## 4. Daftar container Flowdesk
 
 Container yang diketahui:
 
-| Container                    | Fungsi utama                       |
-| ---------------------------- | ---------------------------------- |
-| `wabrix-staging-caddy-1`     | Reverse proxy, HTTP/HTTPS, routing |
-| `wabrix-staging-api-1`       | Backend API                        |
-| `wabrix-staging-web-1`       | Frontend web                       |
-| `wabrix-staging-worker-1`    | Background jobs                    |
-| `wabrix-staging-scheduler-1` | Penjadwalan jobs                   |
-| `wabrix-staging-ingress-1`   | Ingress atau penerimaan event      |
-| `wabrix-staging-postgres-1`  | Database PostgreSQL                |
-| `wabrix-staging-redis-1`     | Cache/queue Redis                  |
-| `wabrix-staging-minio-1`     | Object storage MinIO               |
-| `wabrix-staging-clamav-1`    | Antivirus/file scanning            |
+| Container                      | Fungsi utama                       |
+| ------------------------------ | ---------------------------------- |
+| `flowdesk-staging-caddy-1`     | Reverse proxy, HTTP/HTTPS, routing |
+| `flowdesk-staging-api-1`       | Backend API                        |
+| `flowdesk-staging-web-1`       | Frontend web                       |
+| `flowdesk-staging-worker-1`    | Background jobs                    |
+| `flowdesk-staging-scheduler-1` | Penjadwalan jobs                   |
+| `flowdesk-staging-ingress-1`   | Ingress atau penerimaan event      |
+| `flowdesk-staging-postgres-1`  | Database PostgreSQL                |
+| `flowdesk-staging-redis-1`     | Cache/queue Redis                  |
+| `flowdesk-staging-minio-1`     | Object storage MinIO               |
+| `flowdesk-staging-clamav-1`    | Antivirus/file scanning            |
 
 Lihat container yang sedang hidup:
 
@@ -244,10 +244,10 @@ Termasuk container yang sudah berhenti:
 docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
 ```
 
-Filter container Wabrix staging:
+Filter container Flowdesk staging:
 
 ```bash
-docker ps -a --filter 'name=wabrix-staging-' \
+docker ps -a --filter 'name=flowdesk-staging-' \
   --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}'
 ```
 
@@ -269,16 +269,16 @@ Arti status umum:
 Tekan `Ctrl+C` untuk keluar dari mode follow. Ini hanya menghentikan tampilan log, bukan container.
 
 ```bash
-docker logs -f wabrix-staging-api-1
-docker logs -f wabrix-staging-web-1
-docker logs -f wabrix-staging-worker-1
-docker logs -f wabrix-staging-scheduler-1
-docker logs -f wabrix-staging-ingress-1
-docker logs -f wabrix-staging-caddy-1
-docker logs -f wabrix-staging-postgres-1
-docker logs -f wabrix-staging-redis-1
-docker logs -f wabrix-staging-minio-1
-docker logs -f wabrix-staging-clamav-1
+docker logs -f flowdesk-staging-api-1
+docker logs -f flowdesk-staging-web-1
+docker logs -f flowdesk-staging-worker-1
+docker logs -f flowdesk-staging-scheduler-1
+docker logs -f flowdesk-staging-ingress-1
+docker logs -f flowdesk-staging-caddy-1
+docker logs -f flowdesk-staging-postgres-1
+docker logs -f flowdesk-staging-redis-1
+docker logs -f flowdesk-staging-minio-1
+docker logs -f flowdesk-staging-clamav-1
 ```
 
 ### Log berbatas waktu/jumlah
@@ -286,13 +286,13 @@ docker logs -f wabrix-staging-clamav-1
 100 baris terakhir:
 
 ```bash
-docker logs --tail 100 --timestamps wabrix-staging-api-1
+docker logs --tail 100 --timestamps flowdesk-staging-api-1
 ```
 
 10 menit terakhir:
 
 ```bash
-docker logs --since 10m --timestamps wabrix-staging-api-1
+docker logs --since 10m --timestamps flowdesk-staging-api-1
 ```
 
 Rentang waktu tertentu:
@@ -302,7 +302,7 @@ docker logs \
   --since '2026-08-30T10:00:00+07:00' \
   --until '2026-08-30T10:15:00+07:00' \
   --timestamps \
-  wabrix-staging-api-1
+  flowdesk-staging-api-1
 ```
 
 ### Filter log
@@ -310,21 +310,21 @@ docker logs \
 Error dan warning:
 
 ```bash
-docker logs --since 30m wabrix-staging-api-1 2>&1 \
+docker logs --since 30m flowdesk-staging-api-1 2>&1 \
   | grep -iE 'error|warn|fatal|panic'
 ```
 
 Status HTTP penting:
 
 ```bash
-docker logs --since 30m wabrix-staging-api-1 2>&1 \
+docker logs --since 30m flowdesk-staging-api-1 2>&1 \
   | grep -E 'statusCode.*(409|500|502|503)|"status":(409|500|502|503)'
 ```
 
 Organization/RLS:
 
 ```bash
-docker logs --since 30m wabrix-staging-api-1 2>&1 \
+docker logs --since 30m flowdesk-staging-api-1 2>&1 \
   | grep -iE 'organization|membership|rls|row.level|permission denied'
 ```
 
@@ -337,21 +337,21 @@ Catatan: tidak semua aplikasi memakai format log yang sama. Jika filter menghasi
 ### Restart satu service — **berdampak**
 
 ```bash
-docker restart wabrix-staging-api-1
-docker restart wabrix-staging-web-1
-docker restart wabrix-staging-worker-1
-docker restart wabrix-staging-caddy-1
+docker restart flowdesk-staging-api-1
+docker restart flowdesk-staging-web-1
+docker restart flowdesk-staging-worker-1
+docker restart flowdesk-staging-caddy-1
 ```
 
 Restart service aplikasi sekaligus — **berdampak**:
 
 ```bash
 docker restart \
-  wabrix-staging-api-1 \
-  wabrix-staging-web-1 \
-  wabrix-staging-worker-1 \
-  wabrix-staging-scheduler-1 \
-  wabrix-staging-ingress-1
+  flowdesk-staging-api-1 \
+  flowdesk-staging-web-1 \
+  flowdesk-staging-worker-1 \
+  flowdesk-staging-scheduler-1 \
+  flowdesk-staging-ingress-1
 ```
 
 Jangan restart PostgreSQL, Redis, atau Docker daemon sebagai langkah pertama. Cari bukti masalahnya dulu.
@@ -359,20 +359,20 @@ Jangan restart PostgreSQL, Redis, atau Docker daemon sebagai langkah pertama. Ca
 ### Stop/start — **berdampak**
 
 ```bash
-docker stop wabrix-staging-api-1
-docker start wabrix-staging-api-1
+docker stop flowdesk-staging-api-1
+docker start flowdesk-staging-api-1
 ```
 
 ### Masuk ke dalam container
 
 ```bash
-docker exec -it wabrix-staging-api-1 sh
+docker exec -it flowdesk-staging-api-1 sh
 ```
 
 Kalau image memiliki Bash:
 
 ```bash
-docker exec -it wabrix-staging-api-1 bash
+docker exec -it flowdesk-staging-api-1 bash
 ```
 
 Image Alpine/minimal biasanya hanya menyediakan `sh`. Gunakan `exit` atau `Ctrl+D` untuk keluar.
@@ -380,8 +380,8 @@ Image Alpine/minimal biasanya hanya menyediakan `sh`. Gunakan `exit` atau `Ctrl+
 Jalankan satu command tanpa membuka shell:
 
 ```bash
-docker exec wabrix-staging-api-1 pwd
-docker exec wabrix-staging-api-1 ps
+docker exec flowdesk-staging-api-1 pwd
+docker exec flowdesk-staging-api-1 ps
 ```
 
 ### Inspect status
@@ -389,40 +389,40 @@ docker exec wabrix-staging-api-1 ps
 Status proses:
 
 ```bash
-docker inspect wabrix-staging-api-1 --format '{{.State.Status}}'
+docker inspect flowdesk-staging-api-1 --format '{{.State.Status}}'
 ```
 
 Health:
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}'
 ```
 
 Image aktif:
 
 ```bash
-docker inspect wabrix-staging-api-1 --format '{{.Config.Image}}'
+docker inspect flowdesk-staging-api-1 --format '{{.Config.Image}}'
 ```
 
 Waktu mulai dan restart count:
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format 'started={{.State.StartedAt}} restarts={{.RestartCount}} exit={{.State.ExitCode}}'
 ```
 
 Alasan container terakhir berhenti:
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format 'oom={{.State.OOMKilled}} error={{printf "%q" .State.Error}} finished={{.State.FinishedAt}}'
 ```
 
 Mounts:
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format '{{range .Mounts}}{{println .Type .Source "->" .Destination}}{{end}}'
 ```
 
@@ -433,7 +433,7 @@ docker inspect wabrix-staging-api-1 \
 ### Masuk dengan command penuh
 
 ```bash
-docker exec -it wabrix-staging-postgres-1 sh -lc \
+docker exec -it flowdesk-staging-postgres-1 sh -lc \
   'exec psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 ```
 
@@ -445,7 +445,7 @@ Jalankan sekali di server:
 cat >> ~/.bashrc <<'EOF'
 
 flowdb() {
-  docker exec -it wabrix-staging-postgres-1 sh -lc \
+  docker exec -it flowdesk-staging-postgres-1 sh -lc \
     'exec psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 }
 EOF
@@ -474,31 +474,31 @@ Daftar schema dan tabel:
 
 ```sql
 \dn
-\dt wabrix.*
-\dt wabrix.*organization*
-\dt wabrix.*user*
+\dt flowdesk.*
+\dt flowdesk.*organization*
+\dt flowdesk.*user*
 ```
 
 Struktur tabel:
 
 ```sql
-\d wabrix.organizations
-\d wabrix.memberships
-\d wabrix.roles
+\d flowdesk.organizations
+\d flowdesk.memberships
+\d flowdesk.roles
 ```
 
 Data terbaru—gunakan limit:
 
 ```sql
 SELECT *
-FROM wabrix.organizations
+FROM flowdesk.organizations
 ORDER BY created_at DESC
 LIMIT 20;
 ```
 
 ```sql
 SELECT *
-FROM wabrix.memberships
+FROM flowdesk.memberships
 ORDER BY created_at DESC
 LIMIT 20;
 ```
@@ -519,12 +519,12 @@ WHERE datname = current_database()
 ORDER BY usename, state;
 ```
 
-Role Wabrix dan kemampuan bypass RLS:
+Role Flowdesk dan kemampuan bypass RLS:
 
 ```sql
 SELECT rolname, rolsuper, rolbypassrls
 FROM pg_roles
-WHERE rolname LIKE 'wabrix%'
+WHERE rolname LIKE 'flowdesk%'
 ORDER BY rolname;
 ```
 
@@ -540,15 +540,15 @@ SELECT
   qual,
   with_check
 FROM pg_policies
-WHERE schemaname = 'wabrix'
+WHERE schemaname = 'flowdesk'
 ORDER BY tablename, policyname;
 ```
 
 Daftar dan source function:
 
 ```sql
-\df wabrix.*
-\sf wabrix.current_organization_id
+\df flowdesk.*
+\sf flowdesk.current_organization_id
 ```
 
 Ukuran database dan tabel besar:
@@ -589,7 +589,7 @@ Keluar:
 Masuk ke CLI:
 
 ```bash
-docker exec -it wabrix-staging-redis-1 redis-cli
+docker exec -it flowdesk-staging-redis-1 redis-cli
 ```
 
 Jika Redis memakai autentikasi, jangan menaruh password langsung di command yang akan tersimpan di shell history. Cari mekanisme autentikasi deployment yang sudah digunakan.
@@ -632,10 +632,10 @@ QUIT
 Log Redis:
 
 ```bash
-docker logs --tail 100 --timestamps wabrix-staging-redis-1
+docker logs --tail 100 --timestamps flowdesk-staging-redis-1
 ```
 
-### Fungsi Redis di Wabrix
+### Fungsi Redis di FlowDesk
 
 1. **Socket.IO Realtime Adapter (`api`):** Pub/sub fan-out multi-node untuk sinkronisasi state live inbox antarnode.
 2. **Query Embedding Cache (`worker`):** Cache vektor embedding scoped per-tenant untuk worker bot draft AI (`QUERY_EMBEDDING_CACHE_ENABLED=true`).
@@ -702,7 +702,7 @@ docker ps --format 'table {{.Names}}\t{{.Status}}'
 ```
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format '{{json .State.Health}}'
 ```
 
@@ -715,34 +715,34 @@ Catatan penting: `/livez` biasanya hanya memastikan proses hidup. Kalau tersedia
 Log:
 
 ```bash
-docker logs --tail 100 --timestamps wabrix-staging-caddy-1
-docker logs -f wabrix-staging-caddy-1
+docker logs --tail 100 --timestamps flowdesk-staging-caddy-1
+docker logs -f flowdesk-staging-caddy-1
 ```
 
 Lihat Caddyfile aktif:
 
 ```bash
-docker exec wabrix-staging-caddy-1 cat /etc/caddy/Caddyfile
+docker exec flowdesk-staging-caddy-1 cat /etc/caddy/Caddyfile
 ```
 
 Validasi config—**aman**:
 
 ```bash
-docker exec wabrix-staging-caddy-1 \
+docker exec flowdesk-staging-caddy-1 \
   caddy validate --config /etc/caddy/Caddyfile
 ```
 
 Reload config—**berdampak**, lakukan hanya setelah validasi:
 
 ```bash
-docker exec wabrix-staging-caddy-1 \
+docker exec flowdesk-staging-caddy-1 \
   caddy reload --config /etc/caddy/Caddyfile
 ```
 
 Masuk ke container:
 
 ```bash
-docker exec -it wabrix-staging-caddy-1 sh
+docker exec -it flowdesk-staging-caddy-1 sh
 ```
 
 Saat terjadi `502 Bad Gateway`, cek berurutan:
@@ -790,20 +790,20 @@ docker network ls
 Inspect network staging:
 
 ```bash
-docker network inspect wabrix-staging_default
+docker network inspect flowdesk-staging_default
 ```
 
 IP internal API:
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format '{{range .NetworkSettings.Networks}}{{println .NetworkID .IPAddress}}{{end}}'
 ```
 
-Network yang dipakai setiap container Wabrix:
+Network yang dipakai setiap container Flowdesk:
 
 ```bash
-for c in $(docker ps -a --filter 'name=wabrix-staging-' --format '{{.Names}}'); do
+for c in $(docker ps -a --filter 'name=flowdesk-staging-' --format '{{.Names}}'); do
   printf '%s: ' "$c"
   docker inspect "$c" \
     --format '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}} {{end}}'
@@ -855,10 +855,10 @@ Penggunaan disk Docker:
 docker system df
 ```
 
-Ukuran direktori Wabrix:
+Ukuran direktori Flowdesk:
 
 ```bash
-du -sh /opt/wabrix/* 2>/dev/null
+du -sh /opt/flowdesk/* 2>/dev/null
 ```
 
 Inode—penting jika disk terlihat masih ada tetapi pembuatan file gagal:
@@ -893,20 +893,20 @@ Jangan langsung menjalankan `docker system prune -a`. Itu dapat menghapus cache 
 Semua env API:
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format '{{range .Config.Env}}{{println .}}{{end}}'
 ```
 
 Atau dari dalam container:
 
 ```bash
-docker exec wabrix-staging-api-1 env | sort
+docker exec flowdesk-staging-api-1 env | sort
 ```
 
 Filter nama variable tanpa sengaja menampilkan semuanya:
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format '{{range .Config.Env}}{{println .}}{{end}}' \
   | cut -d= -f1 \
   | sort
@@ -915,7 +915,7 @@ docker inspect wabrix-staging-api-1 \
 Filter kelompok tertentu—outputnya mungkin berisi secret:
 
 ```bash
-docker inspect wabrix-staging-api-1 \
+docker inspect flowdesk-staging-api-1 \
   --format '{{range .Config.Env}}{{println .}}{{end}}' \
   | grep -E '^(DATABASE|REDIS|POSTGRES|AUTH|CLERK|S3|MINIO)_'
 ```
@@ -938,26 +938,26 @@ Daftar image:
 docker images
 ```
 
-Filter Wabrix:
+Filter Flowdesk:
 
 ```bash
 docker images --format 'table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedSince}}' \
-  | grep -i wabrix
+  | grep -i flowdesk
 ```
 
 Image tiap container aktif:
 
 ```bash
-docker ps --filter 'name=wabrix-staging-' \
+docker ps --filter 'name=flowdesk-staging-' \
   --format 'table {{.Names}}\t{{.Image}}'
 ```
 
 Pola image yang pernah digunakan:
 
 ```text
-ghcr.io/ryanakml/wabrix-api:<git-sha>
-ghcr.io/ryanakml/wabrix-web:<git-sha>
-ghcr.io/ryanakml/wabrix-worker:<git-sha>
+ghcr.io/ryanakml/flowdesk-api:<git-sha>
+ghcr.io/ryanakml/flowdesk-web:<git-sha>
+ghcr.io/ryanakml/flowdesk-worker:<git-sha>
 ```
 
 Contoh Git SHA/release:
@@ -969,7 +969,7 @@ Contoh Git SHA/release:
 ### Git metadata jika tersedia
 
 ```bash
-cd /opt/wabrix/current
+cd /opt/flowdesk/current
 git status
 git log -1 --oneline
 git rev-parse HEAD
@@ -982,7 +982,7 @@ Kalau muncul `not a git repository`, itu dapat normal untuk artifact deployment.
 Jika seluruh env deployment termuat dengan benar:
 
 ```bash
-cd /opt/wabrix/current
+cd /opt/flowdesk/current
 docker compose ps
 docker compose logs --tail 100 api
 ```
@@ -1014,7 +1014,7 @@ Hindari `docker compose up`, `down`, atau `pull` sampai sumber env dan prosedur 
 Cari Compose files:
 
 ```bash
-find /opt/wabrix -type f \
+find /opt/flowdesk -type f \
   \( -name 'compose.yml' -o -name 'compose.yaml' -o -name 'docker-compose.yml' -o -name 'docker-compose.yaml' \) \
   2>/dev/null
 ```
@@ -1022,25 +1022,25 @@ find /opt/wabrix -type f \
 Cari file env—hanya menampilkan nama file:
 
 ```bash
-find /opt/wabrix -type f -name '.env*' -print 2>/dev/null
+find /opt/flowdesk -type f -name '.env*' -print 2>/dev/null
 ```
 
 Cari Caddyfile:
 
 ```bash
-find /opt/wabrix -type f -iname '*caddy*' -print 2>/dev/null
+find /opt/flowdesk -type f -iname '*caddy*' -print 2>/dev/null
 ```
 
 Cari referensi variable:
 
 ```bash
-grep -RIl --exclude-dir='.git' 'IMAGE_TAG' /opt/wabrix 2>/dev/null
+grep -RIl --exclude-dir='.git' 'IMAGE_TAG' /opt/flowdesk 2>/dev/null
 ```
 
 Cari file yang berubah dalam 24 jam terakhir:
 
 ```bash
-find /opt/wabrix -type f -mmin -1440 -print 2>/dev/null
+find /opt/flowdesk -type f -mmin -1440 -print 2>/dev/null
 ```
 
 Gunakan `grep -RIl` untuk hanya menampilkan nama file. `grep -R` biasa dapat mencetak nilai secret jika pattern berada pada baris credential.
@@ -1208,25 +1208,25 @@ Semua command bagian ini dijalankan dari **terminal Mac**, bukan dari dalam sesi
 Mac ke server:
 
 ```bash
-scp ./file.txt wabrix@206.189.89.33:/tmp/
+scp ./file.txt flowdesk@206.189.89.33:/tmp/
 ```
 
 Server ke folder Mac saat ini:
 
 ```bash
-scp wabrix@206.189.89.33:/tmp/file.txt ./
+scp flowdesk@206.189.89.33:/tmp/file.txt ./
 ```
 
 Copy folder Mac ke server:
 
 ```bash
-scp -r ./folder wabrix@206.189.89.33:/tmp/
+scp -r ./folder flowdesk@206.189.89.33:/tmp/
 ```
 
 Dengan SSH config alias:
 
 ```bash
-scp ./file.txt wabrix-staging:/tmp/
+scp ./file.txt flowdesk-staging:/tmp/
 ```
 
 Aturan aman:
@@ -1240,7 +1240,7 @@ Checksum di Mac dan server:
 
 ```bash
 shasum -a 256 ./file.txt
-ssh wabrix@206.189.89.33 'sha256sum /tmp/file.txt'
+ssh flowdesk@206.189.89.33 'sha256sum /tmp/file.txt'
 ```
 
 ---
@@ -1258,8 +1258,8 @@ ssh wabrix@206.189.89.33 'sha256sum /tmp/file.txt'
 2. SSH ke server dan cek Caddy:
 
    ```bash
-   docker ps --filter 'name=wabrix-staging-caddy-1'
-   docker logs --tail 100 --timestamps wabrix-staging-caddy-1
+   docker ps --filter 'name=flowdesk-staging-caddy-1'
+   docker logs --tail 100 --timestamps flowdesk-staging-caddy-1
    ```
 
 3. Cek port host:
@@ -1282,8 +1282,8 @@ ssh wabrix@206.189.89.33 'sha256sum /tmp/file.txt'
 ### C. API `500`
 
 ```bash
-docker logs --since 15m --timestamps wabrix-staging-api-1
-docker inspect wabrix-staging-api-1 \
+docker logs --since 15m --timestamps flowdesk-staging-api-1
+docker inspect flowdesk-staging-api-1 \
   --format 'status={{.State.Status}} restarts={{.RestartCount}} oom={{.State.OOMKilled}}'
 ```
 
@@ -1357,29 +1357,29 @@ Restart bukan diagnosis. Restart boleh memulihkan service sementara, tetapi akar
 
 ## 21. Recommended aliases
 
-Jalankan blok ini sekali di server sebagai user `wabrix`:
+Jalankan blok ini sekali di server sebagai user `flowdesk`:
 
 ```bash
 cat >> ~/.bashrc <<'EOF'
 
-# Wabrix staging helpers
-alias flow='cd /opt/wabrix'
-alias flowcurrent='cd /opt/wabrix/current'
-alias fps='docker ps --filter "name=wabrix-staging-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
-alias fpa='docker ps -a --filter "name=wabrix-staging-" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"'
-alias fapi='docker logs -f --tail 100 --timestamps wabrix-staging-api-1'
-alias fweb='docker logs -f --tail 100 --timestamps wabrix-staging-web-1'
-alias fworker='docker logs -f --tail 100 --timestamps wabrix-staging-worker-1'
-alias fscheduler='docker logs -f --tail 100 --timestamps wabrix-staging-scheduler-1'
-alias fingress='docker logs -f --tail 100 --timestamps wabrix-staging-ingress-1'
-alias fcaddy='docker logs -f --tail 100 --timestamps wabrix-staging-caddy-1'
-alias fpostgres='docker logs -f --tail 100 --timestamps wabrix-staging-postgres-1'
-alias fredis='docker logs -f --tail 100 --timestamps wabrix-staging-redis-1'
+# Flowdesk staging helpers
+alias flow='cd /opt/flowdesk'
+alias flowcurrent='cd /opt/flowdesk/current'
+alias fps='docker ps --filter "name=flowdesk-staging-" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
+alias fpa='docker ps -a --filter "name=flowdesk-staging-" --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"'
+alias fapi='docker logs -f --tail 100 --timestamps flowdesk-staging-api-1'
+alias fweb='docker logs -f --tail 100 --timestamps flowdesk-staging-web-1'
+alias fworker='docker logs -f --tail 100 --timestamps flowdesk-staging-worker-1'
+alias fscheduler='docker logs -f --tail 100 --timestamps flowdesk-staging-scheduler-1'
+alias fingress='docker logs -f --tail 100 --timestamps flowdesk-staging-ingress-1'
+alias fcaddy='docker logs -f --tail 100 --timestamps flowdesk-staging-caddy-1'
+alias fpostgres='docker logs -f --tail 100 --timestamps flowdesk-staging-postgres-1'
+alias fredis='docker logs -f --tail 100 --timestamps flowdesk-staging-redis-1'
 alias fstats='docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.PIDs}}"'
 alias fhealth='curl -i --max-time 10 http://206.189.89.33/api/livez'
 
 flowdb() {
-  docker exec -it wabrix-staging-postgres-1 sh -lc \
+  docker exec -it flowdesk-staging-postgres-1 sh -lc \
     'exec psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 }
 EOF
@@ -1389,23 +1389,23 @@ source ~/.bashrc
 
 Command harian setelah alias aktif:
 
-| Command       | Fungsi                                    |
-| ------------- | ----------------------------------------- |
-| `flow`        | Masuk ke `/opt/wabrix`                    |
-| `flowcurrent` | Masuk ke release aktif                    |
-| `fps`         | Container Wabrix yang hidup               |
-| `fpa`         | Semua container Wabrix termasuk yang mati |
-| `fapi`        | Follow 100 log API terakhir               |
-| `fweb`        | Follow log web                            |
-| `fworker`     | Follow log worker                         |
-| `fscheduler`  | Follow log scheduler                      |
-| `fingress`    | Follow log ingress                        |
-| `fcaddy`      | Follow log Caddy                          |
-| `fpostgres`   | Follow log PostgreSQL                     |
-| `fredis`      | Follow log Redis                          |
-| `fstats`      | Snapshot CPU/RAM container                |
-| `fhealth`     | Health check publik                       |
-| `flowdb`      | Masuk ke PostgreSQL                       |
+| Command       | Fungsi                                      |
+| ------------- | ------------------------------------------- |
+| `flow`        | Masuk ke `/opt/flowdesk`                    |
+| `flowcurrent` | Masuk ke release aktif                      |
+| `fps`         | Container Flowdesk yang hidup               |
+| `fpa`         | Semua container Flowdesk termasuk yang mati |
+| `fapi`        | Follow 100 log API terakhir                 |
+| `fweb`        | Follow log web                              |
+| `fworker`     | Follow log worker                           |
+| `fscheduler`  | Follow log scheduler                        |
+| `fingress`    | Follow log ingress                          |
+| `fcaddy`      | Follow log Caddy                            |
+| `fpostgres`   | Follow log PostgreSQL                       |
+| `fredis`      | Follow log Redis                            |
+| `fstats`      | Snapshot CPU/RAM container                  |
+| `fhealth`     | Health check publik                         |
+| `flowdb`      | Masuk ke PostgreSQL                         |
 
 Verifikasi setelah pemasangan:
 
@@ -1457,7 +1457,7 @@ KEYS *
 
 Juga hindari:
 
-- menghapus `/opt/wabrix`, release, volume, atau database directory secara manual;
+- menghapus `/opt/flowdesk`, release, volume, atau database directory secara manual;
 - menonaktifkan firewall atau SSH password/key protection secara membabi buta;
 - membuka `5432`/`6379` ke seluruh internet;
 - menempelkan `.env`, database URL, token, atau private key ke chat/ticket;
@@ -1482,4 +1482,4 @@ Sebelum menyatakan masalah selesai:
 
 ---
 
-Dokumen ini adalah panduan operasional untuk konfigurasi Wabrix yang diketahui saat dibuat. Jika nama container, domain, endpoint, folder release, atau deployment workflow berubah, perbarui guide agar tetap menjadi sumber referensi yang akurat.
+Dokumen ini adalah panduan operasional untuk konfigurasi Flowdesk yang diketahui saat dibuat. Jika nama container, domain, endpoint, folder release, atau deployment workflow berubah, perbarui guide agar tetap menjadi sumber referensi yang akurat.

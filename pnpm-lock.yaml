@@ -64,30 +64,30 @@ importers:
 
   apps/api:
     dependencies:
+      '@flowdesk/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@flowdesk/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@flowdesk/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@flowdesk/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@flowdesk/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
+      '@flowdesk/providers':
+        specifier: workspace:*
+        version: link:../../packages/providers
+      '@flowdesk/security':
+        specifier: workspace:*
+        version: link:../../packages/security
       '@socket.io/redis-adapter':
         specifier: ^8.3.0
         version: 8.3.0(socket.io-adapter@2.5.8)
-      '@wabrix/config':
-        specifier: workspace:*
-        version: link:../../packages/config
-      '@wabrix/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
-      '@wabrix/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@wabrix/domain':
-        specifier: workspace:*
-        version: link:../../packages/domain
-      '@wabrix/observability':
-        specifier: workspace:*
-        version: link:../../packages/observability
-      '@wabrix/providers':
-        specifier: workspace:*
-        version: link:../../packages/providers
-      '@wabrix/security':
-        specifier: workspace:*
-        version: link:../../packages/security
       express:
         specifier: ^5.1.0
         version: 5.2.1
@@ -122,16 +122,16 @@ importers:
 
   apps/ingress:
     dependencies:
-      '@wabrix/config':
+      '@flowdesk/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@wabrix/db':
+      '@flowdesk/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@wabrix/observability':
+      '@flowdesk/observability':
         specifier: workspace:*
         version: link:../../packages/observability
-      '@wabrix/security':
+      '@flowdesk/security':
         specifier: workspace:*
         version: link:../../packages/security
       express:
@@ -159,13 +159,13 @@ importers:
 
   apps/scheduler:
     dependencies:
-      '@wabrix/config':
+      '@flowdesk/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@wabrix/db':
+      '@flowdesk/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@wabrix/observability':
+      '@flowdesk/observability':
         specifier: workspace:*
         version: link:../../packages/observability
       pg:
@@ -181,6 +181,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@flowdesk/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@flowdesk/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@flowdesk/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@flowdesk/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@radix-ui/react-slot':
         specifier: ^1.3.3
         version: 1.3.3(@types/react@19.2.18)(react@19.2.8)
@@ -193,18 +205,6 @@ importers:
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@wabrix/config':
-        specifier: workspace:*
-        version: link:../../packages/config
-      '@wabrix/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
-      '@wabrix/domain':
-        specifier: workspace:*
-        version: link:../../packages/domain
-      '@wabrix/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -275,25 +275,25 @@ importers:
 
   apps/worker:
     dependencies:
-      '@wabrix/config':
+      '@flowdesk/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@wabrix/contracts':
+      '@flowdesk/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@wabrix/db':
+      '@flowdesk/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@wabrix/domain':
+      '@flowdesk/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@wabrix/observability':
+      '@flowdesk/observability':
         specifier: workspace:*
         version: link:../../packages/observability
-      '@wabrix/providers':
+      '@flowdesk/providers':
         specifier: workspace:*
         version: link:../../packages/providers
-      '@wabrix/security':
+      '@flowdesk/security':
         specifier: workspace:*
         version: link:../../packages/security
       pg:
@@ -324,15 +324,15 @@ importers:
 
   packages/db:
     dependencies:
+      '@flowdesk/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@flowdesk/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@prisma/client':
         specifier: 6.19.3
         version: 6.19.3(prisma@6.19.3(magicast@0.3.5)(typescript@5.9.3))(typescript@5.9.3)
-      '@wabrix/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      '@wabrix/domain':
-        specifier: workspace:*
-        version: link:../domain
       pg:
         specifier: 8.16.3
         version: 8.16.3

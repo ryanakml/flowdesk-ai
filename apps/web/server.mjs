@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
-import { loadHttpConfig } from "@wabrix/config";
+import { loadHttpConfig } from "@flowdesk/config";
 import sirv from "sirv";
 
 const config = loadHttpConfig("web", 3000);

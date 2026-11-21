@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { Conversation } from "@wabrix/contracts";
-import { Skeleton } from "@wabrix/ui";
+import type { Conversation } from "@flowdesk/contracts";
+import { Skeleton } from "@flowdesk/ui";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { Card } from "../../../components/ui/card.js";
 import { getConversation, listConversations } from "../../../api.js";

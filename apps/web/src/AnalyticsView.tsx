@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { Button } from "@wabrix/ui";
+import { Button } from "@flowdesk/ui";
 import {
   type AnalyticsMetricsClientResponse,
   exportAnalyticsReportApi,
@@ -74,7 +74,7 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `wabrix-analytics-${orgId}.csv`;
+      a.download = `flowdesk-analytics-${orgId}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

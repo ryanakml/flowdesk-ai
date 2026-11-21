@@ -13,7 +13,7 @@ describe("MockIdentityProvider", () => {
     expect(claims).toEqual({
       provider: "mock",
       subject: "mock|operator",
-      email: "operator@wabrix.dev",
+      email: "operator@flowdesk.dev",
       displayName: "Operator",
       emailVerified: true
     });
@@ -21,11 +21,11 @@ describe("MockIdentityProvider", () => {
 
   it("extracts specific user from user: code prefix", async () => {
     const claims = await provider.exchangeAuthorizationCode({
-      code: "user:alice@wabrix.dev",
+      code: "user:alice@flowdesk.dev",
       codeVerifier: "verifier",
       redirectUri: "http://localhost/callback"
     });
-    expect(claims.email).toBe("alice@wabrix.dev");
+    expect(claims.email).toBe("alice@flowdesk.dev");
     expect(claims.displayName).toBe("Alice");
     expect(claims.subject).toBe("mock|alice");
   });
@@ -44,7 +44,7 @@ describe("MockIdentityProvider", () => {
 describe("OidcIdentityProvider", () => {
   it("exchanges code and extracts claims from id_token", async () => {
     const provider = new OidcIdentityProvider({
-      issuer: "https://auth.wabrix.dev/",
+      issuer: "https://auth.flowdesk.dev/",
       clientId: "client-123",
       clientSecret: "secret-456"
     });
@@ -53,7 +53,7 @@ describe("OidcIdentityProvider", () => {
     const payload = Buffer.from(
       JSON.stringify({
         sub: "auth0|user1",
-        email: "user1@wabrix.dev",
+        email: "user1@flowdesk.dev",
         name: "User One",
         email_verified: true
       })
@@ -68,13 +68,13 @@ describe("OidcIdentityProvider", () => {
     const claims = await provider.exchangeAuthorizationCode({
       code: "auth-code",
       codeVerifier: "verifier",
-      redirectUri: "https://app.wabrix.dev/callback"
+      redirectUri: "https://app.flowdesk.dev/callback"
     });
 
     expect(claims).toEqual({
       provider: "oidc",
       subject: "auth0|user1",
-      email: "user1@wabrix.dev",
+      email: "user1@flowdesk.dev",
       displayName: "User One",
       emailVerified: true
     });
@@ -82,7 +82,7 @@ describe("OidcIdentityProvider", () => {
 
   it("throws when token endpoint fails", async () => {
     const provider = new OidcIdentityProvider({
-      issuer: "https://auth.wabrix.dev/",
+      issuer: "https://auth.flowdesk.dev/",
       clientId: "client-123",
       clientSecret: "secret-456"
     });
@@ -97,7 +97,7 @@ describe("OidcIdentityProvider", () => {
       provider.exchangeAuthorizationCode({
         code: "bad-code",
         codeVerifier: "verifier",
-        redirectUri: "https://app.wabrix.dev/callback"
+        redirectUri: "https://app.flowdesk.dev/callback"
       })
     ).rejects.toThrow("OIDC token exchange failed (401)");
   });

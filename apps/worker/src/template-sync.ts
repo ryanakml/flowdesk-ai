@@ -1,11 +1,11 @@
-import { computeTemplatePayloadHash, validateTemplateComponents } from "@wabrix/domain";
+import { computeTemplatePayloadHash, validateTemplateComponents } from "@flowdesk/domain";
 import {
   type DbClient,
   getTemplateSyncCursor,
   idempotentSyncTemplate,
   setTemplateSyncCursor
-} from "@wabrix/db";
-import { type WhatsAppProvider, WhatsAppProviderError } from "@wabrix/providers";
+} from "@flowdesk/db";
+import { type WhatsAppProvider, WhatsAppProviderError } from "@flowdesk/providers";
 
 export interface SyncWhatsAppTemplatesParams {
   organizationId: string;

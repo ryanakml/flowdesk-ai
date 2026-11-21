@@ -1,29 +1,29 @@
 -- Migration 0016: M3 Media Lifecycle — Deletion, Tombstoning, and Retention
--- Adds soft-deletion columns to wabrix.attachments for retention policy enforcement.
+-- Adds soft-deletion columns to flowdesk.attachments for retention policy enforcement.
 
-ALTER TABLE wabrix.attachments
+ALTER TABLE flowdesk.attachments
   ADD COLUMN IF NOT EXISTS deleted_at timestamptz,
   ADD COLUMN IF NOT EXISTS deletion_reason text;
 
 -- Index for retention expiry job: quickly find expired, non-deleted attachments
 CREATE INDEX IF NOT EXISTS idx_attachments_org_status_deleted
-  ON wabrix.attachments (organization_id, status, deleted_at)
+  ON flowdesk.attachments (organization_id, status, deleted_at)
   WHERE deleted_at IS NULL;
 
 -- Index for cleanup reconciliation: recently deleted attachments
 CREATE INDEX IF NOT EXISTS idx_attachments_deleted_at
-  ON wabrix.attachments (deleted_at)
+  ON flowdesk.attachments (deleted_at)
   WHERE deleted_at IS NOT NULL;
 
-ALTER TABLE wabrix.attachments OWNER TO wabrix_migrator;
-ALTER TABLE wabrix.attachment_upload_sessions OWNER TO wabrix_migrator;
+ALTER TABLE flowdesk.attachments OWNER TO flowdesk_migrator;
+ALTER TABLE flowdesk.attachment_upload_sessions OWNER TO flowdesk_migrator;
 GRANT SELECT, INSERT, UPDATE, DELETE ON
-  wabrix.attachments, wabrix.attachment_upload_sessions TO wabrix_runtime;
-GRANT SELECT ON wabrix.attachments, wabrix.attachment_upload_sessions TO wabrix_reporting;
+  flowdesk.attachments, flowdesk.attachment_upload_sessions TO flowdesk_runtime;
+GRANT SELECT ON flowdesk.attachments, flowdesk.attachment_upload_sessions TO flowdesk_reporting;
 
-GRANT SELECT ON wabrix.attachments TO wabrix_system;
+GRANT SELECT ON flowdesk.attachments TO flowdesk_system;
 
-CREATE OR REPLACE FUNCTION wabrix.claim_attachment_scan_events(input_limit integer)
+CREATE OR REPLACE FUNCTION flowdesk.claim_attachment_scan_events(input_limit integer)
 RETURNS TABLE (
   id uuid,
   organization_id uuid,
@@ -38,7 +38,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, wabrix
+SET search_path = pg_catalog, flowdesk
 AS $$
 BEGIN
   IF input_limit < 1 OR input_limit > 100 THEN
@@ -47,7 +47,7 @@ BEGIN
   RETURN QUERY
   WITH candidates AS (
     SELECT event.id
-    FROM wabrix.outbox_events AS event
+    FROM flowdesk.outbox_events AS event
     WHERE event.event_type = 'attachment.uploaded'
       AND event.published_at IS NULL
       AND event.available_at <= clock_timestamp()
@@ -56,7 +56,7 @@ BEGIN
     FOR UPDATE SKIP LOCKED
     LIMIT input_limit
   ), claimed AS (
-    UPDATE wabrix.outbox_events AS event
+    UPDATE flowdesk.outbox_events AS event
     SET claim_token = gen_random_uuid(),
         claimed_until = clock_timestamp() + interval '30 seconds'
     FROM candidates
@@ -71,11 +71,11 @@ BEGIN
   FROM claimed;
 END $$;
 
-ALTER FUNCTION wabrix.claim_attachment_scan_events(integer) OWNER TO wabrix_system;
-REVOKE ALL ON FUNCTION wabrix.claim_attachment_scan_events(integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION wabrix.claim_attachment_scan_events(integer) TO wabrix_runtime;
+ALTER FUNCTION flowdesk.claim_attachment_scan_events(integer) OWNER TO flowdesk_system;
+REVOKE ALL ON FUNCTION flowdesk.claim_attachment_scan_events(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION flowdesk.claim_attachment_scan_events(integer) TO flowdesk_runtime;
 
-CREATE OR REPLACE FUNCTION wabrix.list_attachment_retention_candidates(
+CREATE OR REPLACE FUNCTION flowdesk.list_attachment_retention_candidates(
   clean_before timestamptz,
   rejected_before timestamptz,
   candidate_limit integer DEFAULT 100
@@ -89,11 +89,11 @@ RETURNS TABLE (
 )
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = pg_catalog, wabrix
+SET search_path = pg_catalog, flowdesk
 AS $$
   SELECT attachment.id, attachment.organization_id, attachment.storage_key,
          attachment.status, attachment.created_at
-  FROM wabrix.attachments AS attachment
+  FROM flowdesk.attachments AS attachment
   WHERE attachment.deleted_at IS NULL
     AND (
       (attachment.status = 'rejected' AND attachment.created_at < rejected_before)
@@ -103,9 +103,9 @@ AS $$
   LIMIT GREATEST(1, LEAST(candidate_limit, 500))
 $$;
 
-ALTER FUNCTION wabrix.list_attachment_retention_candidates(timestamptz, timestamptz, integer)
-  OWNER TO wabrix_system;
-REVOKE ALL ON FUNCTION wabrix.list_attachment_retention_candidates(timestamptz, timestamptz, integer)
+ALTER FUNCTION flowdesk.list_attachment_retention_candidates(timestamptz, timestamptz, integer)
+  OWNER TO flowdesk_system;
+REVOKE ALL ON FUNCTION flowdesk.list_attachment_retention_candidates(timestamptz, timestamptz, integer)
   FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION wabrix.list_attachment_retention_candidates(timestamptz, timestamptz, integer)
-  TO wabrix_runtime;
+GRANT EXECUTE ON FUNCTION flowdesk.list_attachment_retention_candidates(timestamptz, timestamptz, integer)
+  TO flowdesk_runtime;

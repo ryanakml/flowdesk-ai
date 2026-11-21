@@ -7,7 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 
 export function ThemeToggle() {
   const { setTheme } = useTheme();

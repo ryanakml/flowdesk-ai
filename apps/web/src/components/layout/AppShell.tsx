@@ -4,7 +4,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { AppSidebar } from "./AppSidebar.js";
 import { Header } from "./Header.js";
 import { useAuth } from "../../features/auth/context.js";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@wabrix/ui";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@flowdesk/ui";
 
 interface AppShellProps {
   children: React.ReactNode;

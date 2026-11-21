@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "@wabrix/ui/styles/tokens.css";
+@import "@flowdesk/ui/styles/tokens.css";
 
 /* Shared UI lives outside the web workspace's automatic source scan. */
 @source "../../../packages/ui/src";

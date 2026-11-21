@@ -2,7 +2,7 @@
 
 ## Overview & Threat Model
 
-Wabrix enforces strict security controls for all customer and operator media attachments under **TM-006** (_Malicious attachment / SSRF / MIME Spoofing_) and **Capability `MEDIA-PIPE-001`** (_Milestone M3-06_).
+Flowdesk enforces strict security controls for all customer and operator media attachments under **TM-006** (_Malicious attachment / SSRF / MIME Spoofing_) and **Capability `MEDIA-PIPE-001`** (_Milestone M3-06_).
 
 Attachments must enter a **private quarantine** immediately upon registration and cannot be downloaded, served, or dispatched until asynchronous validation, checksum verification, and anti-malware scanning have succeeded.
 
@@ -10,7 +10,7 @@ Attachments must enter a **private quarantine** immediately upon registration an
 sequenceDiagram
     autonumber
     actor Operator as Operator / Client
-    participant API as Wabrix API
+    participant API as Flowdesk API
     participant DB as PostgreSQL (RLS)
     participant Storage as Private S3 (MinIO / AWS)
     participant Worker as Media Scanner Worker
@@ -47,7 +47,7 @@ sequenceDiagram
 ## 1. Storage Isolation & Key Structure
 
 1. **No Permanent Public URLs:**
-   - Attachments are stored exclusively in private S3 buckets (`wabrix-local` in local compose).
+   - Attachments are stored exclusively in private S3 buckets (`flowdesk-local` in local compose).
    - Storage keys are strictly tenant-isolated and unguessable:
      $$\text{key} = \text{org-}\{orgId\}\text{/quarantine/}\{attachmentId\}\text{/}\{randomUUID\}$$
 2. **Short-Lived Presigned PUT URLs:**

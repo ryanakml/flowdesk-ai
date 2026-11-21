@@ -6,7 +6,7 @@ import {
   type MessageDirection,
   type MessageSenderType,
   type MessageStatus
-} from "@wabrix/domain";
+} from "@flowdesk/domain";
 import type { DbClient } from "./auth.js";
 import { runInTenantTransaction, type TenantContext } from "./tenant-context.js";
 import { fanoutDeveloperWebhookEvents } from "./webhook-subscriptions.js";
@@ -116,7 +116,7 @@ export async function findOrCreateConversation(
        resolution_remaining_seconds AS "resolutionRemainingSeconds",
        version, last_message_at AS "lastMessageAt", last_inbound_at AS "lastInboundAt", metadata,
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.conversations
+     FROM flowdesk.conversations
      WHERE organization_id = $1 AND channel_id = $2 AND customer_phone = $3`,
     [input.organizationId, input.channelId, input.customerPhone]
   );
@@ -126,7 +126,7 @@ export async function findOrCreateConversation(
   }
 
   const insertRes = await client.query<ConversationRecord>(
-    `INSERT INTO wabrix.conversations
+    `INSERT INTO flowdesk.conversations
        (organization_id, channel_id, customer_phone, customer_name, metadata)
      VALUES ($1, $2, $3, $4, $5)
      ON CONFLICT (organization_id, channel_id, customer_phone)
@@ -203,7 +203,7 @@ export async function getConversationById(
        resolution_remaining_seconds AS "resolutionRemainingSeconds",
        version, last_message_at AS "lastMessageAt", last_inbound_at AS "lastInboundAt", metadata,
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.conversations
+     FROM flowdesk.conversations
      WHERE organization_id = $1 AND id = $2`,
     [organizationId, id]
   );
@@ -228,7 +228,7 @@ export async function updateConversationStatus(
   assertValidConversationStatusTransition(current.status, targetStatus);
 
   const res = await client.query<ConversationRecord>(
-    `UPDATE wabrix.conversations
+    `UPDATE flowdesk.conversations
      SET status = $1, version = version + 1, updated_at = clock_timestamp()
      WHERE id = $2 AND organization_id = $3 AND version = $4
      RETURNING
@@ -264,7 +264,7 @@ export async function assignConversation(
   userId: string | null
 ): Promise<ConversationRecord> {
   const res = await client.query<ConversationRecord>(
-    `UPDATE wabrix.conversations
+    `UPDATE flowdesk.conversations
      SET assigned_to_user_id = $1, version = version + 1, updated_at = clock_timestamp()
      WHERE id = $2 AND organization_id = $3 AND version = $4
      RETURNING
@@ -298,7 +298,7 @@ export async function createMessage(
   input: CreateMessageInput
 ): Promise<MessageRecord> {
   const insertRes = await client.query<MessageRecord>(
-    `INSERT INTO wabrix.messages
+    `INSERT INTO flowdesk.messages
        (organization_id, conversation_id, channel_id, direction, sender_type,
         sender_user_id, provider_message_id, content, status, metadata, sent_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
@@ -331,7 +331,7 @@ export async function createMessage(
   if (input.direction === "inbound") {
     const isCustomerInbound = input.senderType === "customer";
     await client.query(
-      `UPDATE wabrix.conversations
+      `UPDATE flowdesk.conversations
        SET last_message_at = clock_timestamp(),
            last_inbound_at = CASE WHEN $3 = true THEN COALESCE($4, clock_timestamp()) ELSE last_inbound_at END,
            status = CASE WHEN status IN ('resolved', 'closed') THEN 'open' ELSE status END,
@@ -341,7 +341,7 @@ export async function createMessage(
     );
   } else {
     await client.query(
-      `UPDATE wabrix.conversations
+      `UPDATE flowdesk.conversations
        SET last_message_at = clock_timestamp(), updated_at = clock_timestamp()
        WHERE id = $1 AND organization_id = $2`,
       [input.conversationId, input.organizationId]
@@ -375,7 +375,7 @@ export async function updateMessageStatus(
        content, status, error_detail AS "errorDetail", metadata,
        sent_at AS "sentAt", delivered_at AS "deliveredAt", read_at AS "readAt",
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.messages
+     FROM flowdesk.messages
      WHERE id = $1 AND organization_id = $2`,
     [messageId, organizationId]
   );
@@ -388,7 +388,7 @@ export async function updateMessageStatus(
   assertValidMessageStatusTransition(current.status, targetStatus);
 
   const updateRes = await client.query<MessageRecord>(
-    `UPDATE wabrix.messages
+    `UPDATE flowdesk.messages
      SET status = $1,
          provider_message_id = COALESCE($3, provider_message_id),
          sent_at = COALESCE($4, sent_at),
@@ -432,7 +432,7 @@ export async function getMessageById(
        content, status, error_detail AS "errorDetail", metadata,
        sent_at AS "sentAt", delivered_at AS "deliveredAt", read_at AS "readAt",
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.messages
+     FROM flowdesk.messages
      WHERE organization_id = $1 AND id = $2
      LIMIT 1`,
     [organizationId, messageId]
@@ -457,7 +457,7 @@ export async function listMessagesByConversation(
        content, status, error_detail AS "errorDetail", metadata,
        sent_at AS "sentAt", delivered_at AS "deliveredAt", read_at AS "readAt",
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.messages
+     FROM flowdesk.messages
      WHERE organization_id = $1 AND conversation_id = $2
      ORDER BY created_at ASC
      LIMIT $3`,
@@ -542,7 +542,7 @@ export async function listConversations(
       resolution_remaining_seconds AS "resolutionRemainingSeconds",
       version, last_message_at AS "lastMessageAt", last_inbound_at AS "lastInboundAt", metadata,
       created_at AS "createdAt", updated_at AS "updatedAt"
-    FROM wabrix.conversations
+    FROM flowdesk.conversations
     WHERE ${conditions.join(" AND ")}
     ORDER BY last_message_at DESC, id DESC
     LIMIT $${limitIdx}`;
@@ -610,7 +610,7 @@ export async function updateConversation(
   const verIdx = values.length;
 
   const sql = `
-    UPDATE wabrix.conversations
+    UPDATE flowdesk.conversations
     SET ${setClauses.join(", ")}
     WHERE id = $${idIdx} AND organization_id = $${orgIdx} AND version = $${verIdx}
     RETURNING
@@ -707,7 +707,7 @@ export async function createOutboundMessageWithOutbox(
   };
 
   await client.query(
-    `INSERT INTO wabrix.outbox_events
+    `INSERT INTO flowdesk.outbox_events
        (organization_id, aggregate_type, aggregate_id, event_type, payload, correlation_id)
      VALUES ($1, 'message', $2, 'message.outbound.created', $3, $4)`,
     [input.organizationId, message.id, JSON.stringify(outboxPayload), input.correlationId ?? null]
@@ -756,7 +756,7 @@ export async function getOutboundMessageByBotRun(
        content, status, error_detail AS "errorDetail", metadata,
        sent_at AS "sentAt", delivered_at AS "deliveredAt", read_at AS "readAt",
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.messages
+     FROM flowdesk.messages
      WHERE organization_id = $1 AND direction = 'outbound'
        AND metadata->>'aiBotRunId' = $2
      ORDER BY created_at DESC LIMIT 1`,
@@ -797,7 +797,7 @@ export async function claimUnpublishedOutboxEvents<TPayload = Record<string, unk
     causation_id: string | null;
     occurred_at: Date;
     attempts: number;
-  }>(`SELECT * FROM wabrix.claim_outbox_events($1::text, $2::integer)`, [eventType, limit]);
+  }>(`SELECT * FROM flowdesk.claim_outbox_events($1::text, $2::integer)`, [eventType, limit]);
 
   return res.rows.map((row) => ({
     id: row.id,
@@ -818,7 +818,7 @@ export async function claimUnpublishedOutboxEvents<TPayload = Record<string, unk
  */
 export async function markOutboxEventPublished(client: DbClient, eventId: string): Promise<void> {
   await client.query(
-    `UPDATE wabrix.outbox_events
+    `UPDATE flowdesk.outbox_events
      SET published_at = clock_timestamp()
          , claimed_until = NULL
          , claim_token = NULL
@@ -838,7 +838,7 @@ export async function recordOutboxEventFailure(
   terminal = false
 ): Promise<void> {
   await client.query(
-    `UPDATE wabrix.outbox_events
+    `UPDATE flowdesk.outbox_events
      SET attempts = attempts + 1,
          last_error = $2,
          published_at = CASE WHEN $3 = true THEN clock_timestamp() ELSE published_at END,

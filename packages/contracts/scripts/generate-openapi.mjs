@@ -9,9 +9,9 @@ export function buildOpenApiSpec() {
   return {
     openapi: "3.1.0",
     info: {
-      title: "Wabrix API",
+      title: "FlowDesk API",
       version: "1.0.0",
-      description: "Wabrix secure multi-tenant customer engagement API."
+      description: "FlowDesk secure multi-tenant customer engagement API."
     },
     servers: [
       {
@@ -19,7 +19,7 @@ export function buildOpenApiSpec() {
         description: "Local Development API Server"
       },
       {
-        url: "https://api.wabrix.dev",
+        url: "https://api.flowdesk.dev",
         description: "Production API Server"
       }
     ],
@@ -1736,7 +1736,7 @@ if (process.argv.includes("--check")) {
     const existingObj = JSON.parse(existing);
     if (JSON.stringify(existingObj) !== JSON.stringify(spec)) {
       console.error(
-        `Error: OpenAPI specification drift detected in docs/api/openapi.json. Run 'pnpm --filter @wabrix/contracts generate:openapi' to regenerate.`
+        `Error: OpenAPI specification drift detected in docs/api/openapi.json. Run 'pnpm --filter @flowdesk/contracts generate:openapi' to regenerate.`
       );
       process.exit(1);
     }

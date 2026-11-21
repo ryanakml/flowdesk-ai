@@ -1,6 +1,6 @@
 # Configuration contract
 
-All processes read environment variables through `@wabrix/config`; direct reads are limited to bootstrapping a role-specific port before schema validation. Invalid values abort startup before accepting work. Local defaults are permitted only where they are harmless; secrets never receive code defaults.
+All processes read environment variables through `@flowdesk/config`; direct reads are limited to bootstrapping a role-specific port before schema validation. Invalid values abort startup before accepting work. Local defaults are permitted only where they are harmless; secrets never receive code defaults.
 
 `.env.example` is the canonical local inventory and contains synthetic local-only values. Production secrets must arrive as secret-manager references or injected runtime values, never source, image layers, Terraform state, client bundles, or logs. A new variable requires schema, example/inventory, owner, sensitivity, rotation behavior, and tests in the same change.
 

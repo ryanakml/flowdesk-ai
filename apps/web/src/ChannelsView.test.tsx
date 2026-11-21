@@ -135,8 +135,8 @@ describe("ChannelsView WhatsApp connection", () => {
             {
               attemptId,
               state: "state-value-with-more-than-thirty-two-characters",
-              appId: "wabrix-meta-app-id",
-              configId: "wabrix-embedded-config-id",
+              appId: "flowdesk-meta-app-id",
+              configId: "flowdesk-embedded-config-id",
               expiresAt: new Date(Date.now() + 600000).toISOString()
             },
             201

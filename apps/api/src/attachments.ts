@@ -5,7 +5,7 @@ import {
   CompleteUploadRequestSchema,
   AttachmentDetailResponseSchema,
   GenerateDownloadUrlResponseSchema
-} from "@wabrix/contracts";
+} from "@flowdesk/contracts";
 import {
   type DbClient,
   createAttachmentUploadSession,
@@ -13,9 +13,9 @@ import {
   completeAttachmentUploadSession,
   runInTenantTransaction,
   type AttachmentRecord
-} from "@wabrix/db";
-import { ALLOWED_MIME_TYPES, getMediaSizeLimit } from "@wabrix/domain";
-import { type ObjectStore, InMemoryObjectStore } from "@wabrix/providers";
+} from "@flowdesk/db";
+import { ALLOWED_MIME_TYPES, getMediaSizeLimit } from "@flowdesk/domain";
+import { type ObjectStore, InMemoryObjectStore } from "@flowdesk/providers";
 import { type Request, type Response, Router } from "express";
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createRequireOrgPermissionMiddleware } from "./organizations.js";
@@ -33,7 +33,7 @@ function sendProblem(
   detail: string
 ) {
   const problem: Problem = {
-    type: `https://wabrix.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
+    type: `https://flowdesk.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
     title,
     status,
     code,

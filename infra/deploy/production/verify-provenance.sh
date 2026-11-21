@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 source_sha=${1:-}
 output_file=${2:-artifacts/provenance/image-digests.json}
-image_family=${3:-wabrix}
+image_family=${3:-flowdesk}
 
 if [[ -z ${source_sha} ]]; then
   echo "::error::Source SHA argument is required." >&2
@@ -14,8 +14,8 @@ if [[ ! ${source_sha} =~ ^[0-9a-f]{40}$ ]]; then
   exit 1
 fi
 case ${image_family} in
-  wabrix) ;;
-  *) echo "::error::Image family must be wabrix." >&2; exit 1 ;;
+  wabrix|flowdesk) ;;
+  *) echo "::error::Image family must be wabrix or flowdesk." >&2; exit 1 ;;
 esac
 
 apps=(web api ingress worker scheduler migrator)
@@ -24,7 +24,7 @@ for app in "${apps[@]}"; do
   repository="ghcr.io/ryanakml/${image_family}-${app}"
   image_tag="${repository}:${source_sha}"
   digest=""
-  if [[ ${WABRIX_MOCK_PROVENANCE:-false} == true ]]; then
+  if [[ ${FLOWDESK_MOCK_PROVENANCE:-false} == true ]]; then
     digest=$(node -e 'console.log("sha256:" + require("crypto").createHash("sha256").update(process.argv[1]).digest("hex"))' "${image_tag}")
   else
     # Resolve the registry manifest/index digest, never the image config digest.

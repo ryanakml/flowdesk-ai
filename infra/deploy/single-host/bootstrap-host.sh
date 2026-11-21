@@ -7,7 +7,7 @@ if [[ ${EUID} -ne 0 ]]; then
 fi
 
 deploy_public_key=${1:-}
-deploy_user=${2:-wabrix}
+deploy_user=${2:-flowdesk}
 if [[ ! ${deploy_public_key} =~ ^ssh-ed25519\  ]]; then
   echo "usage: bootstrap-host.sh 'ssh-ed25519 AAAA... deployment-key' [deploy-user]" >&2
   exit 1
@@ -40,7 +40,7 @@ printf '%s\n' "${deploy_public_key}" > "${deploy_home}/.ssh/authorized_keys"
 chown "${deploy_user}:${deploy_group}" "${deploy_home}/.ssh/authorized_keys"
 chmod 0600 "${deploy_home}/.ssh/authorized_keys"
 
-install -d -m 0750 -o "${deploy_user}" -g "${deploy_group}" /opt/wabrix/releases /opt/wabrix/shared
+install -d -m 0750 -o "${deploy_user}" -g "${deploy_group}" /opt/flowdesk/releases /opt/flowdesk/shared
 install -d -m 0755 /etc/docker
 printf '%s\n' '{"log-driver":"local","log-opts":{"max-size":"10m","max-file":"3"},"live-restore":true}' > /etc/docker/daemon.json
 systemctl enable --now docker fail2ban

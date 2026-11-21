@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Wabrix Production Compute Workload Deployment Controller (M5-07 / #181, #205)
+# FlowDesk Production Compute Workload Deployment Controller (M5-07 / #181, #205)
 # Deploys exact verified immutable sha256 image digests to AWS ECS Fargate workloads.
 # Verifies that running tasks match the expected digests and pass target health checks
 # BEFORE any traffic shifting occurs.
@@ -25,7 +25,7 @@ case "${SLICE}" in
     ;;
 esac
 
-echo "Deploying verified image digests to Wabrix production ${SLICE} workload..."
+echo "Deploying verified image digests to FlowDesk production ${SLICE} workload..."
 
 if [[ ! -f "${DIGESTS_FILE}" ]]; then
   echo "::error::Digests file '${DIGESTS_FILE}' not found. Cannot deploy unverified workload." >&2
@@ -52,7 +52,7 @@ node -e "
 " "${DIGESTS_FILE}"
 
 # Mock compute adapter for offline unit/integration test execution
-if [[ "${WABRIX_MOCK_COMPUTE_CONTROLLER:-false}" == "true" ]]; then
+if [[ "${FLOWDESK_MOCK_COMPUTE_CONTROLLER:-false}" == "true" ]]; then
   echo "[MOCK] Executing mock compute controller for ${SLICE} workload..."
   
   if [[ "${MOCK_WORKLOAD_FAIL:-false}" == "true" ]]; then
@@ -60,7 +60,7 @@ if [[ "${WABRIX_MOCK_COMPUTE_CONTROLLER:-false}" == "true" ]]; then
     exit 1
   fi
 
-  MOCK_STATE_FILE="${MOCK_WORKLOAD_STATE_FILE:-/tmp/wabrix-workload-mock-state.json}"
+  MOCK_STATE_FILE="${MOCK_WORKLOAD_STATE_FILE:-/tmp/flowdesk-workload-mock-state.json}"
   
   node -e "
     const fs = require('fs');
@@ -73,7 +73,7 @@ if [[ "${WABRIX_MOCK_COMPUTE_CONTROLLER:-false}" == "true" ]]; then
     // Simulate digest mismatch if requested by test
     let runningDigests = { ...digests };
     if (process.env.MOCK_DIGEST_MISMATCH === 'true') {
-      runningDigests['api'] = 'ghcr.io/ryanakml/wabrix-api@sha256:0000000000000000000000000000000000000000000000000000000000000000';
+      runningDigests['api'] = 'ghcr.io/ryanakml/flowdesk-api@sha256:0000000000000000000000000000000000000000000000000000000000000000';
     }
 
     // Verify running digest matches expected
@@ -107,7 +107,7 @@ if [[ -z "${ECS_CLUSTER_NAME:-}" ]]; then
   MISSING_VARS+=("ECS_CLUSTER_NAME")
 fi
 
-ECS_SERVICE_NAME="${ECS_SERVICE_NAME:-wabrix-production-${SLICE}-api}"
+ECS_SERVICE_NAME="${ECS_SERVICE_NAME:-flowdesk-production-${SLICE}-api}"
 PROD_TG_ARN=""
 if [[ "${SLICE}" == "canary" ]]; then
   PROD_TG_ARN="${PROD_CANARY_TG_ARN:-}"

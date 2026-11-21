@@ -1,10 +1,10 @@
 -- M2 completion hardening: durable domain history, contacts, outbound intents,
 -- tenant policies, and provider-message idempotency.
 
-CREATE TABLE wabrix.contacts (
+CREATE TABLE flowdesk.contacts (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid NOT NULL REFERENCES wabrix.organizations(id) ON DELETE RESTRICT,
-  channel_id uuid NOT NULL REFERENCES wabrix.channels(id) ON DELETE RESTRICT,
+  organization_id uuid NOT NULL REFERENCES flowdesk.organizations(id) ON DELETE RESTRICT,
+  channel_id uuid NOT NULL REFERENCES flowdesk.channels(id) ON DELETE RESTRICT,
   phone_number text NOT NULL CHECK (length(phone_number) BETWEEN 5 AND 30),
   display_name text,
   metadata jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(metadata) = 'object'),
@@ -13,33 +13,33 @@ CREATE TABLE wabrix.contacts (
   UNIQUE (organization_id, channel_id, phone_number)
 );
 
-CREATE INDEX contacts_org_phone_idx ON wabrix.contacts (organization_id, phone_number);
+CREATE INDEX contacts_org_phone_idx ON flowdesk.contacts (organization_id, phone_number);
 
-ALTER TABLE wabrix.conversations ADD COLUMN contact_id uuid;
+ALTER TABLE flowdesk.conversations ADD COLUMN contact_id uuid;
 
-INSERT INTO wabrix.contacts (organization_id, channel_id, phone_number, display_name)
+INSERT INTO flowdesk.contacts (organization_id, channel_id, phone_number, display_name)
 SELECT organization_id, channel_id, customer_phone, max(customer_name)
-FROM wabrix.conversations
+FROM flowdesk.conversations
 GROUP BY organization_id, channel_id, customer_phone
 ON CONFLICT (organization_id, channel_id, phone_number) DO NOTHING;
 
-UPDATE wabrix.conversations AS conversation
+UPDATE flowdesk.conversations AS conversation
 SET contact_id = contact.id
-FROM wabrix.contacts AS contact
+FROM flowdesk.contacts AS contact
 WHERE contact.organization_id = conversation.organization_id
   AND contact.channel_id = conversation.channel_id
   AND contact.phone_number = conversation.customer_phone;
 
-ALTER TABLE wabrix.conversations ALTER COLUMN contact_id SET NOT NULL;
-ALTER TABLE wabrix.conversations
+ALTER TABLE flowdesk.conversations ALTER COLUMN contact_id SET NOT NULL;
+ALTER TABLE flowdesk.conversations
   ADD CONSTRAINT conversations_contact_fk
-  FOREIGN KEY (contact_id) REFERENCES wabrix.contacts(id) ON DELETE RESTRICT;
-CREATE INDEX conversations_contact_idx ON wabrix.conversations (organization_id, contact_id);
+  FOREIGN KEY (contact_id) REFERENCES flowdesk.contacts(id) ON DELETE RESTRICT;
+CREATE INDEX conversations_contact_idx ON flowdesk.conversations (organization_id, contact_id);
 
-CREATE TABLE wabrix.message_status_events (
+CREATE TABLE flowdesk.message_status_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid NOT NULL REFERENCES wabrix.organizations(id) ON DELETE RESTRICT,
-  message_id uuid NOT NULL REFERENCES wabrix.messages(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES flowdesk.organizations(id) ON DELETE RESTRICT,
+  message_id uuid NOT NULL REFERENCES flowdesk.messages(id) ON DELETE CASCADE,
   status text NOT NULL CHECK (status IN ('queued', 'sent', 'delivered', 'read', 'failed')),
   provider_occurred_at timestamptz,
   error_detail text,
@@ -48,27 +48,27 @@ CREATE TABLE wabrix.message_status_events (
 );
 
 CREATE INDEX message_status_events_timeline_idx
-  ON wabrix.message_status_events (organization_id, message_id, created_at);
+  ON flowdesk.message_status_events (organization_id, message_id, created_at);
 
-CREATE TABLE wabrix.conversation_events (
+CREATE TABLE flowdesk.conversation_events (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid NOT NULL REFERENCES wabrix.organizations(id) ON DELETE RESTRICT,
-  conversation_id uuid NOT NULL REFERENCES wabrix.conversations(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES flowdesk.organizations(id) ON DELETE RESTRICT,
+  conversation_id uuid NOT NULL REFERENCES flowdesk.conversations(id) ON DELETE CASCADE,
   event_type text NOT NULL,
-  actor_user_id uuid REFERENCES wabrix.users(id) ON DELETE SET NULL,
+  actor_user_id uuid REFERENCES flowdesk.users(id) ON DELETE SET NULL,
   payload jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(payload) = 'object'),
   created_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );
 
 CREATE INDEX conversation_events_timeline_idx
-  ON wabrix.conversation_events (organization_id, conversation_id, created_at);
+  ON flowdesk.conversation_events (organization_id, conversation_id, created_at);
 
-CREATE TABLE wabrix.outbound_intents (
+CREATE TABLE flowdesk.outbound_intents (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid NOT NULL REFERENCES wabrix.organizations(id) ON DELETE RESTRICT,
-  message_id uuid NOT NULL UNIQUE REFERENCES wabrix.messages(id) ON DELETE CASCADE,
-  conversation_id uuid NOT NULL REFERENCES wabrix.conversations(id) ON DELETE CASCADE,
-  channel_id uuid NOT NULL REFERENCES wabrix.channels(id) ON DELETE RESTRICT,
+  organization_id uuid NOT NULL REFERENCES flowdesk.organizations(id) ON DELETE RESTRICT,
+  message_id uuid NOT NULL UNIQUE REFERENCES flowdesk.messages(id) ON DELETE CASCADE,
+  conversation_id uuid NOT NULL REFERENCES flowdesk.conversations(id) ON DELETE CASCADE,
+  channel_id uuid NOT NULL REFERENCES flowdesk.channels(id) ON DELETE RESTRICT,
   state text NOT NULL DEFAULT 'queued'
     CHECK (state IN ('queued', 'dispatching', 'sent', 'failed', 'reconcile_required')),
   attempt_count integer NOT NULL DEFAULT 0 CHECK (attempt_count >= 0),
@@ -81,22 +81,22 @@ CREATE TABLE wabrix.outbound_intents (
 );
 
 CREATE INDEX outbound_intents_dispatch_idx
-  ON wabrix.outbound_intents (organization_id, state, created_at);
+  ON flowdesk.outbound_intents (organization_id, state, created_at);
 
-INSERT INTO wabrix.message_status_events
+INSERT INTO flowdesk.message_status_events
   (organization_id, message_id, status, provider_occurred_at, error_detail, created_at)
 SELECT organization_id, id, status,
        CASE status WHEN 'sent' THEN sent_at WHEN 'delivered' THEN delivered_at
          WHEN 'read' THEN read_at ELSE NULL END,
        error_detail, created_at
-FROM wabrix.messages;
+FROM flowdesk.messages;
 
-INSERT INTO wabrix.conversation_events
+INSERT INTO flowdesk.conversation_events
   (organization_id, conversation_id, event_type, payload, created_at)
 SELECT organization_id, id, 'conversation.created', jsonb_build_object('status', status), created_at
-FROM wabrix.conversations;
+FROM flowdesk.conversations;
 
-INSERT INTO wabrix.outbound_intents
+INSERT INTO flowdesk.outbound_intents
   (organization_id, message_id, conversation_id, channel_id, state,
    provider_message_id, last_error, completed_at, created_at, updated_at)
 SELECT organization_id, id, conversation_id, channel_id,
@@ -104,32 +104,32 @@ SELECT organization_id, id, conversation_id, channel_id,
        provider_message_id, error_detail,
        CASE WHEN status = 'queued' THEN NULL ELSE updated_at END,
        created_at, updated_at
-FROM wabrix.messages
+FROM flowdesk.messages
 WHERE direction = 'outbound'
 ON CONFLICT (message_id) DO NOTHING;
 
 CREATE UNIQUE INDEX messages_org_provider_message_unique
-  ON wabrix.messages (organization_id, provider_message_id)
+  ON flowdesk.messages (organization_id, provider_message_id)
   WHERE provider_message_id IS NOT NULL;
 
-ALTER TABLE wabrix.outbox_events
+ALTER TABLE flowdesk.outbox_events
   ADD COLUMN available_at timestamptz NOT NULL DEFAULT clock_timestamp(),
   ADD COLUMN claimed_until timestamptz,
   ADD COLUMN claim_token uuid,
   ADD COLUMN dead_lettered_at timestamptz;
 
 CREATE INDEX outbox_events_claimable_idx
-  ON wabrix.outbox_events (event_type, available_at, occurred_at)
+  ON flowdesk.outbox_events (event_type, available_at, occurred_at)
   WHERE published_at IS NULL;
 
-CREATE OR REPLACE FUNCTION wabrix.sync_conversation_contact() RETURNS trigger
+CREATE OR REPLACE FUNCTION flowdesk.sync_conversation_contact() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE resolved_contact_id uuid;
 BEGIN
-  INSERT INTO wabrix.contacts (organization_id, channel_id, phone_number, display_name)
+  INSERT INTO flowdesk.contacts (organization_id, channel_id, phone_number, display_name)
   VALUES (NEW.organization_id, NEW.channel_id, NEW.customer_phone, NEW.customer_name)
   ON CONFLICT (organization_id, channel_id, phone_number)
-  DO UPDATE SET display_name = COALESCE(EXCLUDED.display_name, wabrix.contacts.display_name),
+  DO UPDATE SET display_name = COALESCE(EXCLUDED.display_name, flowdesk.contacts.display_name),
                 updated_at = clock_timestamp()
   RETURNING id INTO resolved_contact_id;
   NEW.contact_id := resolved_contact_id;
@@ -137,14 +137,14 @@ BEGIN
 END $$;
 
 CREATE TRIGGER conversations_sync_contact
-BEFORE INSERT OR UPDATE OF customer_phone, customer_name ON wabrix.conversations
-FOR EACH ROW EXECUTE FUNCTION wabrix.sync_conversation_contact();
+BEFORE INSERT OR UPDATE OF customer_phone, customer_name ON flowdesk.conversations
+FOR EACH ROW EXECUTE FUNCTION flowdesk.sync_conversation_contact();
 
-CREATE OR REPLACE FUNCTION wabrix.capture_message_lifecycle() RETURNS trigger
+CREATE OR REPLACE FUNCTION flowdesk.capture_message_lifecycle() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_OP = 'INSERT' OR NEW.status IS DISTINCT FROM OLD.status THEN
-    INSERT INTO wabrix.message_status_events
+    INSERT INTO flowdesk.message_status_events
       (organization_id, message_id, status, provider_occurred_at, error_detail)
     VALUES (
       NEW.organization_id, NEW.id, NEW.status,
@@ -154,12 +154,12 @@ BEGIN
     );
   END IF;
   IF TG_OP = 'INSERT' AND NEW.direction = 'outbound' THEN
-    INSERT INTO wabrix.outbound_intents
+    INSERT INTO flowdesk.outbound_intents
       (organization_id, message_id, conversation_id, channel_id)
     VALUES (NEW.organization_id, NEW.id, NEW.conversation_id, NEW.channel_id)
     ON CONFLICT (message_id) DO NOTHING;
   ELSIF TG_OP = 'UPDATE' AND NEW.direction = 'outbound' AND NEW.status IS DISTINCT FROM OLD.status THEN
-    UPDATE wabrix.outbound_intents
+    UPDATE flowdesk.outbound_intents
     SET state = CASE NEW.status WHEN 'queued' THEN 'queued' WHEN 'failed' THEN 'failed' ELSE 'sent' END,
         provider_message_id = COALESCE(NEW.provider_message_id, provider_message_id),
         last_error = NEW.error_detail,
@@ -171,23 +171,23 @@ BEGIN
 END $$;
 
 CREATE TRIGGER messages_capture_lifecycle
-AFTER INSERT OR UPDATE OF status ON wabrix.messages
-FOR EACH ROW EXECUTE FUNCTION wabrix.capture_message_lifecycle();
+AFTER INSERT OR UPDATE OF status ON flowdesk.messages
+FOR EACH ROW EXECUTE FUNCTION flowdesk.capture_message_lifecycle();
 
-CREATE OR REPLACE FUNCTION wabrix.capture_conversation_lifecycle() RETURNS trigger
+CREATE OR REPLACE FUNCTION flowdesk.capture_conversation_lifecycle() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
-    INSERT INTO wabrix.conversation_events (organization_id, conversation_id, event_type, payload)
+    INSERT INTO flowdesk.conversation_events (organization_id, conversation_id, event_type, payload)
     VALUES (NEW.organization_id, NEW.id, 'conversation.created', jsonb_build_object('status', NEW.status));
   ELSE
     IF NEW.status IS DISTINCT FROM OLD.status THEN
-      INSERT INTO wabrix.conversation_events (organization_id, conversation_id, event_type, payload)
+      INSERT INTO flowdesk.conversation_events (organization_id, conversation_id, event_type, payload)
       VALUES (NEW.organization_id, NEW.id, 'conversation.status_changed',
               jsonb_build_object('from', OLD.status, 'to', NEW.status));
     END IF;
     IF NEW.assigned_to_user_id IS DISTINCT FROM OLD.assigned_to_user_id THEN
-      INSERT INTO wabrix.conversation_events
+      INSERT INTO flowdesk.conversation_events
         (organization_id, conversation_id, event_type, actor_user_id, payload)
       VALUES (NEW.organization_id, NEW.id, 'conversation.assignment_changed',
               NEW.assigned_to_user_id,
@@ -198,66 +198,66 @@ BEGIN
 END $$;
 
 CREATE TRIGGER conversations_capture_lifecycle
-AFTER INSERT OR UPDATE OF status, assigned_to_user_id ON wabrix.conversations
-FOR EACH ROW EXECUTE FUNCTION wabrix.capture_conversation_lifecycle();
+AFTER INSERT OR UPDATE OF status, assigned_to_user_id ON flowdesk.conversations
+FOR EACH ROW EXECUTE FUNCTION flowdesk.capture_conversation_lifecycle();
 
-ALTER TABLE wabrix.contacts OWNER TO wabrix_migrator;
-ALTER TABLE wabrix.message_status_events OWNER TO wabrix_migrator;
-ALTER TABLE wabrix.conversation_events OWNER TO wabrix_migrator;
-ALTER TABLE wabrix.outbound_intents OWNER TO wabrix_migrator;
+ALTER TABLE flowdesk.contacts OWNER TO flowdesk_migrator;
+ALTER TABLE flowdesk.message_status_events OWNER TO flowdesk_migrator;
+ALTER TABLE flowdesk.conversation_events OWNER TO flowdesk_migrator;
+ALTER TABLE flowdesk.outbound_intents OWNER TO flowdesk_migrator;
 
 GRANT SELECT, INSERT, UPDATE, DELETE ON
-  wabrix.contacts, wabrix.message_status_events,
-  wabrix.conversation_events, wabrix.outbound_intents
-TO wabrix_runtime;
+  flowdesk.contacts, flowdesk.message_status_events,
+  flowdesk.conversation_events, flowdesk.outbound_intents
+TO flowdesk_runtime;
 GRANT SELECT ON
-  wabrix.contacts, wabrix.message_status_events,
-  wabrix.conversation_events, wabrix.outbound_intents
-TO wabrix_reporting;
+  flowdesk.contacts, flowdesk.message_status_events,
+  flowdesk.conversation_events, flowdesk.outbound_intents
+TO flowdesk_reporting;
 
-ALTER TABLE wabrix.contacts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.contacts FORCE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.message_status_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.message_status_events FORCE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.conversation_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.conversation_events FORCE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.outbound_intents ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.outbound_intents FORCE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.webhook_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.webhook_events FORCE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.contacts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.contacts FORCE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.message_status_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.message_status_events FORCE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.conversation_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.conversation_events FORCE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.outbound_intents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.outbound_intents FORCE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.webhook_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.webhook_events FORCE ROW LEVEL SECURITY;
 
-CREATE POLICY contacts_tenant ON wabrix.contacts
-  USING (organization_id = wabrix.current_organization_id())
-  WITH CHECK (organization_id = wabrix.current_organization_id());
-CREATE POLICY message_status_events_tenant ON wabrix.message_status_events
-  USING (organization_id = wabrix.current_organization_id())
-  WITH CHECK (organization_id = wabrix.current_organization_id());
-CREATE POLICY conversation_events_tenant ON wabrix.conversation_events
-  USING (organization_id = wabrix.current_organization_id())
-  WITH CHECK (organization_id = wabrix.current_organization_id());
-CREATE POLICY outbound_intents_tenant ON wabrix.outbound_intents
-  USING (organization_id = wabrix.current_organization_id())
-  WITH CHECK (organization_id = wabrix.current_organization_id());
-CREATE POLICY webhook_events_tenant ON wabrix.webhook_events
-  USING (organization_id = wabrix.current_organization_id())
-  WITH CHECK (organization_id = wabrix.current_organization_id());
+CREATE POLICY contacts_tenant ON flowdesk.contacts
+  USING (organization_id = flowdesk.current_organization_id())
+  WITH CHECK (organization_id = flowdesk.current_organization_id());
+CREATE POLICY message_status_events_tenant ON flowdesk.message_status_events
+  USING (organization_id = flowdesk.current_organization_id())
+  WITH CHECK (organization_id = flowdesk.current_organization_id());
+CREATE POLICY conversation_events_tenant ON flowdesk.conversation_events
+  USING (organization_id = flowdesk.current_organization_id())
+  WITH CHECK (organization_id = flowdesk.current_organization_id());
+CREATE POLICY outbound_intents_tenant ON flowdesk.outbound_intents
+  USING (organization_id = flowdesk.current_organization_id())
+  WITH CHECK (organization_id = flowdesk.current_organization_id());
+CREATE POLICY webhook_events_tenant ON flowdesk.webhook_events
+  USING (organization_id = flowdesk.current_organization_id())
+  WITH CHECK (organization_id = flowdesk.current_organization_id());
 
 -- Cross-tenant queue discovery is exposed only through narrow, non-login
 -- security-definer capabilities. Tenant business work still runs as
--- wabrix_runtime with FORCE RLS after an event has been claimed.
+-- flowdesk_runtime with FORCE RLS after an event has been claimed.
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'wabrix_system') THEN
-    CREATE ROLE wabrix_system NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT BYPASSRLS;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'flowdesk_system') THEN
+    CREATE ROLE flowdesk_system NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT BYPASSRLS;
   END IF;
 END $$;
 
-ALTER ROLE wabrix_system NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT BYPASSRLS;
-GRANT USAGE ON SCHEMA wabrix TO wabrix_system;
-GRANT SELECT ON wabrix.channels, wabrix.outbound_intents TO wabrix_system;
-GRANT SELECT, INSERT, UPDATE ON wabrix.webhook_events, wabrix.outbox_events TO wabrix_system;
+ALTER ROLE flowdesk_system NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT BYPASSRLS;
+GRANT USAGE ON SCHEMA flowdesk TO flowdesk_system;
+GRANT SELECT ON flowdesk.channels, flowdesk.outbound_intents TO flowdesk_system;
+GRANT SELECT, INSERT, UPDATE ON flowdesk.webhook_events, flowdesk.outbox_events TO flowdesk_system;
 
-CREATE OR REPLACE FUNCTION wabrix.claim_outbox_events(
+CREATE OR REPLACE FUNCTION flowdesk.claim_outbox_events(
   input_event_type text,
   input_limit integer
 ) RETURNS TABLE (
@@ -274,7 +274,7 @@ CREATE OR REPLACE FUNCTION wabrix.claim_outbox_events(
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, wabrix
+SET search_path = pg_catalog, flowdesk
 AS $$
 BEGIN
   IF input_event_type NOT IN ('webhook.received', 'message.outbound.created') THEN
@@ -287,7 +287,7 @@ BEGIN
   RETURN QUERY
   WITH candidates AS (
     SELECT event.id
-    FROM wabrix.outbox_events AS event
+    FROM flowdesk.outbox_events AS event
     WHERE event.event_type = input_event_type
       AND event.published_at IS NULL
       AND event.available_at <= clock_timestamp()
@@ -296,7 +296,7 @@ BEGIN
     FOR UPDATE SKIP LOCKED
     LIMIT input_limit
   ), claimed AS (
-    UPDATE wabrix.outbox_events AS event
+    UPDATE flowdesk.outbox_events AS event
     SET claim_token = gen_random_uuid(),
         claimed_until = clock_timestamp() + interval '30 seconds'
     FROM candidates
@@ -312,7 +312,7 @@ BEGIN
   FROM claimed;
 END $$;
 
-CREATE OR REPLACE FUNCTION wabrix.messaging_operational_snapshot()
+CREATE OR REPLACE FUNCTION flowdesk.messaging_operational_snapshot()
 RETURNS TABLE (
   pending_events bigint,
   oldest_event_age_seconds double precision,
@@ -321,28 +321,28 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = pg_catalog, wabrix
+SET search_path = pg_catalog, flowdesk
 AS $$
   SELECT
-    (SELECT count(*) FROM wabrix.outbox_events WHERE published_at IS NULL),
+    (SELECT count(*) FROM flowdesk.outbox_events WHERE published_at IS NULL),
     COALESCE((
       SELECT extract(epoch FROM clock_timestamp() - min(occurred_at))
-      FROM wabrix.outbox_events WHERE published_at IS NULL
+      FROM flowdesk.outbox_events WHERE published_at IS NULL
     ), 0),
-    (SELECT count(*) FROM wabrix.outbox_events WHERE dead_lettered_at IS NOT NULL)
+    (SELECT count(*) FROM flowdesk.outbox_events WHERE dead_lettered_at IS NOT NULL)
 $$;
 
-ALTER FUNCTION wabrix.claim_outbox_events(text, integer) OWNER TO wabrix_system;
-ALTER FUNCTION wabrix.messaging_operational_snapshot() OWNER TO wabrix_system;
-REVOKE ALL ON FUNCTION wabrix.claim_outbox_events(text, integer) FROM PUBLIC;
-REVOKE ALL ON FUNCTION wabrix.messaging_operational_snapshot() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION wabrix.claim_outbox_events(text, integer) TO wabrix_runtime;
-GRANT EXECUTE ON FUNCTION wabrix.messaging_operational_snapshot() TO wabrix_runtime;
+ALTER FUNCTION flowdesk.claim_outbox_events(text, integer) OWNER TO flowdesk_system;
+ALTER FUNCTION flowdesk.messaging_operational_snapshot() OWNER TO flowdesk_system;
+REVOKE ALL ON FUNCTION flowdesk.claim_outbox_events(text, integer) FROM PUBLIC;
+REVOKE ALL ON FUNCTION flowdesk.messaging_operational_snapshot() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION flowdesk.claim_outbox_events(text, integer) TO flowdesk_runtime;
+GRANT EXECUTE ON FUNCTION flowdesk.messaging_operational_snapshot() TO flowdesk_runtime;
 
 -- The public ingress does not know a tenant until it maps Meta's phone number
 -- ID. Expose one narrowly-scoped, atomic capability instead of granting the
 -- ingress process unrestricted cross-tenant table access.
-CREATE OR REPLACE FUNCTION wabrix.record_whatsapp_webhook(
+CREATE OR REPLACE FUNCTION flowdesk.record_whatsapp_webhook(
   input_payload_hash text,
   input_raw_payload text,
   input_phone_number_id text,
@@ -365,20 +365,20 @@ CREATE OR REPLACE FUNCTION wabrix.record_whatsapp_webhook(
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, wabrix
+SET search_path = pg_catalog, flowdesk
 AS $$
 DECLARE
   resolved_organization_id uuid;
-  stored_event wabrix.webhook_events%ROWTYPE;
+  stored_event flowdesk.webhook_events%ROWTYPE;
 BEGIN
   SELECT channel.organization_id
   INTO resolved_organization_id
-  FROM wabrix.channels AS channel
+  FROM flowdesk.channels AS channel
   WHERE channel.phone_number_id = input_phone_number_id
     AND channel.status != 'disconnected'
   LIMIT 1;
 
-  INSERT INTO wabrix.webhook_events AS webhook
+  INSERT INTO flowdesk.webhook_events AS webhook
     (provider, payload_hash, phone_number_id, organization_id, raw_payload, correlation_id)
   VALUES
     ('whatsapp', input_payload_hash, input_phone_number_id, resolved_organization_id,
@@ -388,14 +388,14 @@ BEGIN
 
   IF stored_event.id IS NULL THEN
     SELECT webhook.* INTO stored_event
-    FROM wabrix.webhook_events AS webhook
+    FROM flowdesk.webhook_events AS webhook
     WHERE webhook.provider = 'whatsapp'
       AND webhook.payload_hash = input_payload_hash;
     deduplicated := true;
   ELSE
     deduplicated := false;
     IF resolved_organization_id IS NOT NULL THEN
-      INSERT INTO wabrix.outbox_events
+      INSERT INTO flowdesk.outbox_events
         (organization_id, aggregate_type, aggregate_id, event_type,
          schema_version, payload, correlation_id)
       VALUES
@@ -416,7 +416,7 @@ BEGIN
     stored_event.created_at, stored_event.updated_at, deduplicated;
 END $$;
 
-REVOKE ALL ON FUNCTION wabrix.record_whatsapp_webhook(text, text, text, uuid) FROM PUBLIC;
-ALTER FUNCTION wabrix.record_whatsapp_webhook(text, text, text, uuid) OWNER TO wabrix_system;
-GRANT EXECUTE ON FUNCTION wabrix.record_whatsapp_webhook(text, text, text, uuid)
-TO wabrix_runtime;
+REVOKE ALL ON FUNCTION flowdesk.record_whatsapp_webhook(text, text, text, uuid) FROM PUBLIC;
+ALTER FUNCTION flowdesk.record_whatsapp_webhook(text, text, text, uuid) OWNER TO flowdesk_system;
+GRANT EXECUTE ON FUNCTION flowdesk.record_whatsapp_webhook(text, text, text, uuid)
+TO flowdesk_runtime;

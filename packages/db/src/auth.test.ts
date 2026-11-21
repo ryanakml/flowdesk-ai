@@ -24,7 +24,7 @@ describe("auth database repository", () => {
 
     expect(result.id).toBe("tx-1");
     expect(query).toHaveBeenCalledWith(
-      expect.stringContaining("INSERT INTO wabrix.oidc_authorization_transactions"),
+      expect.stringContaining("INSERT INTO flowdesk.oidc_authorization_transactions"),
       expect.arrayContaining(["state-hash", "nonce-hash", "code-verifier-hash", "/inbox"])
     );
   });
@@ -53,7 +53,7 @@ describe("auth database repository", () => {
       expiresAt: now
     });
     expect(query).toHaveBeenCalledWith(
-      expect.stringContaining("UPDATE wabrix.oidc_authorization_transactions"),
+      expect.stringContaining("UPDATE flowdesk.oidc_authorization_transactions"),
       ["state-hash"]
     );
   });
@@ -71,7 +71,7 @@ describe("auth database repository", () => {
       rows: [
         {
           user_id: "u-1",
-          email: "user@wabrix.dev",
+          email: "user@flowdesk.dev",
           display_name: "Test User",
           status: "active"
         }
@@ -82,13 +82,13 @@ describe("auth database repository", () => {
     const user = await findOrCreateUserFromIdentity(db, {
       provider: "auth0",
       subject: "auth0|123",
-      email: "user@wabrix.dev",
+      email: "user@flowdesk.dev",
       displayName: "Test User"
     });
 
     expect(user).toEqual({
       id: "u-1",
-      email: "user@wabrix.dev",
+      email: "user@flowdesk.dev",
       displayName: "Test User",
       status: "active"
     });
@@ -107,7 +107,7 @@ describe("auth database repository", () => {
         rows: [
           {
             id: "u-new",
-            email: "new@wabrix.dev",
+            email: "new@flowdesk.dev",
             display_name: "New User",
             status: "active"
           }
@@ -121,7 +121,7 @@ describe("auth database repository", () => {
     const user = await findOrCreateUserFromIdentity(db, {
       provider: "auth0",
       subject: "auth0|456",
-      email: "new@wabrix.dev",
+      email: "new@flowdesk.dev",
       displayName: "New User"
     });
 
@@ -149,7 +149,7 @@ describe("auth database repository", () => {
         {
           id: "s-1",
           user_id: "u-1",
-          email: "user@wabrix.dev",
+          email: "user@flowdesk.dev",
           display_name: "Test User",
           expires_at: now,
           created_at: now
@@ -162,7 +162,7 @@ describe("auth database repository", () => {
     expect(session).toEqual({
       sessionId: "s-1",
       userId: "u-1",
-      email: "user@wabrix.dev",
+      email: "user@flowdesk.dev",
       displayName: "Test User",
       expiresAt: now,
       createdAt: now

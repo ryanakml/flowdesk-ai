@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import type { Message } from "@wabrix/contracts";
+import type { Message } from "@flowdesk/contracts";
 import { MessageBubble } from "./MessageBubble.js";
 
 const mockMsgBase: Message = {

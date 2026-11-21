@@ -3,7 +3,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
-import type { Conversation } from "@wabrix/contracts";
+import type { Conversation } from "@flowdesk/contracts";
 import { InboxView } from "./InboxView.js";
 
 vi.mock("./realtime.js", () => ({ useRealtimeSync: vi.fn() }));

@@ -10,7 +10,7 @@ fi
 release_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck disable=SC1091
 source "${release_dir}/health-check.sh"
-shared_dir=/opt/wabrix/shared
+shared_dir=/opt/flowdesk/shared
 environment_file=${shared_dir}/staging.env
 current_release_file=${shared_dir}/current-image
 previous_release_file=${shared_dir}/previous-image

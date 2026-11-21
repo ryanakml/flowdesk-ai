@@ -50,7 +50,7 @@ export async function acquireIdempotencyKey(
     expires_at: Date;
   }>(
     `SELECT id, request_fingerprint, response_status, response_body, completed_at, expires_at
-     FROM wabrix.idempotency_keys
+     FROM flowdesk.idempotency_keys
      WHERE organization_id = $1
        AND actor_user_id = $2
        AND route = $3
@@ -80,7 +80,7 @@ export async function acquireIdempotencyKey(
 
     // Expired in-flight record: reuse existing row
     await db.query(
-      `UPDATE wabrix.idempotency_keys
+      `UPDATE flowdesk.idempotency_keys
        SET request_fingerprint = $1,
            response_status = NULL,
            response_body = NULL,
@@ -95,7 +95,7 @@ export async function acquireIdempotencyKey(
   // 2. Insert new in-flight record
   try {
     await db.query(
-      `INSERT INTO wabrix.idempotency_keys (
+      `INSERT INTO flowdesk.idempotency_keys (
          organization_id,
          actor_user_id,
          route,
@@ -128,7 +128,7 @@ export async function completeIdempotencyKey(
   params: CompleteIdempotencyParams
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.idempotency_keys
+    `UPDATE flowdesk.idempotency_keys
      SET response_status = $1,
          response_body = $2::jsonb,
          completed_at = clock_timestamp()
@@ -152,7 +152,7 @@ export async function releaseIdempotencyKey(
   params: ReleaseIdempotencyParams
 ): Promise<void> {
   await db.query(
-    `DELETE FROM wabrix.idempotency_keys
+    `DELETE FROM flowdesk.idempotency_keys
      WHERE organization_id = $1
        AND actor_user_id = $2
        AND route = $3

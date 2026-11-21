@@ -17,7 +17,7 @@ This document outlines the architecture, database schema, domain rules, API cont
 
 ### 2.1 Formula & Clock Boundaries
 
-- **Inbound Trigger:** Whenever an inbound customer message (`direction = 'inbound' AND sender_type = 'customer'`) arrives, `wabrix.conversations.last_inbound_at` is updated to the message creation time.
+- **Inbound Trigger:** Whenever an inbound customer message (`direction = 'inbound' AND sender_type = 'customer'`) arrives, `flowdesk.conversations.last_inbound_at` is updated to the message creation time.
 - **Window Expiry:**
   $$\text{expiresAt} = \text{lastInboundAt} + 24\text{ hours}$$
 - **Window Eligibility:**
@@ -26,7 +26,7 @@ This document outlines the architecture, database schema, domain rules, API cont
 
 ### 2.2 Boundary Test Cases
 
-The domain function `calculateServiceWindow(lastInboundAt, now)` in `@wabrix/domain` validates exact second boundaries:
+The domain function `calculateServiceWindow(lastInboundAt, now)` in `@flowdesk/domain` validates exact second boundaries:
 
 1. `lastInboundAt == null` $\implies$ `isOpen: false`, `expiresAt: null`, `remainingSeconds: 0`.
 2. `now == lastInboundAt + 23h 59m 59s` $\implies$ `isOpen: true`, `remainingSeconds: 1`.
@@ -40,15 +40,15 @@ The domain function `calculateServiceWindow(lastInboundAt, now)` in `@wabrix/dom
 ### 3.1 Migration `0014_m3_service_window.sql`
 
 ```sql
-ALTER TABLE wabrix.conversations
+ALTER TABLE flowdesk.conversations
   ADD COLUMN IF NOT EXISTS last_inbound_at timestamptz;
 
 -- Backfill from latest customer inbound message
-UPDATE wabrix.conversations c
+UPDATE flowdesk.conversations c
 SET last_inbound_at = m.latest_inbound
 FROM (
   SELECT conversation_id, MAX(created_at) AS latest_inbound
-  FROM wabrix.messages
+  FROM flowdesk.messages
   WHERE direction = 'inbound' AND sender_type = 'customer'
   GROUP BY conversation_id
 ) m
@@ -57,12 +57,12 @@ WHERE c.id = m.conversation_id
 
 -- Index for organization and last_inbound_at filtering
 CREATE INDEX IF NOT EXISTS conversations_org_last_inbound_idx
-  ON wabrix.conversations (organization_id, last_inbound_at DESC NULLS LAST);
+  ON flowdesk.conversations (organization_id, last_inbound_at DESC NULLS LAST);
 ```
 
 ### 3.2 Transactional Outbox Integration
 
-When a template message is queued via `createOutboundMessageWithOutbox`, the rendered body is saved to `wabrix.messages.content`, and the template metadata is recorded into the outbox event payload:
+When a template message is queued via `createOutboundMessageWithOutbox`, the rendered body is saved to `flowdesk.messages.content`, and the template metadata is recorded into the outbox event payload:
 
 ```json
 {
@@ -145,7 +145,7 @@ To prevent sending revoked or rejected templates when there is a delay between q
 - Free-form outside 24h window returns `422 Unprocessable Entity`:
   ```json
   {
-    "type": "https://wabrix.dev/problems/outside-service-window",
+    "type": "https://flowdesk.dev/problems/outside-service-window",
     "title": "Outside Customer Service Window",
     "status": 422,
     "code": "OUTSIDE_SERVICE_WINDOW",

@@ -1,6 +1,6 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { computeMetaSignature } from "@wabrix/security";
+import { computeMetaSignature } from "@flowdesk/security";
 import { createIngressApp } from "./app.js";
 
 interface ProblemDetails {
@@ -209,11 +209,11 @@ describe("Ingress Application & Webhook Routes (M2-03)", () => {
             await Promise.resolve();
             const sql = queryText.replace(/\s+/g, " ").trim();
 
-            if (failOnInsert && sql.includes("INSERT INTO wabrix.webhook_events")) {
+            if (failOnInsert && sql.includes("INSERT INTO flowdesk.webhook_events")) {
               throw new Error("Connection terminated unexpectedly");
             }
 
-            if (sql.includes("SELECT organization_id FROM wabrix.channels")) {
+            if (sql.includes("SELECT organization_id FROM flowdesk.channels")) {
               return {
                 rows: [{ organization_id: "org-123" }],
                 rowCount: 1,
@@ -223,7 +223,7 @@ describe("Ingress Application & Webhook Routes (M2-03)", () => {
               };
             }
 
-            if (sql.includes("INSERT INTO wabrix.webhook_events")) {
+            if (sql.includes("INSERT INTO flowdesk.webhook_events")) {
               const provider = values[0] as string;
               const payloadHash = values[1] as string;
               const phoneId = (values[2] as string | null) ?? null;
@@ -276,12 +276,12 @@ describe("Ingress Application & Webhook Routes (M2-03)", () => {
               };
             }
 
-            if (sql.includes("INSERT INTO wabrix.outbox_events")) {
+            if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
               return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
             }
 
             if (
-              sql.includes("FROM wabrix.webhook_events WHERE provider = $1 AND payload_hash = $2")
+              sql.includes("FROM flowdesk.webhook_events WHERE provider = $1 AND payload_hash = $2")
             ) {
               const provider = values[0] as string;
               const payloadHash = values[1] as string;
@@ -436,7 +436,7 @@ describe("Ingress Application & Webhook Routes (M2-03)", () => {
             await Promise.resolve();
             const sql = queryText.replace(/\s+/g, " ").trim();
 
-            if (sql.includes("SELECT organization_id FROM wabrix.channels")) {
+            if (sql.includes("SELECT organization_id FROM flowdesk.channels")) {
               if (!orgId) return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
               return {
                 rows: [{ organization_id: orgId }],
@@ -446,7 +446,7 @@ describe("Ingress Application & Webhook Routes (M2-03)", () => {
                 fields: []
               };
             }
-            if (sql.includes("INSERT INTO wabrix.webhook_events")) {
+            if (sql.includes("INSERT INTO flowdesk.webhook_events")) {
               const id = `evt-log-${persistedEvents.size + 1}`;
               const phoneId = (values[2] as string | null) ?? null;
               const record: MockEvent = {
@@ -486,7 +486,7 @@ describe("Ingress Application & Webhook Routes (M2-03)", () => {
                 fields: []
               };
             }
-            if (sql.includes("INSERT INTO wabrix.outbox_events")) {
+            if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
               return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
             }
             return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };

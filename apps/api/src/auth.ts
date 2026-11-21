@@ -1,6 +1,6 @@
-import type { AuthConfig } from "@wabrix/config";
-import type { Problem } from "@wabrix/contracts";
-import { recordAuthDenial } from "@wabrix/observability";
+import type { AuthConfig } from "@flowdesk/config";
+import type { Problem } from "@flowdesk/contracts";
+import { recordAuthDenial } from "@flowdesk/observability";
 import {
   type DbClient,
   createAuthSession,
@@ -9,12 +9,12 @@ import {
   findOrCreateUserFromIdentity,
   getActiveSessionByTokenHash,
   revokeAuthSession
-} from "@wabrix/db";
+} from "@flowdesk/db";
 import {
   type IdentityProvider,
   MockIdentityProvider,
   OidcIdentityProvider
-} from "@wabrix/providers";
+} from "@flowdesk/providers";
 import {
   createOidcAuthorizationRequest,
   createOidcLogoutUrl,
@@ -25,7 +25,7 @@ import {
   serializeExpiredSessionCookie,
   serializeSessionCookie,
   validateLogoutReturnUrl
-} from "@wabrix/security";
+} from "@flowdesk/security";
 import { type Request, type Response, type RequestHandler, Router } from "express";
 
 export interface AuthRouterOptions {
@@ -66,7 +66,7 @@ function sendProblem(
 ) {
   const requestId = response.getHeader("x-request-id")?.toString() ?? "unknown";
   const problem: Problem = {
-    type: `https://wabrix.dev/problems/${code.toLowerCase().replace(/_/g, "-")}`,
+    type: `https://flowdesk.dev/problems/${code.toLowerCase().replace(/_/g, "-")}`,
     title,
     status,
     code,
@@ -166,14 +166,14 @@ export function createAuthRouter(options: AuthRouterOptions): Router {
       });
 
       const secure = options.config.AUTH_COOKIE_SECURE;
-      const pkceCookie = `wabrix_pkce=${authRequest.codeVerifier}; Path=/api/v1/auth/callback; HttpOnly; SameSite=Lax; Max-Age=600${secure ? "; Secure" : ""}`;
+      const pkceCookie = `flowdesk_pkce=${authRequest.codeVerifier}; Path=/api/v1/auth/callback; HttpOnly; SameSite=Lax; Max-Age=600${secure ? "; Secure" : ""}`;
       response.setHeader("Set-Cookie", pkceCookie);
 
       const prefersJson = Boolean(request.accepts("json") && !request.accepts("html"));
 
       if (options.config.AUTH_MOCK_ENABLED) {
         const mockUrl = new URL(options.config.AUTH_OIDC_REDIRECT_URI);
-        mockUrl.searchParams.set("code", "user:operator@wabrix.dev");
+        mockUrl.searchParams.set("code", "user:operator@flowdesk.dev");
         mockUrl.searchParams.set("state", authRequest.state);
         const mockCallbackUrl = mockUrl.toString();
         if (prefersJson) {
@@ -225,7 +225,7 @@ export function createAuthRouter(options: AuthRouterOptions): Router {
       }
 
       const pkceVerifier =
-        parseCookieByName(request.headers.cookie, "wabrix_pkce") ||
+        parseCookieByName(request.headers.cookie, "flowdesk_pkce") ||
         (options.config.AUTH_MOCK_ENABLED ? "mock-verifier" : "");
 
       if (!options.config.AUTH_MOCK_ENABLED) {
@@ -266,7 +266,7 @@ export function createAuthRouter(options: AuthRouterOptions): Router {
 
       const secure = options.config.AUTH_COOKIE_SECURE;
       const sessionCookie = serializeSessionCookie(sessionToken, secure);
-      const clearPkceCookie = `wabrix_pkce=; Path=/api/v1/auth/callback; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure ? "; Secure" : ""}`;
+      const clearPkceCookie = `flowdesk_pkce=; Path=/api/v1/auth/callback; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT${secure ? "; Secure" : ""}`;
 
       response.setHeader("Set-Cookie", [sessionCookie, clearPkceCookie]);
 

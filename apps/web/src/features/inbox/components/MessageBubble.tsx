@@ -1,5 +1,5 @@
-import type { Message } from "@wabrix/contracts";
-import { cn } from "@wabrix/ui";
+import type { Message } from "@flowdesk/contracts";
+import { cn } from "@flowdesk/ui";
 import { MarkdownContent } from "./MarkdownContent.js";
 
 type AuthorType = "customer" | "agent" | "system" | "ai-draft";

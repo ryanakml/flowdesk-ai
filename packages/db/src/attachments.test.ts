@@ -22,8 +22,8 @@ function createMockAttachmentsDb() {
   const db = {
     query: async (sql: string, values: unknown[] = []) => {
       await Promise.resolve();
-      // INSERT INTO wabrix.attachments
-      if (sql.includes("INSERT INTO wabrix.attachments")) {
+      // INSERT INTO flowdesk.attachments
+      if (sql.includes("INSERT INTO flowdesk.attachments")) {
         const id = `att-${attachments.size + 1}`;
         const record: AttachmentRecord = {
           id,
@@ -56,8 +56,8 @@ function createMockAttachmentsDb() {
         };
       }
 
-      // INSERT INTO wabrix.attachment_upload_sessions
-      if (sql.includes("INSERT INTO wabrix.attachment_upload_sessions")) {
+      // INSERT INTO flowdesk.attachment_upload_sessions
+      if (sql.includes("INSERT INTO flowdesk.attachment_upload_sessions")) {
         const id = `sess-${sessions.size + 1}`;
         const record: AttachmentUploadSessionRecord = {
           id,
@@ -79,9 +79,9 @@ function createMockAttachmentsDb() {
         };
       }
 
-      // SELECT FROM wabrix.attachments
+      // SELECT FROM flowdesk.attachments
       if (
-        sql.includes("FROM wabrix.attachments") &&
+        sql.includes("FROM flowdesk.attachments") &&
         sql.includes("organization_id = $1 AND id = $2")
       ) {
         const [orgId, id] = values as [string, string];
@@ -98,9 +98,9 @@ function createMockAttachmentsDb() {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      // SELECT FROM wabrix.attachment_upload_sessions
+      // SELECT FROM flowdesk.attachment_upload_sessions
       if (
-        sql.includes("FROM wabrix.attachment_upload_sessions") &&
+        sql.includes("FROM flowdesk.attachment_upload_sessions") &&
         sql.includes("organization_id = $1 AND id = $2")
       ) {
         const [orgId, id] = values as [string, string];
@@ -118,7 +118,7 @@ function createMockAttachmentsDb() {
       }
 
       // UPDATE attachment_upload_sessions
-      if (sql.includes("UPDATE wabrix.attachment_upload_sessions")) {
+      if (sql.includes("UPDATE flowdesk.attachment_upload_sessions")) {
         const [now, orgId, attId] = values as [Date, string, string];
         let updated = 0;
         for (const s of sessions.values()) {
@@ -141,7 +141,7 @@ function createMockAttachmentsDb() {
         return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      // UPDATE wabrix.attachments SET status = $1 (Scan result)
+      // UPDATE flowdesk.attachments SET status = $1 (Scan result)
       if (sql.includes("SET status = $1")) {
         const [
           status,
@@ -186,8 +186,8 @@ function createMockAttachmentsDb() {
         return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      // INSERT INTO wabrix.outbox_events
-      if (sql.includes("INSERT INTO wabrix.outbox_events")) {
+      // INSERT INTO flowdesk.outbox_events
+      if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
         let eventType = "";
         let payloadStr = "";
         let aggregateId = "";

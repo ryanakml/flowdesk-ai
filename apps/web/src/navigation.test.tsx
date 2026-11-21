@@ -2,7 +2,7 @@
 import { cleanup, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type * as WabrixUi from "@wabrix/ui";
+import type * as FlowdeskUi from "@flowdesk/ui";
 import { App, router } from "./App.js";
 import { queryClient } from "./lib/query-client.js";
 
@@ -16,8 +16,8 @@ vi.mock("./realtime.js", () => ({
   }))
 }));
 
-vi.mock("@wabrix/ui", async () => {
-  const actual = await vi.importActual<typeof WabrixUi>("@wabrix/ui");
+vi.mock("@flowdesk/ui", async () => {
+  const actual = await vi.importActual<typeof FlowdeskUi>("@flowdesk/ui");
   const React = await import("react");
 
   interface DropdownContextValue {
@@ -277,7 +277,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              user: { id: userId, email: "owner@wabrix.dev", displayName: "Test User" },
+              user: { id: userId, email: "owner@flowdesk.dev", displayName: "Test User" },
               expiresAt: "2026-08-31T00:00:00.000Z"
             }),
             { status: 200 }
@@ -368,7 +368,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
                 {
                   id: "m-1",
                   userId,
-                  email: "owner@wabrix.dev",
+                  email: "owner@flowdesk.dev",
                   displayName: "Owner",
                   roleKey: "owner",
                   status: "active"
@@ -455,7 +455,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
     globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
         JSON.stringify({
-          type: "https://wabrix.dev/problems/unauthorized",
+          type: "https://flowdesk.dev/problems/unauthorized",
           title: "Unauthorized",
           status: 401,
           code: "UNAUTHORIZED",
@@ -610,7 +610,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
       // Check user navigation trigger and badge
       expect(screen.getByTestId("user-nav-trigger")).toBeDefined();
       expect(screen.getByText("Test User")).toBeDefined();
-      expect(screen.getByText("owner@wabrix.dev")).toBeDefined();
+      expect(screen.getByText("owner@flowdesk.dev")).toBeDefined();
 
       // Check navigation groups & links
       expect(screen.getByTestId("nav-link-/inbox")).toBeDefined();
@@ -811,7 +811,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
 
     it("persists theme preference across toggles", async () => {
       setupAuthMocks("owner");
-      window.localStorage.removeItem("wabrix-theme");
+      window.localStorage.removeItem("flowdesk-theme");
 
       render(<App />);
       await router.navigate({ to: "/inbox" });
@@ -831,7 +831,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
 
       await waitFor(() => {
         expect(document.documentElement.classList.contains("dark")).toBe(true);
-        expect(window.localStorage.getItem("wabrix-theme")).toBe("dark");
+        expect(window.localStorage.getItem("flowdesk-theme")).toBe("dark");
       });
 
       const btn2 = screen.getByTestId("theme-toggle-button");
@@ -845,7 +845,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
 
       await waitFor(() => {
         expect(document.documentElement.classList.contains("dark")).toBe(false);
-        expect(window.localStorage.getItem("wabrix-theme")).toBe("light");
+        expect(window.localStorage.getItem("flowdesk-theme")).toBe("light");
       });
     });
   });

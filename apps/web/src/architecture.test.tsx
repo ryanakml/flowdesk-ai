@@ -10,7 +10,7 @@ import { analyticsKeys } from "./features/analytics/query-keys.js";
 import { knowledgeKeys } from "./features/knowledge/query-keys.js";
 import { workspaceKeys } from "./features/workspace/query-keys.js";
 import { handleRealtimeHint, handleRealtimeReconciliation } from "./lib/realtime-adapter.js";
-import type { RealtimeHint } from "@wabrix/contracts";
+import type { RealtimeHint } from "@flowdesk/contracts";
 
 describe("Architecture Modernization (UI-02 / Issue #216)", () => {
   describe("Query Client Policies", () => {

@@ -15,7 +15,7 @@ import {
   X,
   Zap
 } from "lucide-react";
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Separator } from "@wabrix/ui";
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Separator } from "@flowdesk/ui";
 import { FlowDeskIcon } from "../../components/layout/AppSidebar.js";
 import { useTheme } from "../../components/theme-provider.js";
 

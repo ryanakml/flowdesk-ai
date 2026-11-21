@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { encryptSecret, decryptSecret } from "./encryption.js";
 
 describe("AES-256-GCM Envelope Encryption (M2-01)", () => {
-  const secretKey = "test-secret-key-wabrix-channels-32b";
+  const secretKey = "test-secret-key-flowdesk-channels-32b";
   const sensitivePayload = JSON.stringify({
     accessToken: "EAABtest_token_12345",
     verifyToken: "wh_verify_secret_abc"

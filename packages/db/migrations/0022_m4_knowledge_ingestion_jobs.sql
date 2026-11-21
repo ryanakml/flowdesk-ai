@@ -1,16 +1,16 @@
 -- M4-R2: durable, tenant-isolated knowledge ingestion jobs.
 
-ALTER TABLE wabrix.knowledge_sources
+ALTER TABLE flowdesk.knowledge_sources
   ADD COLUMN IF NOT EXISTS dedupe_key text;
 
 CREATE UNIQUE INDEX IF NOT EXISTS knowledge_sources_org_dedupe_unique
-  ON wabrix.knowledge_sources (organization_id, dedupe_key)
+  ON flowdesk.knowledge_sources (organization_id, dedupe_key)
   WHERE dedupe_key IS NOT NULL AND deleted_at IS NULL;
 
-CREATE TABLE IF NOT EXISTS wabrix.knowledge_ingestion_jobs (
+CREATE TABLE IF NOT EXISTS flowdesk.knowledge_ingestion_jobs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid NOT NULL REFERENCES wabrix.organizations(id) ON DELETE CASCADE,
-  source_id uuid NOT NULL REFERENCES wabrix.knowledge_sources(id) ON DELETE CASCADE,
+  organization_id uuid NOT NULL REFERENCES flowdesk.organizations(id) ON DELETE CASCADE,
+  source_id uuid NOT NULL REFERENCES flowdesk.knowledge_sources(id) ON DELETE CASCADE,
   dedupe_key text NOT NULL,
   input_text text,
   status text NOT NULL DEFAULT 'queued'
@@ -28,24 +28,24 @@ CREATE TABLE IF NOT EXISTS wabrix.knowledge_ingestion_jobs (
 );
 
 CREATE INDEX IF NOT EXISTS knowledge_ingestion_jobs_claim_idx
-  ON wabrix.knowledge_ingestion_jobs (available_at, created_at)
+  ON flowdesk.knowledge_ingestion_jobs (available_at, created_at)
   WHERE status = 'queued';
 
-ALTER TABLE wabrix.knowledge_ingestion_jobs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.knowledge_ingestion_jobs FORCE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.knowledge_ingestion_jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.knowledge_ingestion_jobs FORCE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS knowledge_ingestion_jobs_tenant ON wabrix.knowledge_ingestion_jobs;
-CREATE POLICY knowledge_ingestion_jobs_tenant ON wabrix.knowledge_ingestion_jobs
-  USING (organization_id = wabrix.current_organization_id())
-  WITH CHECK (organization_id = wabrix.current_organization_id());
+DROP POLICY IF EXISTS knowledge_ingestion_jobs_tenant ON flowdesk.knowledge_ingestion_jobs;
+CREATE POLICY knowledge_ingestion_jobs_tenant ON flowdesk.knowledge_ingestion_jobs
+  USING (organization_id = flowdesk.current_organization_id())
+  WITH CHECK (organization_id = flowdesk.current_organization_id());
 
-ALTER TABLE wabrix.knowledge_ingestion_jobs OWNER TO wabrix_migrator;
-GRANT SELECT, INSERT, UPDATE, DELETE ON wabrix.knowledge_ingestion_jobs TO wabrix_runtime;
-GRANT SELECT ON wabrix.knowledge_ingestion_jobs TO wabrix_reporting;
-GRANT SELECT, UPDATE ON wabrix.knowledge_ingestion_jobs TO wabrix_system;
-GRANT SELECT, UPDATE ON wabrix.knowledge_sources TO wabrix_system;
+ALTER TABLE flowdesk.knowledge_ingestion_jobs OWNER TO flowdesk_migrator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON flowdesk.knowledge_ingestion_jobs TO flowdesk_runtime;
+GRANT SELECT ON flowdesk.knowledge_ingestion_jobs TO flowdesk_reporting;
+GRANT SELECT, UPDATE ON flowdesk.knowledge_ingestion_jobs TO flowdesk_system;
+GRANT SELECT, UPDATE ON flowdesk.knowledge_sources TO flowdesk_system;
 
-CREATE OR REPLACE FUNCTION wabrix.claim_knowledge_ingestion_jobs(input_limit integer)
+CREATE OR REPLACE FUNCTION flowdesk.claim_knowledge_ingestion_jobs(input_limit integer)
 RETURNS TABLE (
   id uuid,
   organization_id uuid,
@@ -55,7 +55,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, wabrix
+SET search_path = pg_catalog, flowdesk
 AS $$
 BEGIN
   IF input_limit < 1 OR input_limit > 50 THEN
@@ -63,7 +63,7 @@ BEGIN
   END IF;
 
   WITH exhausted AS (
-    UPDATE wabrix.knowledge_ingestion_jobs AS job
+    UPDATE flowdesk.knowledge_ingestion_jobs AS job
     SET status = 'failed', error_code = 'WORKER_LEASE_EXPIRED',
         error_detail = 'Knowledge ingestion stopped after the worker lease expired.',
         completed_at = clock_timestamp(), updated_at = clock_timestamp()
@@ -72,7 +72,7 @@ BEGIN
       AND job.attempts >= job.max_attempts
     RETURNING job.source_id
   )
-  UPDATE wabrix.knowledge_sources AS source
+  UPDATE flowdesk.knowledge_sources AS source
   SET status = 'failed', status_reason = 'Knowledge ingestion worker lease expired.',
       updated_at = clock_timestamp()
   FROM exhausted
@@ -81,7 +81,7 @@ BEGIN
   RETURN QUERY
   WITH candidates AS (
     SELECT job.id
-    FROM wabrix.knowledge_ingestion_jobs AS job
+    FROM flowdesk.knowledge_ingestion_jobs AS job
     WHERE (job.status = 'queued'
            OR (job.status = 'processing'
                AND job.claimed_at < clock_timestamp() - interval '2 minutes'))
@@ -91,7 +91,7 @@ BEGIN
     FOR UPDATE SKIP LOCKED
     LIMIT input_limit
   ), claimed AS (
-    UPDATE wabrix.knowledge_ingestion_jobs AS job
+    UPDATE flowdesk.knowledge_ingestion_jobs AS job
     SET status = 'processing',
         attempts = job.attempts + 1,
         claimed_at = clock_timestamp(),
@@ -105,6 +105,6 @@ BEGIN
   FROM claimed;
 END $$;
 
-ALTER FUNCTION wabrix.claim_knowledge_ingestion_jobs(integer) OWNER TO wabrix_system;
-REVOKE ALL ON FUNCTION wabrix.claim_knowledge_ingestion_jobs(integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION wabrix.claim_knowledge_ingestion_jobs(integer) TO wabrix_runtime;
+ALTER FUNCTION flowdesk.claim_knowledge_ingestion_jobs(integer) OWNER TO flowdesk_system;
+REVOKE ALL ON FUNCTION flowdesk.claim_knowledge_ingestion_jobs(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION flowdesk.claim_knowledge_ingestion_jobs(integer) TO flowdesk_runtime;

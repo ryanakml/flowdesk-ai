@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Milestone 5 establishes enterprise-grade automated conversation routing, multi-layer policy-controlled AI auto-sending, instant multi-level emergency killswitches, production deployment infrastructure with container image provenance, and comprehensive SLO monitoring & resilience drills across Wabrix.
+Milestone 5 establishes enterprise-grade automated conversation routing, multi-layer policy-controlled AI auto-sending, instant multi-level emergency killswitches, production deployment infrastructure with container image provenance, and comprehensive SLO monitoring & resilience drills across FlowDesk.
 
 ---
 
@@ -28,15 +28,15 @@ Milestone 5 establishes enterprise-grade automated conversation routing, multi-l
 ## Verification & Quality Matrix
 
 1. **Database RLS Tenant Isolation:**
-   - Table `wabrix.routing_rules` enforces `tenant_isolation_routing_rules` RLS policy.
-   - Table `wabrix.routing_logs` enforces `tenant_isolation_routing_logs` RLS policy.
+   - Table `flowdesk.routing_rules` enforces `tenant_isolation_routing_rules` RLS policy.
+   - Table `flowdesk.routing_logs` enforces `tenant_isolation_routing_logs` RLS policy.
    - Verified via `packages/db/src/database-foundation.integration.test.ts`.
 
 2. **Policy Pre-Send Guardrails:**
    - Evaluates minimum confidence threshold ($\ge 0.90$).
    - Evaluates business hours & 24h WhatsApp service window compliance.
    - Evaluates rate limiting ($\le 3$ auto-replies/hr per conversation).
-   - Appends mandatory AI disclosure footer (`_Balasan otomatis oleh AI Wabrix_`).
+   - Appends mandatory AI disclosure footer (`_Balasan otomatis oleh AI FlowDesk_`).
 
 3. **Resilience & Failure Drills:**
    - Simulated DB connection timeouts fall back safely without silent failure.

@@ -31,7 +31,7 @@ function createMockConversationDb(): {
       if (
         sql.includes("SELECT") &&
         sql.includes(
-          "FROM wabrix.conversations WHERE organization_id = $1 AND channel_id = $2 AND customer_phone = $3"
+          "FROM flowdesk.conversations WHERE organization_id = $1 AND channel_id = $2 AND customer_phone = $3"
         )
       ) {
         const orgId = values[0] as string;
@@ -49,7 +49,7 @@ function createMockConversationDb(): {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.conversations")) {
+      if (sql.includes("INSERT INTO flowdesk.conversations")) {
         const orgId = values[0] as string;
         const channelId = values[1] as string;
         const customerPhone = values[2] as string;
@@ -90,7 +90,7 @@ function createMockConversationDb(): {
 
       if (
         sql.includes("SELECT") &&
-        sql.includes("FROM wabrix.conversations WHERE organization_id = $1 AND id = $2")
+        sql.includes("FROM flowdesk.conversations WHERE organization_id = $1 AND id = $2")
       ) {
         const orgId = values[0] as string;
         const id = values[1] as string;
@@ -101,7 +101,7 @@ function createMockConversationDb(): {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.conversations SET status = $1")) {
+      if (sql.includes("UPDATE flowdesk.conversations SET status = $1")) {
         const targetStatus = values[0] as ConversationRecord["status"];
         const id = values[1] as string;
         const orgId = values[2] as string;
@@ -117,7 +117,7 @@ function createMockConversationDb(): {
         return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.conversations SET assigned_to_user_id = $1")) {
+      if (sql.includes("UPDATE flowdesk.conversations SET assigned_to_user_id = $1")) {
         const targetUser = (values[0] as string | null) ?? null;
         const id = values[1] as string;
         const orgId = values[2] as string;
@@ -133,7 +133,7 @@ function createMockConversationDb(): {
         return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.messages")) {
+      if (sql.includes("INSERT INTO flowdesk.messages")) {
         const id = `msg-${messages.size + 1}`;
         const record: MessageRecord = {
           id,
@@ -158,7 +158,7 @@ function createMockConversationDb(): {
         return { rows: [record], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.conversations SET last_message_at = clock_timestamp()")) {
+      if (sql.includes("UPDATE flowdesk.conversations SET last_message_at = clock_timestamp()")) {
         const convId = values[0] as string;
         const orgId = values[1] as string;
         const c = conversations.get(convId);
@@ -176,7 +176,7 @@ function createMockConversationDb(): {
 
       if (
         sql.includes("SELECT") &&
-        sql.includes("FROM wabrix.messages WHERE id = $1 AND organization_id = $2")
+        sql.includes("FROM flowdesk.messages WHERE id = $1 AND organization_id = $2")
       ) {
         const id = values[0] as string;
         const orgId = values[1] as string;
@@ -187,7 +187,7 @@ function createMockConversationDb(): {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.messages SET status = $1")) {
+      if (sql.includes("UPDATE flowdesk.messages SET status = $1")) {
         const targetStatus = values[0] as MessageRecord["status"];
         const id = values[1] as string;
         const providerMessageId = (values[2] as string | null) ?? null;
@@ -213,7 +213,7 @@ function createMockConversationDb(): {
 
       if (
         sql.includes("SELECT") &&
-        sql.includes("FROM wabrix.messages WHERE organization_id = $1 AND conversation_id = $2")
+        sql.includes("FROM flowdesk.messages WHERE organization_id = $1 AND conversation_id = $2")
       ) {
         const orgId = values[0] as string;
         const convId = values[1] as string;

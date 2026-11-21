@@ -1,5 +1,5 @@
-bucket         = "replace-with-wabrix-staging-terraform-state"
+bucket         = "replace-with-flowdesk-staging-terraform-state"
 key            = "staging/terraform.tfstate"
 region         = "ap-southeast-1"
 encrypt        = true
-dynamodb_table = "replace-with-wabrix-staging-terraform-locks"
+dynamodb_table = "replace-with-flowdesk-staging-terraform-locks"

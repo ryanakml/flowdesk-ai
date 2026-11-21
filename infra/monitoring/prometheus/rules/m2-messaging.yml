@@ -1,23 +1,23 @@
 groups:
-  - name: wabrix-m2-messaging
+  - name: flowdesk-m2-messaging
     rules:
-      - alert: WabrixOutboxBacklogCritical
+      - alert: FlowDeskOutboxBacklogCritical
         expr: outbox_pending_events > 1000 or outbox_oldest_event_age_seconds > 120
         for: 5m
         labels:
           severity: critical
         annotations:
-          summary: Wabrix outbound queue is critically delayed
+          summary: FlowDesk outbound queue is critically delayed
           runbook: docs/runbooks/whatsapp-outbox-dlq.md
-      - alert: WabrixMessagingDLQNotEmpty
+      - alert: FlowDeskMessagingDLQNotEmpty
         expr: outbox_dead_letter_events > 0
         for: 2m
         labels:
           severity: warning
         annotations:
-          summary: Wabrix has failed outbound intents requiring review
+          summary: FlowDesk has failed outbound intents requiring review
           runbook: docs/runbooks/whatsapp-outbox-dlq.md
-      - alert: WabrixWebhookFailureRateHigh
+      - alert: FlowDeskWebhookFailureRateHigh
         expr: sum(rate(whatsapp_webhook_processed_total{result="failed"}[5m])) > 0.1
         for: 5m
         labels:

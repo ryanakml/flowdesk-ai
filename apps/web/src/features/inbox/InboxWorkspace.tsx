@@ -7,15 +7,15 @@ import type {
   GenerateBotDraftResponse,
   TemplatePreviewResponse,
   RealtimeHint
-} from "@wabrix/contracts";
-import { type RoleKey, hasPermission } from "@wabrix/domain";
+} from "@flowdesk/contracts";
+import { type RoleKey, hasPermission } from "@flowdesk/domain";
 import {
   Panel,
   Group as PanelGroup,
   Separator as PanelResizeHandle,
   useDefaultLayout
 } from "react-resizable-panels";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@wabrix/ui";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@flowdesk/ui";
 import { PanelRightOpen, ArrowLeft, Sparkles } from "lucide-react";
 
 import {
@@ -169,7 +169,7 @@ export function InboxWorkspace({
   );
   const [contextCollapsed, setContextCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem("wabrix-inbox-context-collapsed") === "true";
+    return window.sessionStorage.getItem("flowdesk-inbox-context-collapsed") === "true";
   });
 
   useEffect(() => {
@@ -184,14 +184,14 @@ export function InboxWorkspace({
   }, []);
 
   useEffect(() => {
-    window.sessionStorage?.setItem("wabrix-inbox-context-collapsed", String(contextCollapsed));
+    window.sessionStorage?.setItem("flowdesk-inbox-context-collapsed", String(contextCollapsed));
   }, [contextCollapsed]);
 
   // 8. Desktop 3-pane layout persistence
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
     // v2 intentionally invalidates layouts saved by the old numeric pixel
     // configuration. Panel sizes below use explicit percentage strings.
-    id: "wabrix-inbox-panels-v2",
+    id: "flowdesk-inbox-panels-v2",
     panelIds: ["inbox-queue", "inbox-thread", "inbox-context"],
     ...(typeof window !== "undefined" && window.localStorage
       ? { storage: window.localStorage }

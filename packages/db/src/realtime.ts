@@ -5,12 +5,12 @@ export type RealtimeRoom =
 
 export async function getRealtimeVersion(db: DbClient, organizationId: string): Promise<number> {
   await db.query(
-    `INSERT INTO wabrix.realtime_versions (organization_id, version)
+    `INSERT INTO flowdesk.realtime_versions (organization_id, version)
      VALUES ($1, 0) ON CONFLICT (organization_id) DO NOTHING`,
     [organizationId]
   );
   const result = await db.query<{ version: string | number }>(
-    `SELECT version FROM wabrix.realtime_versions WHERE organization_id = $1`,
+    `SELECT version FROM flowdesk.realtime_versions WHERE organization_id = $1`,
     [organizationId]
   );
   return Number(result.rows[0]?.version ?? 0);
@@ -22,7 +22,7 @@ export async function canAccessRealtimeRoom(
 ): Promise<boolean> {
   if (input.room.type === "organization") {
     const result = await db.query(
-      `SELECT 1 FROM wabrix.memberships
+      `SELECT 1 FROM flowdesk.memberships
        WHERE organization_id = $1 AND user_id = $2 AND status = 'active'`,
       [input.organizationId, input.userId]
     );
@@ -32,14 +32,14 @@ export async function canAccessRealtimeRoom(
   if (input.room.type === "team") {
     const result = await db.query(
       `SELECT 1
-       FROM wabrix.memberships AS membership
-       JOIN wabrix.roles AS role ON role.id = membership.role_id
+       FROM flowdesk.memberships AS membership
+       JOIN flowdesk.roles AS role ON role.id = membership.role_id
        WHERE membership.organization_id = $1 AND membership.user_id = $2
          AND membership.status = 'active'
          AND (
            role.key IN ('owner', 'admin', 'supervisor')
            OR EXISTS (
-             SELECT 1 FROM wabrix.team_memberships AS team_member
+             SELECT 1 FROM flowdesk.team_memberships AS team_member
              WHERE team_member.organization_id = membership.organization_id
                AND team_member.team_id = $3 AND team_member.user_id = membership.user_id
                AND team_member.status = 'active'
@@ -52,17 +52,17 @@ export async function canAccessRealtimeRoom(
 
   const result = await db.query(
     `SELECT 1
-     FROM wabrix.conversations AS conversation
-     JOIN wabrix.memberships AS membership
+     FROM flowdesk.conversations AS conversation
+     JOIN flowdesk.memberships AS membership
        ON membership.organization_id = conversation.organization_id
       AND membership.user_id = $2 AND membership.status = 'active'
-     JOIN wabrix.roles AS role ON role.id = membership.role_id
+     JOIN flowdesk.roles AS role ON role.id = membership.role_id
      WHERE conversation.organization_id = $1 AND conversation.id = $3
        AND (
          conversation.queue_id IS NULL
          OR role.key IN ('owner', 'admin', 'supervisor')
          OR EXISTS (
-           SELECT 1 FROM wabrix.queue_memberships AS queue_member
+           SELECT 1 FROM flowdesk.queue_memberships AS queue_member
            WHERE queue_member.organization_id = conversation.organization_id
              AND queue_member.queue_id = conversation.queue_id
              AND queue_member.user_id = membership.user_id

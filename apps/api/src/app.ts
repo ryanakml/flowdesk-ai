@@ -1,23 +1,23 @@
 import { randomUUID } from "node:crypto";
-import { BuildInfoSchema, type Problem } from "@wabrix/contracts";
+import { BuildInfoSchema, type Problem } from "@flowdesk/contracts";
 import {
   runWithRequestContext,
   recordHttpRequest,
   recordRateLimitExceeded,
   getPrometheusMetrics,
   redactEmail
-} from "@wabrix/observability";
+} from "@flowdesk/observability";
 import {
   getSecurityHeaders,
   createSlidingWindowRateLimiter,
   type RateLimiter
-} from "@wabrix/security";
+} from "@flowdesk/security";
 import express, { type ErrorRequestHandler, type RequestHandler } from "express";
 
-import type { AuthConfig, MetaEmbeddedSignupConfig } from "@wabrix/config";
-import type { DbClient } from "@wabrix/db";
-import type { IdentityProvider } from "@wabrix/providers";
-import type { WhatsAppProvider } from "@wabrix/providers";
+import type { AuthConfig, MetaEmbeddedSignupConfig } from "@flowdesk/config";
+import type { DbClient } from "@flowdesk/db";
+import type { IdentityProvider } from "@flowdesk/providers";
+import type { WhatsAppProvider } from "@flowdesk/providers";
 import { createAuthRouter } from "./auth.js";
 import { createOrganizationsRouter, createInvitationsRouter } from "./organizations.js";
 import { createConversationsRouter } from "./conversations.js";
@@ -29,7 +29,7 @@ import { createDeveloperRouter } from "./developer.js";
 import { createAnalyticsRouter } from "./analytics.js";
 import { createKnowledgeRouter } from "./knowledge.js";
 import { createExternalApiRouter } from "./external.js";
-import type { ObjectStore } from "@wabrix/providers";
+import type { ObjectStore } from "@flowdesk/providers";
 export { createAuthRouter, createRequireAuthMiddleware, type AuthenticatedUser } from "./auth.js";
 export {
   createOrganizationsRouter,
@@ -175,7 +175,7 @@ export function createApiApp(options: ApiAppOptions) {
         response.setHeader("Retry-After", String(result.resetSeconds));
         recordRateLimitExceeded(request.baseUrl + request.path);
         const problem: Problem = {
-          type: "https://wabrix.dev/problems/rate-limit-exceeded",
+          type: "https://flowdesk.dev/problems/rate-limit-exceeded",
           title: "Too Many Requests",
           status: 429,
           code: "RATE_LIMIT_EXCEEDED",
@@ -285,7 +285,7 @@ export function createApiApp(options: ApiAppOptions) {
 
   app.use(((request, response) => {
     const problem: Problem = {
-      type: "https://wabrix.dev/problems/not-found",
+      type: "https://flowdesk.dev/problems/not-found",
       title: "Resource not found",
       status: 404,
       code: "RESOURCE_NOT_FOUND",
@@ -306,7 +306,7 @@ export function createApiApp(options: ApiAppOptions) {
       ...describeError(error)
     });
     const problem: Problem = {
-      type: "https://wabrix.dev/problems/internal-error",
+      type: "https://flowdesk.dev/problems/internal-error",
       title: "Internal server error",
       status: 500,
       code: "INTERNAL_ERROR",

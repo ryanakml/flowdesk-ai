@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
-import type { MembershipMember } from "@wabrix/contracts";
-import { type RoleKey, hasPermission } from "@wabrix/domain";
+import type { MembershipMember } from "@flowdesk/contracts";
+import { type RoleKey, hasPermission } from "@flowdesk/domain";
 import { UserPlus, Users, Search, Info, ArrowUpRight } from "lucide-react";
 import {
   Button,
@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
   Skeleton
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 import { listMembers, inviteMember, updateMemberRole, revokeMember } from "../../api.js";
 import { useAuth } from "../auth/context.js";
 import { ConfirmDialog } from "../../components/ConfirmDialog.js";

@@ -10,7 +10,7 @@ import {
 import { OrgSwitcher } from "./OrgSwitcher.js";
 import { UserNav } from "./UserNav.js";
 import { activeNavClassName } from "./nav-styles.js";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@wabrix/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@flowdesk/ui";
 
 export function FlowDeskIcon({ size = 20 }: { size?: number }) {
   return (

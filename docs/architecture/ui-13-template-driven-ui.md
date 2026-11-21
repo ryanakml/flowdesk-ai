@@ -8,10 +8,10 @@ Donor UI source: `satnaing/shadcn-admin`.
 
 ## Guardrails
 
-- Wabrix remains the authoritative application.
+- FlowDesk remains the authoritative application.
 - Donor code is used for presentation/layout acceleration only.
-- Existing Wabrix API contracts, RBAC, routing, realtime behavior, tenant boundaries, and business logic remain authoritative.
+- Existing FlowDesk API contracts, RBAC, routing, realtime behavior, tenant boundaries, and business logic remain authoritative.
 - Donor-only mock features are removed rather than carried into production.
 - Substantial copied MIT-licensed portions retain required copyright/license notices.
 
-Implementation details and donor-to-Wabrix mapping will be added in subsequent commits.
+Implementation details and donor-to-FlowDesk mapping will be added in subsequent commits.

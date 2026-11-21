@@ -1,6 +1,6 @@
 import { useRef } from "react";
-import type { Conversation, InboxWorkspaceResourcesResponse } from "@wabrix/contracts";
-import { Skeleton } from "@wabrix/ui";
+import type { Conversation, InboxWorkspaceResourcesResponse } from "@flowdesk/contracts";
+import { Skeleton } from "@flowdesk/ui";
 import { RefreshCw, Search } from "lucide-react";
 import { ConversationItem } from "./ConversationItem.js";
 import type { StatusFilter, AssigneeFilter } from "../hooks/useConversationFilters.js";

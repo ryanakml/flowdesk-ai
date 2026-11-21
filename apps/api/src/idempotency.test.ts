@@ -1,9 +1,9 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@wabrix/config";
-import type { DbClient } from "@wabrix/db";
-import { MockIdentityProvider } from "@wabrix/providers";
-import { hashSessionToken, serializeSessionCookie } from "@wabrix/security";
+import { loadAuthConfig } from "@flowdesk/config";
+import type { DbClient } from "@flowdesk/db";
+import { MockIdentityProvider } from "@flowdesk/providers";
+import { hashSessionToken, serializeSessionCookie } from "@flowdesk/security";
 import { createApiApp } from "./app.js";
 
 function createMockDb(): DbClient {
@@ -45,7 +45,7 @@ function createMockDb(): DbClient {
   const userId = "u1";
   users.set(userId, {
     id: userId,
-    email: "owner@wabrix.dev",
+    email: "owner@flowdesk.dev",
     displayName: "Owner",
     status: "active"
   });
@@ -70,7 +70,7 @@ function createMockDb(): DbClient {
       const sql = queryText.replace(/\s+/g, " ").trim();
 
       // Session lookup
-      if (sql.includes("FROM wabrix.auth_sessions s JOIN wabrix.users u")) {
+      if (sql.includes("FROM flowdesk.auth_sessions s JOIN flowdesk.users u")) {
         const [tokenHash] = values as [string];
         const session = sessions.get(tokenHash);
         if (!session || session.revokedAt !== null || session.expiresAt.getTime() <= Date.now()) {
@@ -97,12 +97,12 @@ function createMockDb(): DbClient {
       }
 
       // Resolve role ID
-      if (sql.includes("FROM wabrix.roles WHERE organization_id = $1 AND key = $2")) {
+      if (sql.includes("FROM flowdesk.roles WHERE organization_id = $1 AND key = $2")) {
         return { rows: [{ id: "role-agent" }] };
       }
 
       // Idempotency check: SELECT id, request_fingerprint...
-      if (sql.startsWith("SELECT") && sql.includes("FROM wabrix.idempotency_keys")) {
+      if (sql.startsWith("SELECT") && sql.includes("FROM flowdesk.idempotency_keys")) {
         const [o, a, r, k] = values as [string, string, string, string];
         const row = idempotencyKeys.get(makeIdempKey(o, a, r, k));
         if (!row) {
@@ -122,8 +122,8 @@ function createMockDb(): DbClient {
         };
       }
 
-      // Idempotency insert: INSERT INTO wabrix.idempotency_keys
-      if (sql.includes("INSERT INTO wabrix.idempotency_keys")) {
+      // Idempotency insert: INSERT INTO flowdesk.idempotency_keys
+      if (sql.includes("INSERT INTO flowdesk.idempotency_keys")) {
         const [o, a, r, k, fp] = values as [string, string, string, string, string];
         const key = makeIdempKey(o, a, r, k);
         if (idempotencyKeys.has(key)) {
@@ -146,9 +146,9 @@ function createMockDb(): DbClient {
         return { rowCount: 1 };
       }
 
-      // Idempotency complete: UPDATE wabrix.idempotency_keys
+      // Idempotency complete: UPDATE flowdesk.idempotency_keys
       if (
-        sql.includes("UPDATE wabrix.idempotency_keys") &&
+        sql.includes("UPDATE flowdesk.idempotency_keys") &&
         sql.includes("completed_at = clock_timestamp()")
       ) {
         const [status, bodyJson, o, a, r, k] = values as [
@@ -169,7 +169,7 @@ function createMockDb(): DbClient {
       }
 
       // Insert invitation
-      if (sql.includes("INSERT INTO wabrix.invitations")) {
+      if (sql.includes("INSERT INTO flowdesk.invitations")) {
         const [o, email, roleId] = values as [string, string, string];
         const id = `inv-${invitations.size + 1}`;
         invitations.set(id, { id, orgId: o, email, roleId });
@@ -177,7 +177,7 @@ function createMockDb(): DbClient {
       }
 
       // Insert audit log
-      if (sql.includes("INSERT INTO wabrix.audit_logs")) {
+      if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
         return { rows: [{ id: "audit-1", occurred_at: new Date() }] };
       }
 
@@ -213,7 +213,7 @@ describe("API Idempotency Middleware (M1-06)", () => {
       .post(`/api/v1/organizations/${orgId}/invitations`)
       .set("Cookie", ownerCookie)
       .set("Idempotency-Key", "a".repeat(257))
-      .send({ email: "bob@wabrix.dev", role: "agent" })
+      .send({ email: "bob@flowdesk.dev", role: "agent" })
       .expect(400);
 
     const body = res.body as { code: string };
@@ -225,11 +225,11 @@ describe("API Idempotency Middleware (M1-06)", () => {
       .post(`/api/v1/organizations/${orgId}/invitations`)
       .set("Cookie", ownerCookie)
       .set("Idempotency-Key", "first-key-123")
-      .send({ email: "bob@wabrix.dev", role: "agent" })
+      .send({ email: "bob@flowdesk.dev", role: "agent" })
       .expect(201);
 
     const body = res.body as { invitation: { email: string; role: string } };
-    expect(body.invitation.email).toBe("bob@wabrix.dev");
+    expect(body.invitation.email).toBe("bob@flowdesk.dev");
     expect(res.headers["idempotent-replay"]).toBeUndefined();
   });
 
@@ -241,12 +241,12 @@ describe("API Idempotency Middleware (M1-06)", () => {
       .post(`/api/v1/organizations/${orgId}/invitations`)
       .set("Cookie", ownerCookie)
       .set("Idempotency-Key", "first-key-123")
-      .send({ email: "bob@wabrix.dev", role: "agent" })
+      .send({ email: "bob@flowdesk.dev", role: "agent" })
       .expect(201);
 
     expect(res.headers["idempotent-replay"]).toBe("true");
     const body = res.body as { invitation: { email: string; role: string } };
-    expect(body.invitation.email).toBe("bob@wabrix.dev");
+    expect(body.invitation.email).toBe("bob@flowdesk.dev");
   });
 
   it("returns 422 if key is reused with a different payload", async () => {
@@ -254,7 +254,7 @@ describe("API Idempotency Middleware (M1-06)", () => {
       .post(`/api/v1/organizations/${orgId}/invitations`)
       .set("Cookie", ownerCookie)
       .set("Idempotency-Key", "first-key-123")
-      .send({ email: "charlie@wabrix.dev", role: "agent" })
+      .send({ email: "charlie@flowdesk.dev", role: "agent" })
       .expect(422);
 
     const body = res.body as { code: string };

@@ -1,2 +1,2 @@
-project_name = "wabrix"
+project_name = "flowdesk"
 environment  = "staging"

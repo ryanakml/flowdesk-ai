@@ -50,8 +50,8 @@ import {
   ListKnowledgeSourcesResponseSchema,
   StartWhatsAppEmbeddedSignupResponseSchema,
   CompleteWhatsAppEmbeddedSignupResponseSchema
-} from "@wabrix/contracts";
-import type { RoleKey } from "@wabrix/domain";
+} from "@flowdesk/contracts";
+import type { RoleKey } from "@flowdesk/domain";
 
 export class ApiError extends Error {
   readonly status: number;

@@ -1,4 +1,4 @@
-# Wabrix Frontend Application Architecture Specification
+# FlowDesk Frontend Application Architecture Specification
 
 > **Milestone**: M6.5 — Frontend Architecture & Product UI Redesign  
 > **Package**: `apps/web`  
@@ -44,7 +44,7 @@ All routes live under `apps/web/src/routes/` and compile via `@tanstack/router-p
 - `__root.tsx` defines:
   - `notFoundComponent`: Rendered when an unknown URL is requested, offering a graceful "404 — Page Not Found" glass card with a single-click return to `/inbox`.
   - `errorComponent`: Top-level route error boundary catching unhandled client rendering errors and providing recovery actions.
-  - Document Title Synchronizer: Automatically updates `document.title` on route transitions (e.g. `Wabrix — Inbox`, `Wabrix — Developer APIs`).
+  - Document Title Synchronizer: Automatically updates `document.title` on route transitions (e.g. `FlowDesk — Inbox`, `FlowDesk — Developer APIs`).
 
 ---
 
@@ -68,7 +68,7 @@ The application root composition (`apps/web/src/App.tsx`) is structured with str
 2. **`AuthProvider`**:
    - Resides in `src/features/auth/context.tsx`.
    - Manages current `sessionUser`, tenant `organizations`, `selectedOrgId`, `currentRole`, invite acceptance token flow, and first-time organization onboarding bootstrap.
-   - Provides `checkPermission(permission)` helper evaluating `@wabrix/domain` RBAC rules.
+   - Provides `checkPermission(permission)` helper evaluating `@flowdesk/domain` RBAC rules.
 3. **`RouterProvider`**:
    - Mounts the TanStack Router instance with intent preloading and registers TypeScript router types globally.
 

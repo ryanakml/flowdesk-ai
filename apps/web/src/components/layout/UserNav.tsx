@@ -8,7 +8,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 import { useAuth } from "../../features/auth/context.js";
 
 interface UserNavProps {

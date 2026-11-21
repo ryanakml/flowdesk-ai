@@ -6,9 +6,9 @@ describe("Semantic RAG Retrieval Domain Engine", () => {
     const rawChunks = [
       {
         id: "chunk-1",
-        content: "Wabrix supports WhatsApp multi-tenant team inbox routing.",
+        content: "FlowDesk supports WhatsApp multi-tenant team inbox routing.",
         similarity: 0.92345,
-        metadata: { documentTitle: "Wabrix Features Guide" }
+        metadata: { documentTitle: "FlowDesk Features Guide" }
       },
       {
         id: "chunk-2",
@@ -21,13 +21,15 @@ describe("Semantic RAG Retrieval Domain Engine", () => {
     const citations = buildCitations(rawChunks);
 
     expect(citations).toHaveLength(2);
-    expect(citations[0]?.documentTitle).toBe("Wabrix Features Guide");
+    expect(citations[0]?.documentTitle).toBe("FlowDesk Features Guide");
     expect(citations[0]?.score).toBe(0.9234);
     expect(citations[1]?.documentTitle).toBe("Knowledge Document");
 
     const formattedContext = formatKnowledgeContext(citations);
-    expect(formattedContext).toContain("[Source 1: Wabrix Features Guide (Relevance: 92%)]");
-    expect(formattedContext).toContain("Wabrix supports WhatsApp multi-tenant team inbox routing.");
+    expect(formattedContext).toContain("[Source 1: FlowDesk Features Guide (Relevance: 92%)]");
+    expect(formattedContext).toContain(
+      "FlowDesk supports WhatsApp multi-tenant team inbox routing."
+    );
   });
 
   it("handles empty citations gracefully", () => {

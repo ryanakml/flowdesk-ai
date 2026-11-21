@@ -60,7 +60,7 @@ export async function bootstrapOrganization(
     display_name: string;
     owner_role_id: string;
     membership_id: string;
-  }>("SELECT * FROM wabrix.bootstrap_organization($1, $2, $3)", [
+  }>("SELECT * FROM flowdesk.bootstrap_organization($1, $2, $3)", [
     input.slug,
     input.name,
     input.userId
@@ -86,7 +86,7 @@ export async function createInvitation(
 ): Promise<InvitationRecord> {
   // 1. Resolve role_id from roleKey in this organization
   const roleRes = await db.query<{ id: string }>(
-    "SELECT id FROM wabrix.roles WHERE organization_id = $1 AND key = $2",
+    "SELECT id FROM flowdesk.roles WHERE organization_id = $1 AND key = $2",
     [input.organizationId, input.roleKey]
   );
   const roleRow = roleRes.rows[0];
@@ -98,7 +98,7 @@ export async function createInvitation(
   const expiresAt = new Date(Date.now() + ttlHours * 60 * 60 * 1000);
 
   const insertRes = await db.query<{ id: string; status: string; expires_at: Date }>(
-    `INSERT INTO wabrix.invitations (
+    `INSERT INTO flowdesk.invitations (
       organization_id, email, role_id, token_hash, invited_by_user_id, status, expires_at
     ) VALUES ($1, $2, $3, $4, $5, 'pending', $6)
     RETURNING id, status, expires_at`,
@@ -135,7 +135,7 @@ export async function consumeInvitation(
     organization_id: string;
     role_id: string;
     membership_id: string;
-  }>("SELECT * FROM wabrix.consume_invitation($1, $2)", [input.tokenHash, input.userId]);
+  }>("SELECT * FROM flowdesk.consume_invitation($1, $2)", [input.tokenHash, input.userId]);
 
   const row = res.rows[0];
   if (!row) return null;
@@ -152,7 +152,7 @@ export async function revokeInvitation(
   input: { organizationId: string; invitationId: string }
 ): Promise<boolean> {
   const res = await db.query(
-    `UPDATE wabrix.invitations
+    `UPDATE flowdesk.invitations
      SET status = 'revoked', revoked_at = clock_timestamp(), updated_at = clock_timestamp()
      WHERE organization_id = $1 AND id = $2 AND status = 'pending'`,
     [input.organizationId, input.invitationId]
@@ -176,9 +176,9 @@ export async function listMemberships(
     created_at: Date;
   }>(
     `SELECT m.id, m.user_id, u.email, u.display_name, r.key AS role_key, r.label AS role_label, m.status, m.created_at
-     FROM wabrix.memberships m
-     JOIN wabrix.users u ON m.user_id = u.id
-     JOIN wabrix.roles r ON m.role_id = r.id
+     FROM flowdesk.memberships m
+     JOIN flowdesk.users u ON m.user_id = u.id
+     JOIN flowdesk.roles r ON m.role_id = r.id
      WHERE m.organization_id = $1 AND m.status != 'revoked'
      ORDER BY m.created_at ASC`,
     [organizationId]
@@ -206,8 +206,8 @@ export async function getMemberRole(
     status: string;
   }>(
     `SELECT m.id, r.key AS role_key, m.status
-     FROM wabrix.memberships m
-     JOIN wabrix.roles r ON m.role_id = r.id
+     FROM flowdesk.memberships m
+     JOIN flowdesk.roles r ON m.role_id = r.id
      WHERE m.organization_id = $1 AND m.user_id = $2 AND m.status = 'active'`,
     [input.organizationId, input.userId]
   );
@@ -225,8 +225,8 @@ export async function getMemberRole(
 async function countActiveOwners(db: DbClient, organizationId: string): Promise<number> {
   const res = await db.query<{ count: string | number }>(
     `SELECT count(*) AS count
-     FROM wabrix.memberships m
-     JOIN wabrix.roles r ON m.role_id = r.id
+     FROM flowdesk.memberships m
+     JOIN flowdesk.roles r ON m.role_id = r.id
      WHERE m.organization_id = $1 AND r.key = 'owner' AND m.status = 'active'`,
     [organizationId]
   );
@@ -240,8 +240,8 @@ export async function updateMembershipRole(
   // 1. Fetch current membership role
   const currentRes = await db.query<{ role_key: string; status: string }>(
     `SELECT r.key AS role_key, m.status
-     FROM wabrix.memberships m
-     JOIN wabrix.roles r ON m.role_id = r.id
+     FROM flowdesk.memberships m
+     JOIN flowdesk.roles r ON m.role_id = r.id
      WHERE m.organization_id = $1 AND m.id = $2`,
     [input.organizationId, input.membershipId]
   );
@@ -260,7 +260,7 @@ export async function updateMembershipRole(
 
   // 3. Resolve target role ID
   const roleRes = await db.query<{ id: string }>(
-    "SELECT id FROM wabrix.roles WHERE organization_id = $1 AND key = $2",
+    "SELECT id FROM flowdesk.roles WHERE organization_id = $1 AND key = $2",
     [input.organizationId, input.newRoleKey]
   );
   const targetRole = roleRes.rows[0];
@@ -269,7 +269,7 @@ export async function updateMembershipRole(
   }
 
   await db.query(
-    `UPDATE wabrix.memberships
+    `UPDATE flowdesk.memberships
      SET role_id = $1, updated_at = clock_timestamp()
      WHERE organization_id = $2 AND id = $3`,
     [targetRole.id, input.organizationId, input.membershipId]
@@ -288,8 +288,8 @@ export async function revokeMembership(
   // 1. Fetch current role
   const currentRes = await db.query<{ role_key: string; status: string }>(
     `SELECT r.key AS role_key, m.status
-     FROM wabrix.memberships m
-     JOIN wabrix.roles r ON m.role_id = r.id
+     FROM flowdesk.memberships m
+     JOIN flowdesk.roles r ON m.role_id = r.id
      WHERE m.organization_id = $1 AND m.id = $2`,
     [input.organizationId, input.membershipId]
   );
@@ -307,7 +307,7 @@ export async function revokeMembership(
   }
 
   const res = await db.query(
-    `UPDATE wabrix.memberships
+    `UPDATE flowdesk.memberships
      SET status = 'revoked', revoked_at = clock_timestamp(), updated_at = clock_timestamp()
      WHERE organization_id = $1 AND id = $2 AND status != 'revoked'`,
     [input.organizationId, input.membershipId]
@@ -334,7 +334,7 @@ export async function listUserOrganizations(
     display_name: string;
     role_key: string;
     membership_id: string;
-  }>("SELECT * FROM wabrix.list_user_organizations($1)", [userId]);
+  }>("SELECT * FROM flowdesk.list_user_organizations($1)", [userId]);
 
   return result.rows.map((row) => ({
     id: row.id,
@@ -347,7 +347,7 @@ export async function listUserOrganizations(
 
 export async function listActiveOrganizationIds(db: DbClient): Promise<string[]> {
   const result = await db.query<{ id: string }>(
-    "SELECT id FROM wabrix.list_active_organization_ids()"
+    "SELECT id FROM flowdesk.list_active_organization_ids()"
   );
   return result.rows.map((row) => row.id);
 }

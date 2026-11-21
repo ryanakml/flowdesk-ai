@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient } from "@wabrix/db";
+import type { DbClient } from "@flowdesk/db";
 import {
   AiProviderError,
   FakeEmbeddingProvider,
   type AiEmbeddingProvider
-} from "@wabrix/providers";
+} from "@flowdesk/providers";
 import { processKnowledgeIngestionBatch } from "./knowledge-ingestion.js";
 
 function createMockDb() {
@@ -35,14 +35,14 @@ function createMockDb() {
           }
         ]);
       }
-      if (sql.includes("FROM wabrix.knowledge_ingestion_jobs WHERE id")) {
+      if (sql.includes("FROM flowdesk.knowledge_ingestion_jobs WHERE id")) {
         return result([
           {
             id: "job-1",
             organization_id: "org-1",
             source_id: "source-1",
             dedupe_key: "dedupe-1",
-            input_text: "Wabrix refunds are available within seven days.",
+            input_text: "FlowDesk refunds are available within seven days.",
             status: state.jobStatus,
             attempts: state.attempts,
             max_attempts: 3,
@@ -52,7 +52,7 @@ function createMockDb() {
           }
         ]);
       }
-      if (sql.includes("SELECT * FROM wabrix.knowledge_sources")) {
+      if (sql.includes("SELECT * FROM flowdesk.knowledge_sources")) {
         return result([
           {
             id: "source-1",
@@ -74,20 +74,20 @@ function createMockDb() {
           }
         ]);
       }
-      if (sql.includes("UPDATE wabrix.knowledge_sources") && sql.includes("status = $1")) {
+      if (sql.includes("UPDATE flowdesk.knowledge_sources") && sql.includes("status = $1")) {
         state.sourceStatus = params[0] as string;
         return result([]);
       }
-      if (sql.includes("DELETE FROM wabrix.documents")) {
+      if (sql.includes("DELETE FROM flowdesk.documents")) {
         state.documents = 0;
         state.chunks = [];
         return result([]);
       }
-      if (sql.includes("INSERT INTO wabrix.documents")) {
+      if (sql.includes("INSERT INTO flowdesk.documents")) {
         state.documents++;
         return result([{ id: "document-1" }]);
       }
-      if (sql.includes("INSERT INTO wabrix.document_chunks")) {
+      if (sql.includes("INSERT INTO flowdesk.document_chunks")) {
         state.chunks.push(String(params[6]).slice(1, -1).split(",").map(Number));
         return result([]);
       }
@@ -95,7 +95,7 @@ function createMockDb() {
         state.sourceStatus = "active";
         return result([]);
       }
-      if (sql.includes("UPDATE wabrix.knowledge_ingestion_jobs")) {
+      if (sql.includes("UPDATE flowdesk.knowledge_ingestion_jobs")) {
         state.jobStatus = params[1] as string;
         return result([]);
       }

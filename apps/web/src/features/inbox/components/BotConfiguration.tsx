@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { BotConfigResponse } from "@wabrix/contracts";
-import { Button, Label } from "@wabrix/ui";
+import type { BotConfigResponse } from "@flowdesk/contracts";
+import { Button, Label } from "@flowdesk/ui";
 import { getBotConfig, updateBotConfig } from "../../../api.js";
 import { setAutomationEmergencyStop } from "../../../automation-api.js";
 

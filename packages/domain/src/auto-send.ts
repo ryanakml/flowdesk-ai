@@ -22,7 +22,7 @@ export interface PreSendValidationResult {
 
 export const DEFAULT_MIN_CONFIDENCE_THRESHOLD = 0.9;
 export const DEFAULT_MAX_AUTO_REPLIES_PER_HOUR = 3;
-export const AI_DISCLAIMER_FOOTER = "_Balasan otomatis oleh AI Wabrix_";
+export const AI_DISCLAIMER_FOOTER = "_Balasan otomatis oleh AI FlowDesk_";
 
 export function appendAiDisclaimer(content: string): string {
   const trimmed = content.trim();

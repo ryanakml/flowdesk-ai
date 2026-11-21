@@ -55,7 +55,7 @@ export async function createAttachmentUploadSession(
 ): Promise<{ attachment: AttachmentRecord; uploadSession: AttachmentUploadSessionRecord }> {
   // 1. Insert attachment in 'quarantine' status
   const attachmentRes = await client.query(
-    `INSERT INTO wabrix.attachments
+    `INSERT INTO flowdesk.attachments
        (organization_id, uploader_user_id, file_name, content_type, byte_size, sha256_checksum, storage_key, status, metadata)
      VALUES ($1, $2, $3, $4, $5, $6, $7, 'quarantine', $8)
      RETURNING
@@ -86,7 +86,7 @@ export async function createAttachmentUploadSession(
 
   // 2. Insert upload session
   const sessionRes = await client.query(
-    `INSERT INTO wabrix.attachment_upload_sessions
+    `INSERT INTO flowdesk.attachment_upload_sessions
        (organization_id, attachment_id, uploader_user_id, upload_url, expires_at)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING
@@ -115,7 +115,7 @@ export async function getAttachmentById(
        scanner_name AS "scannerName", scan_metadata AS "scanMetadata", metadata,
        deleted_at AS "deletedAt", deletion_reason AS "deletionReason",
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.attachments
+     FROM flowdesk.attachments
      WHERE organization_id = $1 AND id = $2 AND deleted_at IS NULL`,
     [orgId, id]
   );
@@ -138,7 +138,7 @@ export async function getUploadSessionById(
        id, organization_id AS "organizationId", attachment_id AS "attachmentId",
        uploader_user_id AS "uploaderUserId", upload_url AS "uploadUrl",
        expires_at AS "expiresAt", completed_at AS "completedAt", created_at AS "createdAt"
-     FROM wabrix.attachment_upload_sessions
+     FROM flowdesk.attachment_upload_sessions
      WHERE organization_id = $1 AND id = $2`,
     [orgId, id]
   );
@@ -157,7 +157,7 @@ export async function completeAttachmentUploadSession(
 
   // Mark session completed
   const completed = await client.query(
-    `UPDATE wabrix.attachment_upload_sessions
+    `UPDATE flowdesk.attachment_upload_sessions
      SET completed_at = $1
      WHERE organization_id = $2 AND attachment_id = $3 AND completed_at IS NULL`,
     [now, orgId, attachmentId]
@@ -170,7 +170,7 @@ export async function completeAttachmentUploadSession(
   // Update checksum if supplied
   if (sha256Checksum) {
     await client.query(
-      `UPDATE wabrix.attachments
+      `UPDATE flowdesk.attachments
        SET sha256_checksum = $1, updated_at = $2
        WHERE organization_id = $3 AND id = $4`,
       [sha256Checksum, now, orgId, attachmentId]
@@ -179,7 +179,7 @@ export async function completeAttachmentUploadSession(
 
   // Record outbox event for scanning
   await client.query(
-    `INSERT INTO wabrix.outbox_events
+    `INSERT INTO flowdesk.outbox_events
        (organization_id, aggregate_type, aggregate_id, event_type, payload)
      VALUES ($1, 'attachment', $2, 'attachment.uploaded', $3)`,
     [
@@ -214,7 +214,7 @@ export async function updateAttachmentScanResult(
   const now = new Date();
 
   const res = await client.query(
-    `UPDATE wabrix.attachments
+    `UPDATE flowdesk.attachments
      SET status = $1,
          detected_mime_type = COALESCE($2, detected_mime_type),
          sha256_checksum = COALESCE($3, sha256_checksum),
@@ -254,7 +254,7 @@ export async function updateAttachmentScanResult(
 
   // Record audit outbox event
   await client.query(
-    `INSERT INTO wabrix.outbox_events
+    `INSERT INTO flowdesk.outbox_events
        (organization_id, aggregate_type, aggregate_id, event_type, payload)
      VALUES ($1, 'attachment', $2, $3, $4)`,
     [
@@ -287,7 +287,7 @@ export async function softDeleteAttachment(
   const now = new Date();
 
   const res = await client.query(
-    `UPDATE wabrix.attachments
+    `UPDATE flowdesk.attachments
      SET deleted_at = $1,
          deletion_reason = $2,
          updated_at = $1
@@ -309,7 +309,7 @@ export async function softDeleteAttachment(
 
   // Record audit outbox event
   await client.query(
-    `INSERT INTO wabrix.outbox_events
+    `INSERT INTO flowdesk.outbox_events
        (organization_id, aggregate_type, aggregate_id, event_type, payload)
      VALUES ($1, 'attachment', $2, 'attachment.deleted', $3)`,
     [
@@ -349,7 +349,7 @@ export async function listExpiredAttachments(
     `SELECT
        id, organization_id AS "organizationId", storage_key AS "storageKey",
        status, created_at AS "createdAt"
-     FROM wabrix.attachments
+     FROM flowdesk.attachments
      WHERE organization_id = $1
        AND deleted_at IS NULL
        AND created_at < $2
@@ -374,7 +374,7 @@ export async function listAttachmentRetentionCandidates(
     status: AttachmentStatus;
     created_at: Date;
   }>(
-    `SELECT * FROM wabrix.list_attachment_retention_candidates($1::timestamptz, $2::timestamptz, $3::integer)`,
+    `SELECT * FROM flowdesk.list_attachment_retention_candidates($1::timestamptz, $2::timestamptz, $3::integer)`,
     [cleanBefore, rejectedBefore, limit]
   );
   return result.rows.map((row) => ({
@@ -401,7 +401,7 @@ export async function claimAttachmentScanEvents(
     causation_id: string | null;
     occurred_at: Date;
     attempts: number;
-  }>(`SELECT * FROM wabrix.claim_attachment_scan_events($1::integer)`, [limit]);
+  }>(`SELECT * FROM flowdesk.claim_attachment_scan_events($1::integer)`, [limit]);
   return result.rows.map((row) => ({
     id: row.id,
     organizationId: row.organization_id,

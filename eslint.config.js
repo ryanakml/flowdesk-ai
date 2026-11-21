@@ -26,7 +26,7 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ["**/apps/*", "@wabrix/*/src/*"],
+              group: ["**/apps/*", "@flowdesk/*/src/*"],
               message: "Applications communicate through package contracts, never app internals."
             }
           ]

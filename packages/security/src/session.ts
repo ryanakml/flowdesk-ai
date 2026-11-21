@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
-export const SESSION_COOKIE_NAME = "__Host-wabrix_session";
-export const LOCAL_SESSION_COOKIE_NAME = "wabrix_session";
+export const SESSION_COOKIE_NAME = "__Host-flowdesk_session";
+export const LOCAL_SESSION_COOKIE_NAME = "flowdesk_session";
 
 export function createOpaqueToken(): string {
   return randomBytes(32).toString("base64url");

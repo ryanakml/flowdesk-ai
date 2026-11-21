@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { RealtimeHint } from "@wabrix/contracts";
+import type { RealtimeHint } from "@flowdesk/contracts";
 import { conversationsKeys } from "../features/inbox/query-keys.js";
 import { teamKeys } from "../features/team/query-keys.js";
 import { knowledgeKeys } from "../features/knowledge/query-keys.js";

@@ -1,4 +1,4 @@
-import type { GenerateBotDraftResponse } from "@wabrix/contracts";
+import type { GenerateBotDraftResponse } from "@flowdesk/contracts";
 import {
   Button,
   Dialog,
@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   cn
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 import { RefreshCw, Send, Sparkles } from "lucide-react";
 import { MarkdownContent } from "./MarkdownContent.js";
 

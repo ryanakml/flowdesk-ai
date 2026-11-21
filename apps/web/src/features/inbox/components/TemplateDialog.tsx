@@ -1,6 +1,6 @@
-import type { Conversation, TemplatePreviewResponse } from "@wabrix/contracts";
+import type { Conversation, TemplatePreviewResponse } from "@flowdesk/contracts";
 import type { ConversationTemplateItem } from "../../../api.js";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@wabrix/ui";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@flowdesk/ui";
 
 interface TemplateDialogProps {
   open: boolean;

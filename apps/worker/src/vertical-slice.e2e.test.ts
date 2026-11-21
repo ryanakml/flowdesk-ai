@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient, ClaimedOutboxEvent } from "@wabrix/db";
-import { FakeWhatsAppProvider, WhatsAppProviderError } from "@wabrix/providers";
+import type { DbClient, ClaimedOutboxEvent } from "@flowdesk/db";
+import { FakeWhatsAppProvider, WhatsAppProviderError } from "@flowdesk/providers";
 import {
   decryptWhatsAppChannelCredentials,
   encryptWhatsAppChannelCredentials,
   computeMetaSignature,
   verifyMetaSignature
-} from "@wabrix/security";
+} from "@flowdesk/security";
 import { processWebhookPayload } from "./normalization.js";
 import { dispatchOutboundMessage, type OutboundMessagePayload } from "./dispatch.js";
 
@@ -103,7 +103,7 @@ function createE2EMockDb() {
       }
 
       // Channels: Get by phone_number_id
-      if (sql.includes("FROM wabrix.channels") && sql.includes("phone_number_id = $2")) {
+      if (sql.includes("FROM flowdesk.channels") && sql.includes("phone_number_id = $2")) {
         const targetOrg = values[0] as string;
         const targetPhoneId = values[1] as string;
         for (const ch of channels.values()) {
@@ -119,7 +119,7 @@ function createE2EMockDb() {
       }
 
       // Channels: Get by id
-      if (sql.includes("FROM wabrix.channels WHERE id = $1")) {
+      if (sql.includes("FROM flowdesk.channels WHERE id = $1")) {
         const targetId = values[0] as string;
         const ch = channels.get(targetId);
         if (ch) {
@@ -130,7 +130,7 @@ function createE2EMockDb() {
 
       // Conversations: Find existing by phone & channel
       if (
-        sql.includes("FROM wabrix.conversations") &&
+        sql.includes("FROM flowdesk.conversations") &&
         sql.includes("organization_id = $1 AND channel_id = $2 AND customer_phone = $3")
       ) {
         const [targetOrg, targetChan, targetPhone] = values as [string, string, string];
@@ -147,7 +147,7 @@ function createE2EMockDb() {
       }
 
       // Conversations: Insert new
-      if (sql.includes("INSERT INTO wabrix.conversations")) {
+      if (sql.includes("INSERT INTO flowdesk.conversations")) {
         const id = `conv-${conversations.size + 1}`;
         const conv: MockConversation = {
           id,
@@ -168,7 +168,7 @@ function createE2EMockDb() {
       }
 
       // Messages: Select by provider_message_id (idempotency & status reconciliation)
-      if (sql.includes("FROM wabrix.messages") && sql.includes("provider_message_id = $2")) {
+      if (sql.includes("FROM flowdesk.messages") && sql.includes("provider_message_id = $2")) {
         const [targetOrg, targetProviderId] = values as [string, string];
         for (const m of messages.values()) {
           if (m.organization_id === targetOrg && m.provider_message_id === targetProviderId) {
@@ -180,7 +180,7 @@ function createE2EMockDb() {
 
       // Messages: Select by id (handles both getMessageById and updateMessageStatus SELECT)
       if (
-        sql.includes("FROM wabrix.messages") &&
+        sql.includes("FROM flowdesk.messages") &&
         (sql.includes("WHERE organization_id = $1 AND id = $2") ||
           sql.includes("WHERE id = $1 AND organization_id = $2"))
       ) {
@@ -220,7 +220,7 @@ function createE2EMockDb() {
       }
 
       // Messages: Insert
-      if (sql.includes("INSERT INTO wabrix.messages")) {
+      if (sql.includes("INSERT INTO flowdesk.messages")) {
         const id = `msg-${messages.size + 1}`;
         const msg: MockMessage = {
           id,
@@ -260,7 +260,7 @@ function createE2EMockDb() {
       }
 
       // Messages: Update status
-      if (sql.includes("UPDATE wabrix.messages SET status = $1")) {
+      if (sql.includes("UPDATE flowdesk.messages SET status = $1")) {
         const targetStatus = values[0] as string;
         const msgId = values[1] as string;
         const providerMsgId = (values[2] as string | null) ?? null;
@@ -284,7 +284,7 @@ function createE2EMockDb() {
       }
 
       // Outbox: Claim unpublished
-      if (sql.includes("FROM wabrix.outbox_events") && sql.includes("published_at IS NULL")) {
+      if (sql.includes("FROM flowdesk.outbox_events") && sql.includes("published_at IS NULL")) {
         const limitVal = (values[0] as number) ?? 10;
         const unpublished = Array.from(outboxEvents.values())
           .filter((e) => e.published_at === null)
@@ -299,7 +299,7 @@ function createE2EMockDb() {
       }
 
       // Outbox: Mark published
-      if (sql.includes("UPDATE wabrix.outbox_events SET published_at = clock_timestamp()")) {
+      if (sql.includes("UPDATE flowdesk.outbox_events SET published_at = clock_timestamp()")) {
         const eventId = values[0] as string;
         const ev = outboxEvents.get(eventId);
         if (ev) {
@@ -310,7 +310,7 @@ function createE2EMockDb() {
       }
 
       // Outbox: Record failure
-      if (sql.includes("UPDATE wabrix.outbox_events SET attempts = attempts + 1")) {
+      if (sql.includes("UPDATE flowdesk.outbox_events SET attempts = attempts + 1")) {
         const eventId = values[0] as string;
         const lastErr = values[1] as string;
         const isTerminal = values[2] as boolean;

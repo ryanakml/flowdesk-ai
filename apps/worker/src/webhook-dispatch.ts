@@ -1,4 +1,4 @@
-import type { DbClient, ClaimedOutboxEvent } from "@wabrix/db";
+import type { DbClient, ClaimedOutboxEvent } from "@flowdesk/db";
 import {
   createWebhookDelivery,
   updateWebhookDeliveryOutcome,
@@ -7,12 +7,12 @@ import {
   getWebhookSubscriptionById,
   updateWebhookSubscriptionVerification,
   runInTenantTransaction
-} from "@wabrix/db";
+} from "@flowdesk/db";
 import {
   computeWebhookSignature,
   decryptWebhookSecret,
   validateWebhookUrl
-} from "@wabrix/security";
+} from "@flowdesk/security";
 
 export interface DeveloperWebhookPayload {
   subscriptionId: string;
@@ -120,7 +120,9 @@ export async function dispatchDeveloperWebhook(
 
   // Decrypt secret only in memory
   const encryptionKey =
-    options.encryptionKey ?? process.env["ENCRYPTION_KEY"] ?? "wabrix-local-dev-encryption-key-32b";
+    options.encryptionKey ??
+    process.env["ENCRYPTION_KEY"] ??
+    "flowdesk-local-dev-encryption-key-32b";
   let secret: string;
   try {
     secret = decryptWebhookSecret(storedSecret, encryptionKey);
@@ -152,10 +154,10 @@ export async function dispatchDeveloperWebhook(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Wabrix-Signature": signature,
-        "X-Wabrix-Event-Id": payload.eventId,
-        "X-Wabrix-Timestamp": String(nowSeconds),
-        "User-Agent": "Wabrix-Webhook-Worker/1.0"
+        "X-FlowDesk-Signature": signature,
+        "X-FlowDesk-Event-Id": payload.eventId,
+        "X-FlowDesk-Timestamp": String(nowSeconds),
+        "User-Agent": "FlowDesk-Webhook-Worker/1.0"
       },
       body: rawBody,
       signal: controller.signal
@@ -260,9 +262,10 @@ export async function processOutboxWebhookDispatchBatch(
     causation_id: string | null;
     occurred_at: Date;
     attempts: number;
-  }>(`SELECT * FROM wabrix.claim_outbox_events('developer.webhook.dispatch'::text, $1::integer)`, [
-    batchSize
-  ]);
+  }>(
+    `SELECT * FROM flowdesk.claim_outbox_events('developer.webhook.dispatch'::text, $1::integer)`,
+    [batchSize]
+  );
 
   let processedCount = 0;
   for (const ev of events.rows) {

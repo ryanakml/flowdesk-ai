@@ -8,11 +8,12 @@ on:
         required: true
         type: string
       image_family:
-        description: "Image family to promote (wabrix)"
+        description: "Image family to promote (flowdesk)"
         required: true
-        default: "wabrix"
+        default: "flowdesk"
         type: choice
         options:
+          - flowdesk
           - wabrix
       canary_initial_weight:
         description: "Initial Canary traffic percentage (5 or 25)"
@@ -79,7 +80,7 @@ jobs:
       - name: Upload Verified Image Digests
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
-          name: wabrix-image-digests-${{ github.event.inputs.source_sha }}
+          name: flowdesk-image-digests-${{ github.event.inputs.source_sha }}
           path: artifacts/provenance/image-digests.json
           retention-days: 90
 
@@ -95,7 +96,7 @@ jobs:
       - name: Upload SBOM Artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
-          name: wabrix-sbom-${{ github.event.inputs.source_sha }}
+          name: flowdesk-sbom-${{ github.event.inputs.source_sha }}
           path: artifacts/sbom/
           retention-days: 90
 
@@ -114,7 +115,7 @@ jobs:
       - name: Download Verified Image Digests
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
-          name: wabrix-image-digests-${{ github.event.inputs.source_sha }}
+          name: flowdesk-image-digests-${{ github.event.inputs.source_sha }}
           path: artifacts/provenance/
 
       - name: Configure AWS Credentials via OIDC
@@ -122,12 +123,12 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME || vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
-          role-session-name: Wabrix-Production-Canary-5pct
+          role-session-name: FlowDesk-Production-Canary-5pct
 
       - name: Deploy Verified Image Digests to Canary Workload
         env:
-          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME || vars.ECS_CLUSTER_NAME || 'wabrix-production-cluster' }}
-          ECS_SERVICE_NAME: ${{ secrets.ECS_CANARY_SERVICE_NAME || vars.ECS_CANARY_SERVICE_NAME || 'wabrix-production-canary-api' }}
+          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME || vars.ECS_CLUSTER_NAME || 'flowdesk-production-cluster' }}
+          ECS_SERVICE_NAME: ${{ secrets.ECS_CANARY_SERVICE_NAME || vars.ECS_CANARY_SERVICE_NAME || 'flowdesk-production-canary-api' }}
           PROD_CANARY_TG_ARN: ${{ secrets.PROD_CANARY_TG_ARN || vars.PROD_CANARY_TG_ARN }}
           AWS_REGION: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
           DIGESTS_FILE: "artifacts/provenance/image-digests.json"
@@ -137,8 +138,8 @@ jobs:
 
       - name: Verify Running Canary Workload Digest & Target Health
         env:
-          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME || vars.ECS_CLUSTER_NAME || 'wabrix-production-cluster' }}
-          ECS_SERVICE_NAME: ${{ secrets.ECS_CANARY_SERVICE_NAME || vars.ECS_CANARY_SERVICE_NAME || 'wabrix-production-canary-api' }}
+          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME || vars.ECS_CLUSTER_NAME || 'flowdesk-production-cluster' }}
+          ECS_SERVICE_NAME: ${{ secrets.ECS_CANARY_SERVICE_NAME || vars.ECS_CANARY_SERVICE_NAME || 'flowdesk-production-canary-api' }}
           AWS_REGION: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
           DIGESTS_FILE: "artifacts/provenance/image-digests.json"
         run: |
@@ -207,7 +208,7 @@ jobs:
       - name: Download Verified Image Digests
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
-          name: wabrix-image-digests-${{ github.event.inputs.source_sha }}
+          name: flowdesk-image-digests-${{ github.event.inputs.source_sha }}
           path: artifacts/provenance/
 
       - name: Configure AWS Credentials via OIDC
@@ -215,7 +216,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME || vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
-          role-session-name: Wabrix-Production-Canary-25pct
+          role-session-name: FlowDesk-Production-Canary-25pct
 
       - name: Advance Canary Slice (25% Weight)
         env:
@@ -279,7 +280,7 @@ jobs:
       - name: Download Verified Image Digests
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
         with:
-          name: wabrix-image-digests-${{ github.event.inputs.source_sha }}
+          name: flowdesk-image-digests-${{ github.event.inputs.source_sha }}
           path: artifacts/provenance/
 
       - name: Configure AWS Credentials via OIDC
@@ -287,7 +288,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME || vars.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
-          role-session-name: Wabrix-Production-Promote-100pct
+          role-session-name: FlowDesk-Production-Promote-100pct
 
       - name: Shift Traffic to 100% Canary
         env:
@@ -313,8 +314,8 @@ jobs:
 
       - name: Deploy Verified Image Digests to Stable Workload (Catchup)
         env:
-          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME || vars.ECS_CLUSTER_NAME || 'wabrix-production-cluster' }}
-          ECS_SERVICE_NAME: ${{ secrets.ECS_STABLE_SERVICE_NAME || vars.ECS_STABLE_SERVICE_NAME || 'wabrix-production-stable-api' }}
+          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME || vars.ECS_CLUSTER_NAME || 'flowdesk-production-cluster' }}
+          ECS_SERVICE_NAME: ${{ secrets.ECS_STABLE_SERVICE_NAME || vars.ECS_STABLE_SERVICE_NAME || 'flowdesk-production-stable-api' }}
           PROD_STABLE_TG_ARN: ${{ secrets.PROD_STABLE_TG_ARN || vars.PROD_STABLE_TG_ARN }}
           AWS_REGION: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
           DIGESTS_FILE: "artifacts/provenance/image-digests.json"
@@ -325,8 +326,8 @@ jobs:
 
       - name: Verify Running Stable Workload Digests
         env:
-          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME || vars.ECS_CLUSTER_NAME || 'wabrix-production-cluster' }}
-          ECS_SERVICE_NAME: ${{ secrets.ECS_STABLE_SERVICE_NAME || vars.ECS_STABLE_SERVICE_NAME || 'wabrix-production-stable-api' }}
+          ECS_CLUSTER_NAME: ${{ secrets.ECS_CLUSTER_NAME || vars.ECS_CLUSTER_NAME || 'flowdesk-production-cluster' }}
+          ECS_SERVICE_NAME: ${{ secrets.ECS_STABLE_SERVICE_NAME || vars.ECS_STABLE_SERVICE_NAME || 'flowdesk-production-stable-api' }}
           AWS_REGION: ${{ vars.AWS_REGION || 'ap-southeast-1' }}
           DIGESTS_FILE: "artifacts/provenance/image-digests.json"
         run: |

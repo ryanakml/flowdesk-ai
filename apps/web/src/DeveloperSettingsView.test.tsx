@@ -155,7 +155,7 @@ describe("DeveloperSettingsView component (M6-02)", () => {
                   id: "wh-1",
                   organizationId: orgId,
                   name: "Acceptance Hook",
-                  url: "https://receiver.example.com/wabrix",
+                  url: "https://receiver.example.com/flowdesk",
                   secret: rawSecret,
                   events: ["conversation.created", "message.received"],
                   isActive: true,
@@ -175,7 +175,7 @@ describe("DeveloperSettingsView component (M6-02)", () => {
                       id: "wh-1",
                       organizationId: orgId,
                       name: "Acceptance Hook",
-                      url: "https://receiver.example.com/wabrix",
+                      url: "https://receiver.example.com/flowdesk",
                       secret: "whsec_****************",
                       events: ["conversation.created", "message.received"],
                       isActive: true,
@@ -201,8 +201,8 @@ describe("DeveloperSettingsView component (M6-02)", () => {
     fireEvent.change(screen.getByPlaceholderText("e.g. CRM Sync Handler"), {
       target: { value: "Acceptance Hook" }
     });
-    fireEvent.change(screen.getByPlaceholderText("https://your-domain.com/webhooks/wabrix"), {
-      target: { value: "https://receiver.example.com/wabrix" }
+    fireEvent.change(screen.getByPlaceholderText("https://your-domain.com/webhooks/flowdesk"), {
+      target: { value: "https://receiver.example.com/flowdesk" }
     });
     fireEvent.click(screen.getByText("Register Webhook"));
 

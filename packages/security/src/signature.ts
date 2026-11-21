@@ -41,7 +41,7 @@ export function verifyMetaSignature(
 }
 
 /**
- * Computes a standard Wabrix developer webhook signature (v1 HMAC-SHA256).
+ * Computes a standard FlowDesk developer webhook signature (v1 HMAC-SHA256).
  */
 export function computeWebhookSignature(
   rawBody: Buffer | string,
@@ -54,7 +54,7 @@ export function computeWebhookSignature(
 }
 
 /**
- * Verifies a Wabrix developer webhook signature header (t=...,v1=...) in constant time.
+ * Verifies a FlowDesk developer webhook signature header (t=...,v1=...) in constant time.
  * Supports tolerance against clock skew / replay attacks (default 300 seconds).
  */
 export function verifyWebhookSignature(

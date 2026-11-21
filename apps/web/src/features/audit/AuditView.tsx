@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import type { AuditLogEntry, PageInfo } from "@wabrix/contracts";
+import type { AuditLogEntry, PageInfo } from "@flowdesk/contracts";
 import { ChevronRight, ShieldAlert, ShieldCheck } from "lucide-react";
 import {
   Badge,
@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 import { listAuditLogs } from "../../api.js";
 import { useAuth } from "../auth/context.js";
 

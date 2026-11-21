@@ -55,7 +55,7 @@ export async function createOidcTransaction(
   input: OidcTransactionInput
 ): Promise<{ id: string }> {
   const result = await db.query<{ id: string }>(
-    `INSERT INTO wabrix.oidc_authorization_transactions
+    `INSERT INTO flowdesk.oidc_authorization_transactions
       (state_hash, nonce_hash, code_verifier_hash, return_to, expires_at)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING id`,
@@ -79,7 +79,7 @@ export async function consumeOidcTransaction(
     return_to: string;
     expires_at: Date;
   }>(
-    `UPDATE wabrix.oidc_authorization_transactions
+    `UPDATE flowdesk.oidc_authorization_transactions
      SET consumed_at = clock_timestamp()
      WHERE state_hash = $1
        AND consumed_at IS NULL
@@ -114,8 +114,8 @@ export async function findOrCreateUserFromIdentity(
     status: string;
   }>(
     `SELECT u.id AS user_id, u.email, u.display_name, u.status
-     FROM wabrix.identities i
-     JOIN wabrix.users u ON u.id = i.user_id
+     FROM flowdesk.identities i
+     JOIN flowdesk.users u ON u.id = i.user_id
      WHERE i.provider = $1 AND i.subject = $2`,
     [input.provider, input.subject]
   );
@@ -138,7 +138,7 @@ export async function findOrCreateUserFromIdentity(
     status: string;
   }>(
     `SELECT id, email, display_name, status
-     FROM wabrix.users
+     FROM flowdesk.users
      WHERE email = $1`,
     [normalizedEmail]
   );
@@ -162,7 +162,7 @@ export async function findOrCreateUserFromIdentity(
       display_name: string;
       status: string;
     }>(
-      `INSERT INTO wabrix.users (email, display_name)
+      `INSERT INTO flowdesk.users (email, display_name)
        VALUES ($1, $2)
        RETURNING id, email, display_name, status`,
       [normalizedEmail, input.displayName.trim() || normalizedEmail]
@@ -182,7 +182,7 @@ export async function findOrCreateUserFromIdentity(
 
   // 3. Insert identity link
   await db.query(
-    `INSERT INTO wabrix.identities (user_id, provider, subject, email_verified_at)
+    `INSERT INTO flowdesk.identities (user_id, provider, subject, email_verified_at)
      VALUES ($1, $2, $3, $4)
      ON CONFLICT (provider, subject) DO NOTHING`,
     [userId, input.provider, input.subject, input.emailVerifiedAt ?? new Date()]
@@ -196,7 +196,7 @@ export async function createAuthSession(
   input: CreateAuthSessionInput
 ): Promise<{ sessionId: string }> {
   const result = await db.query<{ id: string }>(
-    `INSERT INTO wabrix.auth_sessions
+    `INSERT INTO flowdesk.auth_sessions
       (user_id, token_hash, expires_at, user_agent_hash, ip_hash)
      VALUES ($1, $2, $3, $4, $5)
      RETURNING id`,
@@ -228,8 +228,8 @@ export async function getActiveSessionByTokenHash(
     created_at: Date;
   }>(
     `SELECT s.id, s.user_id, u.email, u.display_name, s.expires_at, s.created_at
-     FROM wabrix.auth_sessions s
-     JOIN wabrix.users u ON u.id = s.user_id
+     FROM flowdesk.auth_sessions s
+     JOIN flowdesk.users u ON u.id = s.user_id
      WHERE s.token_hash = $1
        AND s.revoked_at IS NULL
        AND s.expires_at > clock_timestamp()
@@ -252,7 +252,7 @@ export async function getActiveSessionByTokenHash(
 
 export async function revokeAuthSession(db: DbClient, tokenHash: string): Promise<boolean> {
   const result = await db.query(
-    `UPDATE wabrix.auth_sessions
+    `UPDATE flowdesk.auth_sessions
      SET revoked_at = clock_timestamp()
      WHERE token_hash = $1
        AND revoked_at IS NULL`,

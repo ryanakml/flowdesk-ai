@@ -1,6 +1,6 @@
 # Query embedding cache
 
-Tracking: [#257](https://github.com/Ryanakml/wabrix-ai/issues/257), M0 Execution foundation; M4 draft worker consumer.
+Tracking: [#257](https://github.com/Ryanakml/flowdesk-ai/issues/257), M0 Execution foundation; M4 draft worker consumer.
 
 ## Behavior and scope
 
@@ -83,12 +83,12 @@ Rollback: set `QUERY_EMBEDDING_CACHE_ENABLED=false` through the existing environ
 The integration suite changes `maxmemory` and briefly pauses Redis to exercise real failures. **Use a disposable test server only**, never a production/staging `REDIS_URL`. It uses a dedicated `REDIS_TEST_URL` and random key namespace.
 
 ```bash
-docker run -d --name wabrix-cache-test -p 127.0.0.1:16379:6379 \
+docker run -d --name flowdesk-cache-test -p 127.0.0.1:16379:6379 \
   redis:7.4.2-bookworm redis-server --save '' --appendonly no
-pnpm turbo run build --filter=@wabrix/worker...
+pnpm turbo run build --filter=@flowdesk/worker...
 RUN_REDIS_INTEGRATION=true REDIS_TEST_URL=redis://127.0.0.1:16379 \
-  pnpm --filter @wabrix/worker exec vitest run src/query-embedding-cache.redis.test.ts
-docker rm -f wabrix-cache-test
+  pnpm --filter @flowdesk/worker exec vitest run src/query-embedding-cache.redis.test.ts
+docker rm -f flowdesk-cache-test
 ```
 
 Normal unit tests skip this opt-in suite. The required `database-foundation` CI job provisions real Redis and explicitly enables it; missing test URL is a hard failure. Unit/worker tests cover key invalidation, redaction placement, safety parity, corrupted values, provider failures, and store failures. Real Redis tests cover shared hits, concurrent loaders, expiry, admission, lock ownership, memory rejection, stalled TCP, cooldown, and reconnection.

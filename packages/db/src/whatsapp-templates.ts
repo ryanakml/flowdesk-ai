@@ -2,7 +2,7 @@ import type {
   WhatsAppTemplateCategory,
   WhatsAppTemplateComponent,
   WhatsAppTemplateStatus
-} from "@wabrix/contracts";
+} from "@flowdesk/contracts";
 import type { DbClient } from "./index.js";
 
 export interface SyncTemplateVersionParams {
@@ -55,7 +55,7 @@ export interface SyncTemplateResult {
 /**
  * Idempotently synchronizes a template item from a provider into the database.
  * If the template or version already exists:
- * - Records status transitions in wabrix.whatsapp_template_status_history.
+ * - Records status transitions in flowdesk.whatsapp_template_status_history.
  * - Increments version number when components/payload hash change.
  * - Updates provider template ID and rejected reason.
  */
@@ -87,7 +87,7 @@ export async function idempotentSyncTemplate(
     created_at: Date;
     updated_at: Date;
   }>(
-    `INSERT INTO wabrix.whatsapp_templates
+    `INSERT INTO flowdesk.whatsapp_templates
        (organization_id, channel_id, name, category, updated_at)
      VALUES ($1, $2, $3, $4, clock_timestamp())
      ON CONFLICT (channel_id, name)
@@ -110,7 +110,7 @@ export async function idempotentSyncTemplate(
     rejected_reason: string | null;
   }>(
     `SELECT id, status, payload_hash, version, rejected_reason
-     FROM wabrix.whatsapp_template_versions
+     FROM flowdesk.whatsapp_template_versions
      WHERE template_id = $1 AND language = $2
      FOR UPDATE`,
     [templateId, language]
@@ -130,7 +130,7 @@ export async function idempotentSyncTemplate(
     // Record status transition if changed
     if (statusChanged) {
       await client.query(
-        `INSERT INTO wabrix.whatsapp_template_status_history
+        `INSERT INTO flowdesk.whatsapp_template_status_history
            (template_version_id, organization_id, from_status, to_status, reason)
          VALUES ($1, $2, $3, $4, $5)`,
         [existing.id, organizationId, existing.status, status, rejectedReason ?? null]
@@ -152,7 +152,7 @@ export async function idempotentSyncTemplate(
       created_at: Date;
       updated_at: Date;
     }>(
-      `UPDATE wabrix.whatsapp_template_versions
+      `UPDATE flowdesk.whatsapp_template_versions
        SET
          provider_template_id = $1,
          status = $2,
@@ -212,7 +212,7 @@ export async function idempotentSyncTemplate(
       created_at: Date;
       updated_at: Date;
     }>(
-      `INSERT INTO wabrix.whatsapp_template_versions
+      `INSERT INTO flowdesk.whatsapp_template_versions
          (template_id, organization_id, provider_template_id, language, status,
           rejected_reason, components, variable_count, payload_hash, version)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1)
@@ -249,7 +249,7 @@ export async function idempotentSyncTemplate(
 
     // Initial status log
     await client.query(
-      `INSERT INTO wabrix.whatsapp_template_status_history
+      `INSERT INTO flowdesk.whatsapp_template_status_history
          (template_version_id, organization_id, from_status, to_status, reason)
        VALUES ($1, $2, $3, $4, $5)`,
       [versionRecord.id, organizationId, null, status, rejectedReason ?? null]
@@ -316,8 +316,8 @@ export async function getTemplateByNameAndLanguage(
        v.variable_count AS v_variable_count, v.payload_hash AS v_payload_hash,
        v.version AS v_version, v.created_at AS v_created_at,
        v.updated_at AS v_updated_at
-     FROM wabrix.whatsapp_templates t
-     JOIN wabrix.whatsapp_template_versions v ON v.template_id = t.id
+     FROM flowdesk.whatsapp_templates t
+     JOIN flowdesk.whatsapp_template_versions v ON v.template_id = t.id
      WHERE t.channel_id = $1 AND t.name = $2 AND v.language = $3`,
     [params.channelId, params.name, params.language]
   );
@@ -361,7 +361,7 @@ export async function getTemplateSyncCursor(
   params: { channelId: string }
 ): Promise<string | null> {
   const result = await client.query<{ cursor: string | null }>(
-    `SELECT cursor FROM wabrix.whatsapp_template_sync_cursors WHERE channel_id = $1`,
+    `SELECT cursor FROM flowdesk.whatsapp_template_sync_cursors WHERE channel_id = $1`,
     [params.channelId]
   );
   return result.rows[0]?.cursor ?? null;
@@ -379,7 +379,7 @@ export async function setTemplateSyncCursor(
   }
 ): Promise<void> {
   await client.query(
-    `INSERT INTO wabrix.whatsapp_template_sync_cursors
+    `INSERT INTO flowdesk.whatsapp_template_sync_cursors
        (organization_id, channel_id, cursor, last_synced_at)
      VALUES ($1, $2, $3, clock_timestamp())
      ON CONFLICT (channel_id)
@@ -411,7 +411,7 @@ export async function getTemplateStatusHistory(
     created_at: Date;
   }>(
     `SELECT id, from_status, to_status, reason, created_at
-     FROM wabrix.whatsapp_template_status_history
+     FROM flowdesk.whatsapp_template_status_history
      WHERE template_version_id = $1
      ORDER BY created_at ASC`,
     [templateVersionId]

@@ -3,7 +3,7 @@ import type {
   SimulatePolicyResponse,
   CreateAutomationPolicyDraft,
   SimulatePolicyRequest
-} from "@wabrix/contracts";
+} from "@flowdesk/contracts";
 
 interface EmergencyStopResponse {
   organizationId: string;

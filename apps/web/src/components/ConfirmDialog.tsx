@@ -7,7 +7,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 
 interface ConfirmDialogProps {
   open: boolean;

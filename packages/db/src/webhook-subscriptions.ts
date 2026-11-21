@@ -59,7 +59,7 @@ export async function listWebhookSubscriptions(
   organizationId: string
 ): Promise<WebhookSubscriptionRecord[]> {
   const res = await db.query<RawWebhookSubscriptionRow>(
-    `SELECT * FROM wabrix.webhook_subscriptions WHERE organization_id = $1 ORDER BY created_at DESC`,
+    `SELECT * FROM flowdesk.webhook_subscriptions WHERE organization_id = $1 ORDER BY created_at DESC`,
     [organizationId]
   );
   return res.rows.map(mapWebhookSubscriptionRow);
@@ -79,7 +79,7 @@ export async function createWebhookSubscription(
   params: CreateWebhookSubscriptionParams
 ): Promise<WebhookSubscriptionRecord> {
   const res = await db.query<RawWebhookSubscriptionRow>(
-    `INSERT INTO wabrix.webhook_subscriptions (
+    `INSERT INTO flowdesk.webhook_subscriptions (
       organization_id, name, url, secret, events, verification_status
     ) VALUES ($1, $2, $3, $4, $5::jsonb, $6)
     RETURNING *`,
@@ -107,7 +107,7 @@ export async function updateWebhookSubscriptionVerification(
   verificationStatus: WebhookVerificationStatus
 ): Promise<boolean> {
   const res = await db.query(
-    `UPDATE wabrix.webhook_subscriptions
+    `UPDATE flowdesk.webhook_subscriptions
      SET verification_status = $1, updated_at = clock_timestamp()
      WHERE id = $2 AND organization_id = $3`,
     [verificationStatus, id, organizationId]
@@ -127,7 +127,7 @@ export async function fanoutDeveloperWebhookEvents(
   params: FanoutDeveloperWebhookParams
 ): Promise<number> {
   const subs = await db.query<{ id: string }>(
-    `SELECT id FROM wabrix.webhook_subscriptions
+    `SELECT id FROM flowdesk.webhook_subscriptions
      WHERE organization_id = $1
        AND is_active = true
        AND verification_status = 'verified'
@@ -148,7 +148,7 @@ export async function fanoutDeveloperWebhookEvents(
     };
 
     await db.query(
-      `INSERT INTO wabrix.outbox_events
+      `INSERT INTO flowdesk.outbox_events
        (organization_id, aggregate_type, aggregate_id, event_type, schema_version, payload)
        VALUES ($1, 'webhook_subscription', $2, 'developer.webhook.dispatch', 1, $3::jsonb)`,
       [params.organizationId, sub.id, JSON.stringify(outboxPayload)]
@@ -165,7 +165,7 @@ export async function deleteWebhookSubscription(
   organizationId: string
 ): Promise<boolean> {
   const res = await db.query(
-    `DELETE FROM wabrix.webhook_subscriptions WHERE id = $1 AND organization_id = $2`,
+    `DELETE FROM flowdesk.webhook_subscriptions WHERE id = $1 AND organization_id = $2`,
     [id, organizationId]
   );
   return (res.rowCount ?? 0) > 0;
@@ -177,7 +177,7 @@ export async function getWebhookSubscriptionById(
   organizationId: string
 ): Promise<WebhookSubscriptionRecord | null> {
   const res = await db.query<RawWebhookSubscriptionRow>(
-    `SELECT * FROM wabrix.webhook_subscriptions WHERE id = $1 AND organization_id = $2`,
+    `SELECT * FROM flowdesk.webhook_subscriptions WHERE id = $1 AND organization_id = $2`,
     [id, organizationId]
   );
   const row = res.rows[0];
@@ -267,7 +267,7 @@ export async function createWebhookDelivery(
   params: CreateWebhookDeliveryParams
 ): Promise<WebhookDeliveryRecord> {
   const res = await db.query<RawWebhookDeliveryRow>(
-    `INSERT INTO wabrix.webhook_deliveries (
+    `INSERT INTO flowdesk.webhook_deliveries (
       organization_id, subscription_id, event_id, event_type, payload, max_attempts
     ) VALUES ($1, $2, $3, $4, $5::jsonb, COALESCE($6, 5))
     ON CONFLICT (subscription_id, event_id) DO UPDATE
@@ -294,7 +294,7 @@ export async function listWebhookDeliveries(
   limit = 50
 ): Promise<WebhookDeliveryRecord[]> {
   const res = await db.query<RawWebhookDeliveryRow>(
-    `SELECT * FROM wabrix.webhook_deliveries
+    `SELECT * FROM flowdesk.webhook_deliveries
      WHERE organization_id = $1 AND subscription_id = $2
      ORDER BY created_at DESC
      LIMIT $3`,
@@ -314,7 +314,7 @@ export async function updateWebhookDeliveryOutcome(
   }
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.webhook_deliveries
+    `UPDATE flowdesk.webhook_deliveries
      SET status = $2,
          attempt_count = attempt_count + 1,
          response_status_code = COALESCE($3, response_status_code),
