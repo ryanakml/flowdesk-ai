@@ -37,8 +37,8 @@ const packages = [];
 
 // Root package
 packages.push({
-  SPDXID: 'SPDXRef-Package-flowdesk-root',
-  name: rootPkg.name || 'flowdesk',
+  SPDXID: 'SPDXRef-Package-wabrix-root',
+  name: rootPkg.name || 'wabrix',
   versionInfo: '${SOURCE_SHA}',
   downloadLocation: 'git+https://github.com/ryanakml/wabrix-ai.git@${SOURCE_SHA}',
   filesAnalyzed: false,

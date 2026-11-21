@@ -1,5 +1,5 @@
 import type { DbClient } from "./auth.js";
-import type { RoutingCondition } from "@flowdesk/domain";
+import type { RoutingCondition } from "@wabrix/domain";
 
 export interface DbRoutingRule {
   id: string;
@@ -126,7 +126,7 @@ export async function createRoutingRule(
   params: CreateRoutingRuleParams
 ): Promise<DbRoutingRule> {
   const result = await db.query<RoutingRuleDbRow>(
-    `INSERT INTO flowdesk.routing_rules (
+    `INSERT INTO wabrix.routing_rules (
       organization_id, name, priority, conditions, target_queue_id, target_team_id, target_user_id, is_active
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *`,
@@ -150,7 +150,7 @@ export async function listRoutingRules(
   organizationId: string
 ): Promise<DbRoutingRule[]> {
   const result = await db.query<RoutingRuleDbRow>(
-    `SELECT * FROM flowdesk.routing_rules
+    `SELECT * FROM wabrix.routing_rules
      WHERE organization_id = $1
      ORDER BY priority ASC, created_at ASC`,
     [organizationId]
@@ -164,7 +164,7 @@ export async function getRoutingRuleById(
   ruleId: string
 ): Promise<DbRoutingRule | null> {
   const result = await db.query<RoutingRuleDbRow>(
-    `SELECT * FROM flowdesk.routing_rules
+    `SELECT * FROM wabrix.routing_rules
      WHERE organization_id = $1 AND id = $2`,
     [organizationId, ruleId]
   );
@@ -193,7 +193,7 @@ export async function updateRoutingRule(
   const isActive = params.isActive !== undefined ? params.isActive : existing.isActive;
 
   const result = await db.query<RoutingRuleDbRow>(
-    `UPDATE flowdesk.routing_rules
+    `UPDATE wabrix.routing_rules
      SET name = $1, priority = $2, conditions = $3, target_queue_id = $4, target_team_id = $5, target_user_id = $6, is_active = $7, updated_at = clock_timestamp()
      WHERE organization_id = $8 AND id = $9
      RETURNING *`,
@@ -220,7 +220,7 @@ export async function deleteRoutingRule(
   ruleId: string
 ): Promise<boolean> {
   const result = await db.query(
-    `DELETE FROM flowdesk.routing_rules
+    `DELETE FROM wabrix.routing_rules
      WHERE organization_id = $1 AND id = $2`,
     [organizationId, ruleId]
   );
@@ -232,7 +232,7 @@ export async function recordRoutingLog(
   params: CreateRoutingLogParams
 ): Promise<RoutingLogRecord> {
   const result = await db.query<RoutingLogDbRow>(
-    `INSERT INTO flowdesk.routing_logs (
+    `INSERT INTO wabrix.routing_logs (
       organization_id, conversation_id, matched_rule_id, matched_policy_rule_id, target_queue_id, target_team_id, target_user_id, reason
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *`,
@@ -257,7 +257,7 @@ export async function listRoutingLogsForConversation(
   conversationId: string
 ): Promise<RoutingLogRecord[]> {
   const result = await db.query<RoutingLogDbRow>(
-    `SELECT * FROM flowdesk.routing_logs
+    `SELECT * FROM wabrix.routing_logs
      WHERE organization_id = $1 AND conversation_id = $2
      ORDER BY routed_at DESC`,
     [organizationId, conversationId]

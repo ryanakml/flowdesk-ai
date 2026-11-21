@@ -1,4 +1,4 @@
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@flowdesk/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@wabrix/ui";
 
 export function AnalyticsRangeSelect({
   value,

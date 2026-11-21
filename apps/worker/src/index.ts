@@ -5,14 +5,14 @@ import {
   loadHttpConfig,
   loadMediaConfig,
   loadWhatsAppGraphApiConfig
-} from "@flowdesk/config";
+} from "@wabrix/config";
 import {
   createLogger,
   createProcessHealthServer,
   initializeTelemetry,
   recordOutboxSnapshot,
   recordWorkerBatchFailure
-} from "@flowdesk/observability";
+} from "@wabrix/observability";
 import { Pool } from "pg";
 import { processOutboxWebhookBatch } from "./normalization.js";
 import { processOutboxOutboundBatch, dispatchOutboundMessage } from "./dispatch.js";
@@ -23,7 +23,7 @@ import {
   FakeMalwareScanner,
   MetaWhatsAppProvider,
   S3ObjectStore
-} from "@flowdesk/providers";
+} from "@wabrix/providers";
 import { processAttachmentScanBatch } from "./media-scanner.js";
 import { processAttachmentRetentionBatch } from "./media-retention.js";
 import { processKnowledgeIngestionBatch } from "./knowledge-ingestion.js";
@@ -231,7 +231,7 @@ if (dbPool) {
         }>(`SELECT pending_events::text,
                    oldest_event_age_seconds AS oldest_age_seconds,
                    dead_letter_events::text
-            FROM flowdesk.messaging_operational_snapshot()`);
+            FROM wabrix.messaging_operational_snapshot()`);
       })
       .then((snapshot) => {
         const row = snapshot.rows[0];

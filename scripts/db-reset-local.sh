@@ -7,7 +7,7 @@ if [[ "${APP_ENV:-local}" != "local" ]]; then
 fi
 
 compose_file="infra/compose/compose.yaml"
-project_name="flowdesk-local"
+project_name="wabrix-local"
 docker compose -f "$compose_file" stop postgres
 docker compose -f "$compose_file" rm -f -s postgres
 docker volume rm "${project_name}_postgres-data" 2>/dev/null || true

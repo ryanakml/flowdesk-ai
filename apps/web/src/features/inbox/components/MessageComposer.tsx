@@ -1,5 +1,5 @@
 import { useRef, useId } from "react";
-import { cn, Button } from "@flowdesk/ui";
+import { cn, Button } from "@wabrix/ui";
 import { Send, Paperclip, Layout, Sparkles } from "lucide-react";
 
 type ConnectionState = "connecting" | "connected" | "reconnecting" | "offline";

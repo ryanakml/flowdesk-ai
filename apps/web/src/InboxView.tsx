@@ -7,8 +7,8 @@ import type {
   TemplatePreviewResponse,
   GenerateBotDraftResponse,
   RealtimeHint
-} from "@flowdesk/contracts";
-import { type RoleKey, hasPermission } from "@flowdesk/domain";
+} from "@wabrix/contracts";
+import { type RoleKey, hasPermission } from "@wabrix/domain";
 import {
   listConversations,
   getConversation,

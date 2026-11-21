@@ -10,7 +10,7 @@ const baseSchema = z.object({
   GIT_SHA: z.string().min(1).default("local"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.url().optional(),
-  OTEL_SERVICE_NAMESPACE: z.string().min(1).default("flowdesk")
+  OTEL_SERVICE_NAMESPACE: z.string().min(1).default("wabrix")
 });
 
 const httpSchema = baseSchema.extend({
@@ -178,9 +178,9 @@ export function loadAiRuntimeConfig(environment: NodeJS.ProcessEnv = process.env
 }
 
 export const authConfigSchema = z.object({
-  AUTH_OIDC_ISSUER: z.string().url().default("https://flowdesk.local.auth0.com/"),
-  AUTH_OIDC_CLIENT_ID: z.string().min(1).default("flowdesk-local-client"),
-  AUTH_OIDC_CLIENT_SECRET: z.string().min(1).default("flowdesk-local-secret"),
+  AUTH_OIDC_ISSUER: z.string().url().default("https://wabrix.local.auth0.com/"),
+  AUTH_OIDC_CLIENT_ID: z.string().min(1).default("wabrix-local-client"),
+  AUTH_OIDC_CLIENT_SECRET: z.string().min(1).default("wabrix-local-secret"),
   AUTH_OIDC_REDIRECT_URI: z.string().url().default("http://localhost:4000/api/v1/auth/callback"),
   AUTH_COOKIE_SECURE: booleanString.default(false),
   AUTH_SESSION_TTL_SECONDS: z.coerce.number().int().positive().default(28_800),
@@ -194,8 +194,8 @@ export function loadAuthConfig(environment: NodeJS.ProcessEnv = process.env): Au
   return authConfigSchema.parse(environment);
 }
 
-const DEFAULT_WEBHOOK_VERIFY_TOKEN = "flowdesk_webhook_verify_token_default";
-const DEFAULT_WEBHOOK_APP_SECRET = "flowdesk_webhook_app_secret_default";
+const DEFAULT_WEBHOOK_VERIFY_TOKEN = "wabrix_webhook_verify_token_default";
+const DEFAULT_WEBHOOK_APP_SECRET = "wabrix_webhook_app_secret_default";
 
 export const webhookConfigSchema = z
   .object({
@@ -235,7 +235,7 @@ export function loadWebhookConfig(environment: NodeJS.ProcessEnv = process.env):
 }
 
 /**
- * Credentials for FlowDesk's single, platform-owned Meta App. App Secret is
+ * Credentials for Wabrix's single, platform-owned Meta App. App Secret is
  * intentionally server-only: it must never be placed in the web bundle or a
  * tenant-owned channel record.
  */

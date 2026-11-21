@@ -1,4 +1,4 @@
-import type { Conversation } from "@flowdesk/contracts";
+import type { Conversation } from "@wabrix/contracts";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 
 interface ConversationHeaderProps {

@@ -4,7 +4,7 @@ import {
   type ListAuditLogsResponse,
   decodeCursor,
   encodeCursor
-} from "@flowdesk/contracts";
+} from "@wabrix/contracts";
 import type { DbClient } from "./auth.js";
 
 const SENSITIVE_KEY_PATTERN = /password|token|secret|authorization|cookie|key|credential|private/i;
@@ -59,7 +59,7 @@ export async function recordAuditEvent(
   >;
 
   const result = await db.query<{ id: string; occurred_at: Date }>(
-    `INSERT INTO flowdesk.audit_logs (
+    `INSERT INTO wabrix.audit_logs (
        organization_id,
        actor_user_id,
        action,
@@ -131,7 +131,7 @@ export async function listAuditLogs(
   const query = `
     SELECT id, organization_id, actor_user_id, action, target_type, target_id,
            result, correlation_id, metadata, occurred_at
-    FROM flowdesk.audit_logs
+    FROM wabrix.audit_logs
     WHERE ${conditions.join(" AND ")}
     ORDER BY occurred_at DESC, id DESC
     LIMIT ${limitParam}

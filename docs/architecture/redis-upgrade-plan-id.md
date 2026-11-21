@@ -1,6 +1,6 @@
-# Rencana upgrade Redis untuk fitur FlowDesk yang sudah ada
+# Rencana upgrade Redis untuk fitur Wabrix yang sudah ada
 
-Tanggal audit: 10 September 2026. Basis kode: `52744fe`. Status: **audit dan rencana awal**. Kandidat 1 ditindaklanjuti melalui [issue #257](https://github.com/Ryanakml/flowdesk-ai/issues/257); kontrak implementasi aktual ada di [runbook query embedding cache](../runbooks/query-embedding-cache.md). Kandidat lain tetap rencana.
+Tanggal audit: 10 September 2026. Basis kode: `52744fe`. Status: **audit dan rencana awal**. Kandidat 1 ditindaklanjuti melalui [issue #257](https://github.com/Ryanakml/wabrix-ai/issues/257); kontrak implementasi aktual ada di [runbook query embedding cache](../runbooks/query-embedding-cache.md). Kandidat lain tetap rencana.
 
 ## 1. Keputusan
 
@@ -110,7 +110,7 @@ Pendekatan shared counters, TTL, dan atomic scripts didukung [dokumentasi rate l
 
 ## 5. Fondasi operasional dan failure behavior
 
-Usulan package kecil `@flowdesk/cache` untuk koneksi, get/set tervalidasi, key construction, timeout, dan metrics. Hindari framework caching generik yang jauh melebihi dua use case. Adapter limiter dapat memakai koneksi tersebut dengan interface security yang terpisah.
+Usulan package kecil `@wabrix/cache` untuk koneksi, get/set tervalidasi, key construction, timeout, dan metrics. Hindari framework caching generik yang jauh melebihi dua use case. Adapter limiter dapat memakai koneksi tersebut dengan interface security yang terpisah.
 
 | Kondisi                                   | Cache AI                                                      | Auth limiter yang diusulkan                         |
 | ----------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------- |
@@ -145,7 +145,7 @@ penghematan rata-rata embedding ≈ hitRate × latencyEmbedding − overheadCach
 penghematan total draft ≈ penghematanEmbedding + penghematanRetrieval
 ```
 
-Contoh hipotetis, bukan hasil FlowDesk: embedding 300 ms, retrieval 40 ms, LLM 2.500 ms, overhead dua cache 4 ms. Ketika kedua cache hit, bagian tersebut turun dari 2.840 ms ke 2.504 ms, sekitar 12%. Pada hit rate 30% untuk keduanya, penghematan rata-rata hanya sekitar 98 ms. Biaya LLM generasi jawaban tetap ada.
+Contoh hipotetis, bukan hasil Wabrix: embedding 300 ms, retrieval 40 ms, LLM 2.500 ms, overhead dua cache 4 ms. Ketika kedua cache hit, bagian tersebut turun dari 2.840 ms ke 2.504 ms, sekitar 12%. Pada hit rate 30% untuk keduanya, penghematan rata-rata hanya sekitar 98 ms. Biaya LLM generasi jawaban tetap ada.
 
 Vector 1.536 dimensi memerlukan sekitar 6 KiB untuk angka float32 mentah; 10.000 vector sudah sekitar 59 MiB sebelum key/Redis overhead. JSON bisa jauh lebih besar. Ukur serialized size dan `MEMORY USAGE` sebelum menentukan TTL/admission; jangan menyamakan ukuran vector mentah dengan penggunaan Redis nyata.
 

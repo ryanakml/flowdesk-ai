@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient } from "@flowdesk/db";
+import type { DbClient } from "@wabrix/db";
 import { schedulerState, runAnalyticsAggregationJob } from "./process.js";
 
 describe("scheduler skeleton", () => {
@@ -10,10 +10,7 @@ describe("scheduler skeleton", () => {
     const mockDb: DbClient = {
       async query(sql: string) {
         await Promise.resolve();
-        if (
-          sql.includes("flowdesk.organizations") ||
-          sql.includes("list_active_organization_ids")
-        ) {
+        if (sql.includes("wabrix.organizations") || sql.includes("list_active_organization_ids")) {
           return {
             rows: [{ id: "org-sched-1" }],
             rowCount: 1,
@@ -22,7 +19,7 @@ describe("scheduler skeleton", () => {
             fields: []
           };
         }
-        if (sql.includes("flowdesk.analytics_watermarks")) {
+        if (sql.includes("wabrix.analytics_watermarks")) {
           return {
             rows: [{ last_aggregated_at: new Date() }],
             rowCount: 1,

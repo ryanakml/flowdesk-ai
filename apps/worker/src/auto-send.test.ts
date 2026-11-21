@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient } from "@flowdesk/db";
+import type { DbClient } from "@wabrix/db";
 import { evaluateAndProcessAutoSend, processCompletedAutoRun } from "./auto-send.js";
 
 const mockOrgId = "a0000000-0000-4000-8000-000000000001";
@@ -22,7 +22,7 @@ function createMockWorkerDb(recentCount = 0): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO flowdesk.messages")) {
+      if (sql.includes("INSERT INTO wabrix.messages")) {
         return {
           rows: [
             {
@@ -65,7 +65,7 @@ describe("Worker Auto-Send Pipeline (M5-02)", () => {
 
     expect(result.autoSent).toBe(true);
     expect(result.messageId).toBe("msg-auto-1");
-    expect(result.content).toContain("_Balasan otomatis oleh AI FlowDesk_");
+    expect(result.content).toContain("_Balasan otomatis oleh AI Wabrix_");
   });
 
   it("downgrades run and does not send when policy fails", async () => {
@@ -113,7 +113,7 @@ function createCompletedAutoRunDb(
       if (sql.includes("resolve_automation_safety")) {
         return { rows: overrides.durableSafety ? [overrides.durableSafety] : [] };
       }
-      if (sql.includes("FROM flowdesk.bot_configs WHERE organization_id = $1 FOR UPDATE")) {
+      if (sql.includes("FROM wabrix.bot_configs WHERE organization_id = $1 FOR UPDATE")) {
         return { rows: [{ id: "config-1" }], rowCount: 1 };
       }
       if (sql.includes("COALESCE(SUM(cost_estimate_microcents)")) {
@@ -123,7 +123,7 @@ function createCompletedAutoRunDb(
         };
       }
       if (sql.includes("metadata->>'aiBotRunId'")) return { rows: [] };
-      if (sql.includes("FROM flowdesk.bot_runs AS run")) {
+      if (sql.includes("FROM wabrix.bot_runs AS run")) {
         return {
           rows: [
             {
@@ -163,7 +163,7 @@ function createCompletedAutoRunDb(
       }
       if (sql.includes("sender_type = 'agent'")) return { rows: [] };
       if (sql.includes("count(*) AS count")) return { rows: [{ count: "0" }] };
-      if (sql.includes("FROM flowdesk.conversations") && !sql.includes("JOIN")) {
+      if (sql.includes("FROM wabrix.conversations") && !sql.includes("JOIN")) {
         return {
           rows: [
             {
@@ -189,7 +189,7 @@ function createCompletedAutoRunDb(
           ]
         };
       }
-      if (sql.includes("INSERT INTO flowdesk.messages")) {
+      if (sql.includes("INSERT INTO wabrix.messages")) {
         return {
           rows: [
             {
@@ -214,7 +214,7 @@ function createCompletedAutoRunDb(
           ]
         };
       }
-      if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
+      if (sql.includes("INSERT INTO wabrix.audit_logs")) {
         return { rows: [{ id: "audit-1", occurred_at: now }] };
       }
       return { rows: [], rowCount: 1 };
@@ -231,7 +231,7 @@ describe("completed AUTO run final gate (#178)", () => {
       runId: "run-auto-1"
     });
     expect(result).toMatchObject({ autoSent: true, messageId: "outbound-auto-1" });
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.outbox_events"))).toBe(true);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.outbox_events"))).toBe(true);
     expect(calls.some((sql) => sql.includes("operator_action = 'auto_sent'"))).toBe(true);
   });
 
@@ -243,7 +243,7 @@ describe("completed AUTO run final gate (#178)", () => {
     });
     expect(result.autoSent).toBe(false);
     expect(result.reason).toContain("takeover");
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.messages"))).toBe(false);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.messages"))).toBe(false);
   });
 
   it("marks a newer-inbound result stale and does not send", async () => {
@@ -254,7 +254,7 @@ describe("completed AUTO run final gate (#178)", () => {
     });
     expect(result.autoSent).toBe(false);
     expect(result.reason).toContain("newer customer message");
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.messages"))).toBe(false);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.messages"))).toBe(false);
   });
 
   it("denies AUTO dispatch when a durable global safety stop is active (#177)", async () => {
@@ -274,8 +274,8 @@ describe("completed AUTO run final gate (#178)", () => {
     expect(result.reason).toBe(
       "Automation safety stop is active (global): M5 staging acceptance global halt"
     );
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.messages"))).toBe(false);
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.outbox_events"))).toBe(false);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.messages"))).toBe(false);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.outbox_events"))).toBe(false);
   });
 
   it("allows AUTO dispatch when durable safety is inactive/cleared (#177)", async () => {
@@ -287,8 +287,8 @@ describe("completed AUTO run final gate (#178)", () => {
       runId: "run-auto-1"
     });
     expect(result.autoSent).toBe(true);
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.messages"))).toBe(true);
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.outbox_events"))).toBe(true);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.messages"))).toBe(true);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.outbox_events"))).toBe(true);
   });
 
   it("allows AUTO dispatch when monthly AI spend is below ceiling (#179)", async () => {
@@ -301,7 +301,7 @@ describe("completed AUTO run final gate (#178)", () => {
       runId: "run-auto-1"
     });
     expect(result.autoSent).toBe(true);
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.messages"))).toBe(true);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.messages"))).toBe(true);
   });
 
   it("denies AUTO dispatch when monthly AI spend is at ceiling (#179)", async () => {
@@ -315,8 +315,8 @@ describe("completed AUTO run final gate (#178)", () => {
     });
     expect(result.autoSent).toBe(false);
     expect(result.reason).toBe("AUTO monthly AI cost ceiling reached (50000/50000 cents)");
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.messages"))).toBe(false);
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.outbox_events"))).toBe(false);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.messages"))).toBe(false);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.outbox_events"))).toBe(false);
   });
 
   it("denies AUTO dispatch when monthly AI spend is above ceiling (#179)", async () => {
@@ -330,7 +330,7 @@ describe("completed AUTO run final gate (#178)", () => {
     });
     expect(result.autoSent).toBe(false);
     expect(result.reason).toBe("AUTO monthly AI cost ceiling reached (60000/50000 cents)");
-    expect(calls.some((sql) => sql.includes("INSERT INTO flowdesk.messages"))).toBe(false);
+    expect(calls.some((sql) => sql.includes("INSERT INTO wabrix.messages"))).toBe(false);
   });
 
   it("records denial metadata and audit log when monthly cost ceiling is reached (#179)", async () => {
@@ -348,17 +348,17 @@ describe("completed AUTO run final gate (#178)", () => {
 
     // Verify bot_runs updated with status 'stale', AUTO_CONTEXT_STALE error code, and metadata
     const botRunUpdate = calls.find(
-      (sql) => sql.includes("UPDATE flowdesk.bot_runs") && sql.includes("AUTO_CONTEXT_STALE")
+      (sql) => sql.includes("UPDATE wabrix.bot_runs") && sql.includes("AUTO_CONTEXT_STALE")
     );
     expect(botRunUpdate).toBeDefined();
 
     // Verify audit event recorded
-    const auditInsert = calls.find((sql) => sql.includes("INSERT INTO flowdesk.audit_logs"));
+    const auditInsert = calls.find((sql) => sql.includes("INSERT INTO wabrix.audit_logs"));
     expect(auditInsert).toBeDefined();
 
     // Verify locking query on bot_configs was called
     const configLock = calls.find(
-      (sql) => sql.includes("FROM flowdesk.bot_configs") && sql.includes("FOR UPDATE")
+      (sql) => sql.includes("FROM wabrix.bot_configs") && sql.includes("FOR UPDATE")
     );
     expect(configLock).toBeDefined();
   });

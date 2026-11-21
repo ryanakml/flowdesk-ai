@@ -5,7 +5,7 @@ import {
   AcceptInvitationRequestSchema,
   UpdateMembershipRoleRequestSchema,
   ListAuditLogsQuerySchema
-} from "@flowdesk/contracts";
+} from "@wabrix/contracts";
 import {
   type DbClient,
   bootstrapOrganization,
@@ -21,10 +21,10 @@ import {
   listAuditLogs,
   listUserOrganizations,
   runInTenantTransaction
-} from "@flowdesk/db";
-import { type Permission, hasPermission } from "@flowdesk/domain";
-import { recordPermissionDenial } from "@flowdesk/observability";
-import { createOpaqueToken, hashSessionToken } from "@flowdesk/security";
+} from "@wabrix/db";
+import { type Permission, hasPermission } from "@wabrix/domain";
+import { recordPermissionDenial } from "@wabrix/observability";
+import { createOpaqueToken, hashSessionToken } from "@wabrix/security";
 import { type Request, type Response, type RequestHandler, Router } from "express";
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createIdempotencyMiddleware } from "./idempotency.js";
@@ -56,7 +56,7 @@ function sendProblem(
 ) {
   const requestId = response.getHeader("x-request-id")?.toString() ?? "unknown";
   const problem: Problem = {
-    type: `https://flowdesk.dev/problems/${code.toLowerCase().replace(/_/g, "-")}`,
+    type: `https://wabrix.dev/problems/${code.toLowerCase().replace(/_/g, "-")}`,
     title,
     status,
     code,

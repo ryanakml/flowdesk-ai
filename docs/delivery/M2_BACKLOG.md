@@ -15,7 +15,7 @@
 
 - **Outcome:** multi-tenant channel definitions exist with encrypted credentials and verifiable connection states.
 - **Depends on:** M1-09.
-- **Scope:** `flowdesk.channels` table; AES-256-GCM envelope encryption for Meta access tokens and webhook verify secrets; state machine `DRAFT → CONNECTING → ACTIVE | DEGRADED | DISCONNECTED`; tenant isolation RLS policy.
+- **Scope:** `wabrix.channels` table; AES-256-GCM envelope encryption for Meta access tokens and webhook verify secrets; state machine `DRAFT → CONNECTING → ACTIVE | DEGRADED | DISCONNECTED`; tenant isolation RLS policy.
 - **Acceptance:** channel creation stores encrypted credentials; invalid state transitions are rejected; non-owner/non-admin roles cannot access secrets; RLS enforces organization boundary.
 - **Design:** envelope encryption key derived from environment secret; credentials decrypted only in memory during provider dispatch.
 - **Cross-cutting:** CI `update`; tests `new`; security `new`; data `new`; docs `update`.
@@ -27,11 +27,11 @@
 
 - **Outcome:** strongly typed provider adapter interface enables local testing and real Meta Cloud API dispatch.
 - **Depends on:** M2-01.
-- **Scope:** `WhatsAppProvider` contract in `@flowdesk/providers`; official Graph API v21.0 message sending; deterministic `FakeWhatsAppProvider` for testing without network calls.
+- **Scope:** `WhatsAppProvider` contract in `@wabrix/providers`; official Graph API v21.0 message sending; deterministic `FakeWhatsAppProvider` for testing without network calls.
 - **Acceptance:** provider sends text messages; handles 4xx/5xx errors and rate limits; fake adapter records outbound calls and simulates delivery/read webhooks.
 - **Design:** dependency injection via interface; no hardcoded API keys.
 - **Cross-cutting:** tests `new`; observability `update`; docs `update`.
-- **Delivery:** library package update in `@flowdesk/providers`.
+- **Delivery:** library package update in `@wabrix/providers`.
 - **Evidence:** adapter unit tests, mock server tests, error classification tests.
 - **Owners:** engineering `@Ryanakml`.
 
@@ -55,7 +55,7 @@
 
 - **Outcome:** webhooks are durably buffered in the database before acknowledging receipt to Meta.
 - **Depends on:** M2-03.
-- **Scope:** `flowdesk.webhook_events` table; payload SHA-256 de-duplication; status tracking (`received`, `processing`, `processed`, `failed`); transactional outbox record creation.
+- **Scope:** `wabrix.webhook_events` table; payload SHA-256 de-duplication; status tracking (`received`, `processing`, `processed`, `failed`); transactional outbox record creation.
 - **Acceptance:** identical webhook delivers exactly one database record; acknowledgment happens only after durable commit; failed commits trigger retryable 5xx.
 - **Design:** deduplication key `(provider, payload_hash)`; transactional outbox decouples ingress from background worker.
 - **Cross-cutting:** data `new`; observability `new`; tests `new`.
@@ -71,7 +71,7 @@
 
 - **Outcome:** normalized schema for contacts, conversations, messages, and timeline events exists under strict RLS.
 - **Depends on:** M2-04.
-- **Scope:** `flowdesk.contacts`, `flowdesk.conversations`, `flowdesk.messages`, `flowdesk.message_status_events`, `flowdesk.conversation_events`, `flowdesk.outbound_intents`; conversation state machine (`OPEN`, `WAITING`, `RESOLVED`); optimistic locking (`version`).
+- **Scope:** `wabrix.contacts`, `wabrix.conversations`, `wabrix.messages`, `wabrix.message_status_events`, `wabrix.conversation_events`, `wabrix.outbound_intents`; conversation state machine (`OPEN`, `WAITING`, `RESOLVED`); optimistic locking (`version`).
 - **Acceptance:** tenant isolation RLS on all tables; conversation status transitions enforce domain rules; optimistic concurrency prevents lost updates.
 - **Design:** normalized WhatsApp message format; compound indexes on `(organization_id, conversation_id, created_at)`.
 - **Cross-cutting:** data `new`; domain `new`; tests `new`.
@@ -99,7 +99,7 @@
 
 - **Outcome:** authorized agents can query conversations, view message history, and submit replies.
 - **Depends on:** M2-06.
-- **Scope:** `GET /api/v1/conversations`, `GET /api/v1/conversations/:id/messages`, `POST /api/v1/conversations/:id/messages`; capability check `conversation:reply`; create `flowdesk.outbound_intents` with idempotency.
+- **Scope:** `GET /api/v1/conversations`, `GET /api/v1/conversations/:id/messages`, `POST /api/v1/conversations/:id/messages`; capability check `conversation:reply`; create `wabrix.outbound_intents` with idempotency.
 - **Acceptance:** cursor pagination on messages; optimistic concurrency conflict (409) if conversation version changed; returns 201 with intent ID.
 - **Design:** API creates intent instead of making synchronous external provider call.
 - **Cross-cutting:** api `update`; contracts `update`; tests `new`.

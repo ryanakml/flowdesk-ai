@@ -7,8 +7,8 @@ import {
   getConversationById,
   createOutboundMessageWithOutbox,
   runInTenantTransaction
-} from "@flowdesk/db";
-import { computeSha256, hasRequiredScope } from "@flowdesk/security";
+} from "@wabrix/db";
+import { computeSha256, hasRequiredScope } from "@wabrix/security";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -31,7 +31,7 @@ function sendProblem(
   instance?: string
 ): Response {
   return response.status(status).json({
-    type: `https://flowdesk.dev/errors/${status}`,
+    type: `https://wabrix.dev/errors/${status}`,
     title,
     status,
     detail,

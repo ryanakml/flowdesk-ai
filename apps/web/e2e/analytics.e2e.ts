@@ -72,8 +72,8 @@ async function mockAnalytics(page: Page, mode: "normal" | "empty" | "single" = "
           organizations: [
             {
               id: orgId,
-              name: "flowdesk",
-              slug: "flowdesk",
+              name: "wabrix",
+              slug: "wabrix",
               role: "owner",
               membershipId: "b0000000-0000-4000-8000-000000000003"
             }
@@ -207,7 +207,7 @@ test("analytics layout preserves metrics, requests, range aggregation and export
   expect(requests.filter((url) => url.includes("/conversations?"))).toHaveLength(1);
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export Compliance CSV" }).click();
-  expect((await download).suggestedFilename()).toBe(`flowdesk-analytics-${orgId}.csv`);
+  expect((await download).suggestedFilename()).toBe(`wabrix-analytics-${orgId}.csv`);
   await expect(recent.getByRole("link", { name: "View all" })).toHaveAttribute("href", "/inbox");
 });
 

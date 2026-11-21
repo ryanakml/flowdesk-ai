@@ -19,7 +19,7 @@ describe("assertLocalDatabaseReset", () => {
   });
 
   it("keeps the runtime role explicitly non-privileged", () => {
-    expect(DATABASE_ROLE_NAMES.runtime).toBe("flowdesk_runtime");
+    expect(DATABASE_ROLE_NAMES.runtime).toBe("wabrix_runtime");
   });
 });
 
@@ -29,7 +29,7 @@ describe("runInTenantTransaction nested client reuse", () => {
     const clientQuery = vi.fn().mockImplementation(async (sql: string) => {
       await Promise.resolve();
       queryLog.push(sql);
-      if (sql.includes("FROM flowdesk.conversations")) {
+      if (sql.includes("FROM wabrix.conversations")) {
         return {
           rows: [
             {
@@ -51,7 +51,7 @@ describe("runInTenantTransaction nested client reuse", () => {
           ]
         };
       }
-      if (sql.includes("FROM flowdesk.messages")) {
+      if (sql.includes("FROM wabrix.messages")) {
         return {
           rows: [
             {
@@ -113,7 +113,7 @@ describe("runInTenantTransaction nested client reuse", () => {
     expect(mockPoolClient.connect).not.toHaveBeenCalled();
     expect(mockPoolClient.release).toHaveBeenCalledTimes(1);
     expect(queryLog).toContain("BEGIN");
-    expect(queryLog).toContain("SET LOCAL search_path = flowdesk, public");
+    expect(queryLog).toContain("SET LOCAL search_path = wabrix, public");
     expect(queryLog).toContain("COMMIT");
   });
 });

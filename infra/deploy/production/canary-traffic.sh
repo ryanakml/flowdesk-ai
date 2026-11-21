@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# FlowDesk Real Production Canary Traffic Controller (M5-07 / #181, #203)
+# Wabrix Real Production Canary Traffic Controller (M5-07 / #181, #203)
 # Manages weighted target group traffic distribution via AWS ALB API and verifies applied weights.
 # Fails closed if production infrastructure configuration or credentials are missing.
 
@@ -27,9 +27,9 @@ CANARY_WEIGHT="${WEIGHT}"
 echo "Configuring production traffic split: Stable=${STABLE_WEIGHT}%, Canary=${CANARY_WEIGHT}%..."
 
 # Mock adapter for offline testing and rehearsal verification
-if [[ "${FLOWDESK_MOCK_TRAFFIC_CONTROLLER:-false}" == "true" ]]; then
+if [[ "${WABRIX_MOCK_TRAFFIC_CONTROLLER:-false}" == "true" ]]; then
   echo "[MOCK] Executing mock traffic controller for test environment..."
-  MOCK_STATE_FILE="${MOCK_TRAFFIC_STATE_FILE:-/tmp/flowdesk-canary-mock-state.json}"
+  MOCK_STATE_FILE="${MOCK_TRAFFIC_STATE_FILE:-/tmp/wabrix-canary-mock-state.json}"
   node -e "
     const fs = require('fs');
     const state = {

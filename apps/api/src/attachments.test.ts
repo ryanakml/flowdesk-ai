@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@flowdesk/config";
-import type { DbClient, AttachmentRecord, AttachmentUploadSessionRecord } from "@flowdesk/db";
-import { MockIdentityProvider, InMemoryObjectStore } from "@flowdesk/providers";
-import { hashSessionToken, serializeSessionCookie } from "@flowdesk/security";
+import { loadAuthConfig } from "@wabrix/config";
+import type { DbClient, AttachmentRecord, AttachmentUploadSessionRecord } from "@wabrix/db";
+import { MockIdentityProvider, InMemoryObjectStore } from "@wabrix/providers";
+import { hashSessionToken, serializeSessionCookie } from "@wabrix/security";
 import { createApiApp } from "./app.js";
 
 const orgId = "00000000-0000-7000-8000-000000000001";
@@ -35,19 +35,19 @@ function createAttachmentsMockDb() {
 
   users.set(aliceId, {
     id: aliceId,
-    email: "alice@flowdesk.dev",
+    email: "alice@wabrix.dev",
     displayName: "Alice Supervisor",
     status: "active"
   });
   users.set(bobId, {
     id: bobId,
-    email: "bob@flowdesk.dev",
+    email: "bob@wabrix.dev",
     displayName: "Bob Agent",
     status: "active"
   });
   users.set(charlieId, {
     id: charlieId,
-    email: "charlie@flowdesk.dev",
+    email: "charlie@wabrix.dev",
     displayName: "Charlie Analyst",
     status: "active"
   });
@@ -82,7 +82,7 @@ function createAttachmentsMockDb() {
     query: async (sql: string, values: unknown[] = []) => {
       await Promise.resolve();
       // 1. Session lookup
-      if (sql.includes("FROM flowdesk.auth_sessions s")) {
+      if (sql.includes("FROM wabrix.auth_sessions s")) {
         const tokenHash = values[0] as string;
         const s = sessions.get(tokenHash);
         if (!s || s.revokedAt || s.expiresAt < new Date()) {
@@ -111,7 +111,7 @@ function createAttachmentsMockDb() {
       }
 
       // 2. Membership permission check
-      if (sql.includes("FROM flowdesk.memberships m")) {
+      if (sql.includes("FROM wabrix.memberships m")) {
         const [targetOrgId, targetUserId] = values as [string, string];
         const m = memberRoles.get(`${targetOrgId}:${targetUserId}`);
         if (!m) return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
@@ -124,8 +124,8 @@ function createAttachmentsMockDb() {
         };
       }
 
-      // 3. INSERT INTO flowdesk.attachments
-      if (sql.includes("INSERT INTO flowdesk.attachments")) {
+      // 3. INSERT INTO wabrix.attachments
+      if (sql.includes("INSERT INTO wabrix.attachments")) {
         const id = randomUUID();
         const record: AttachmentRecord = {
           id,
@@ -158,8 +158,8 @@ function createAttachmentsMockDb() {
         };
       }
 
-      // 4. INSERT INTO flowdesk.attachment_upload_sessions
-      if (sql.includes("INSERT INTO flowdesk.attachment_upload_sessions")) {
+      // 4. INSERT INTO wabrix.attachment_upload_sessions
+      if (sql.includes("INSERT INTO wabrix.attachment_upload_sessions")) {
         const id = randomUUID();
         const record: AttachmentUploadSessionRecord = {
           id,
@@ -175,9 +175,9 @@ function createAttachmentsMockDb() {
         return { rows: [record], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
-      // 5. SELECT FROM flowdesk.attachments
+      // 5. SELECT FROM wabrix.attachments
       if (
-        sql.includes("FROM flowdesk.attachments") &&
+        sql.includes("FROM wabrix.attachments") &&
         sql.includes("organization_id = $1 AND id = $2")
       ) {
         const [targetOrgId, id] = values as [string, string];
@@ -194,8 +194,8 @@ function createAttachmentsMockDb() {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      // 6. UPDATE flowdesk.attachment_upload_sessions
-      if (sql.includes("UPDATE flowdesk.attachment_upload_sessions")) {
+      // 6. UPDATE wabrix.attachment_upload_sessions
+      if (sql.includes("UPDATE wabrix.attachment_upload_sessions")) {
         const [now, targetOrgId, attId] = values as [Date, string, string];
         for (const s of uploadSessions.values()) {
           if (s.organizationId === targetOrgId && s.attachmentId === attId) {
@@ -205,7 +205,7 @@ function createAttachmentsMockDb() {
         return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      // 7. UPDATE flowdesk.attachments (checksum)
+      // 7. UPDATE wabrix.attachments (checksum)
       if (sql.includes("SET sha256_checksum = $1")) {
         const [checksum, now, targetOrgId, attId] = values as [string, Date, string, string];
         const att = attachments.get(attId);
@@ -216,8 +216,8 @@ function createAttachmentsMockDb() {
         return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      // 8. INSERT INTO flowdesk.outbox_events
-      if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
+      // 8. INSERT INTO wabrix.outbox_events
+      if (sql.includes("INSERT INTO wabrix.outbox_events")) {
         const payloadStr = (values.length === 3 ? values[2] : values[3]) as string;
         const eventType = values.length === 3 ? "attachment.uploaded" : (values[2] as string);
         outboxEvents.push({
@@ -240,13 +240,13 @@ function createAttachmentsMockDb() {
 function createTestApp() {
   const authConfig = loadAuthConfig({
     APP_ENV: "local",
-    AUTH_SESSION_SECRET: "test-secret-at-least-32-chars-long-flowdesk"
+    AUTH_SESSION_SECRET: "test-secret-at-least-32-chars-long-wabrix"
   });
   const mockDb = createAttachmentsMockDb();
   const storage = new InMemoryObjectStore();
 
   const app = createApiApp({
-    service: "flowdesk-api",
+    service: "wabrix-api",
     version: "1.0.0",
     gitSha: "testsha",
     environment: "local",

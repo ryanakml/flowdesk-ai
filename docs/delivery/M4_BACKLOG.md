@@ -19,7 +19,7 @@
 - **Acceptance:** foreign tenant access to vector chunks/knowledge sources is denied; pgvector cosine distance operations `<=>` perform within budget; bot config defaults to `off`/`draft` and rejects auto-send values; migration is additive and reversible.
 - **Design:** normalized vector tables with tenant partitioning via RLS; HNSW indexing on cosine embeddings; immutable version snapshots for published knowledge sets.
 - **Cross-cutting:** data/security/tests/docs `new`; CI/observability `update`.
-- **Delivery:** forward migration, database repository functions, and type definitions in `@flowdesk/db`.
+- **Delivery:** forward migration, database repository functions, and type definitions in `@wabrix/db`.
 - **Evidence:** fresh/current migration snapshot tests, tenant A/B negative matrix for vector retrieval, query-plan assertions for HNSW index.
 - **Owners:** engineering `@Ryanakml`; security review required.
 
@@ -145,7 +145,7 @@
 - **Depends on:** M4-09.
 - **Scope:** narrow user-membership discovery function; API isolation coverage; immediate post-create organization selection; browser bootstrap regression coverage.
 - **Acceptance:** no-context direct table reads remain empty; discovery returns only active memberships for the authenticated session user; create exits onboarding with the new owner organization selected; duplicate slugs remain conflicts; cross-tenant routes remain fail-closed.
-- **Design:** a `flowdesk_system`-owned `SECURITY DEFINER` function is the only pre-tenant discovery capability; `PUBLIC` has no execute privilege and the API supplies its user ID only from the validated opaque session. Normal organization routes continue using transaction-scoped `app.organization_id`.
+- **Design:** a `wabrix_system`-owned `SECURITY DEFINER` function is the only pre-tenant discovery capability; `PUBLIC` has no execute privilege and the API supplies its user ID only from the validated opaque session. Normal organization routes continue using transaction-scoped `app.organization_id`.
 - **Cross-cutting:** database, API, web, security, tests, and delivery docs `update`.
 - **Delivery:** migration `0018`, repository query update, bootstrap state transition, and PostgreSQL/API/browser tests.
 - **Evidence:** issue #95, database-foundation integration run, full verification, hosted CI, and staging bootstrap smoke.

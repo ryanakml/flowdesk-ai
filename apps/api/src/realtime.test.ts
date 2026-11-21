@@ -2,9 +2,9 @@ import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { io as ClientSocket, type Socket as ClientSocketType } from "socket.io-client";
-import { type RealtimeHint, type RealtimeReady } from "@flowdesk/contracts";
-import type { DbClient } from "@flowdesk/db";
-import { serializeSessionCookie } from "@flowdesk/security";
+import { type RealtimeHint, type RealtimeReady } from "@wabrix/contracts";
+import type { DbClient } from "@wabrix/db";
+import { serializeSessionCookie } from "@wabrix/security";
 import { createRealtimeServer } from "./realtime.js";
 
 const mockOrgId = "00000000-0000-7000-8000-000000000001";
@@ -46,12 +46,12 @@ function createMockDb(
       }
 
       // Session lookup
-      if (sql.includes("flowdesk.auth_sessions") && sql.includes("token_hash = $1")) {
+      if (sql.includes("wabrix.auth_sessions") && sql.includes("token_hash = $1")) {
         if (!sessionActive) return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         const session = {
           id: "session-1",
           user_id: mockUserId,
-          email: "agent@flowdesk.test",
+          email: "agent@wabrix.test",
           display_name: "Agent Test",
           expires_at: new Date(Date.now() + 3600_000),
           created_at: new Date()
@@ -60,12 +60,12 @@ function createMockDb(
       }
 
       // Realtime versions
-      if (sql.includes("flowdesk.realtime_versions")) {
+      if (sql.includes("wabrix.realtime_versions")) {
         return { rows: [{ version }], rowCount: 1, command: "SELECT", oid: 0, fields: [] };
       }
 
       // Organization access check
-      if (sql.includes("FROM flowdesk.memberships WHERE organization_id = $1 AND user_id = $2")) {
+      if (sql.includes("FROM wabrix.memberships WHERE organization_id = $1 AND user_id = $2")) {
         const targetOrg = values[0] as string;
         if (authorizedOrgs.has(targetOrg)) {
           return { rows: [{ id: "mem-1" }], rowCount: 1, command: "SELECT", oid: 0, fields: [] };
@@ -75,7 +75,7 @@ function createMockDb(
 
       // Team access check
       if (
-        sql.includes("FROM flowdesk.memberships AS membership") &&
+        sql.includes("FROM wabrix.memberships AS membership") &&
         sql.includes("team_member.team_id = $3")
       ) {
         const teamId = values[2] as string;
@@ -87,7 +87,7 @@ function createMockDb(
 
       // Conversation access check
       if (
-        sql.includes("FROM flowdesk.conversations AS conversation") &&
+        sql.includes("FROM wabrix.conversations AS conversation") &&
         sql.includes("conversation.id = $3")
       ) {
         const convId = values[2] as string;
@@ -372,7 +372,7 @@ describe("Socket.IO Realtime Server (M3-03)", () => {
         if (sql.includes("set_config('app.current_organization_id'")) {
           return { rows: [], rowCount: 1, command: "SELECT", oid: 0, fields: [] };
         }
-        if (sql.includes("flowdesk.auth_sessions") && sql.includes("token_hash = $1")) {
+        if (sql.includes("wabrix.auth_sessions") && sql.includes("token_hash = $1")) {
           if (!sessionValid)
             return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
           return {
@@ -380,7 +380,7 @@ describe("Socket.IO Realtime Server (M3-03)", () => {
               {
                 id: "session-1",
                 user_id: mockUserId,
-                email: "agent@flowdesk.test",
+                email: "agent@wabrix.test",
                 display_name: "Agent Test",
                 expires_at: new Date(Date.now() + 3600_000),
                 created_at: new Date()
@@ -392,10 +392,10 @@ describe("Socket.IO Realtime Server (M3-03)", () => {
             fields: []
           };
         }
-        if (sql.includes("flowdesk.realtime_versions")) {
+        if (sql.includes("wabrix.realtime_versions")) {
           return { rows: [{ version: 1 }], rowCount: 1, command: "SELECT", oid: 0, fields: [] };
         }
-        if (sql.includes("FROM flowdesk.memberships WHERE organization_id = $1 AND user_id = $2")) {
+        if (sql.includes("FROM wabrix.memberships WHERE organization_id = $1 AND user_id = $2")) {
           return { rows: [{ id: "mem-1" }], rowCount: 1, command: "SELECT", oid: 0, fields: [] };
         }
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };

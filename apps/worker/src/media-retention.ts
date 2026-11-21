@@ -4,9 +4,9 @@ import {
   listExpiredAttachments,
   runInTenantTransaction,
   softDeleteAttachment
-} from "@flowdesk/db";
-import type { ObjectStore } from "@flowdesk/providers";
-import { recordMediaLifecycle } from "@flowdesk/observability";
+} from "@wabrix/db";
+import type { ObjectStore } from "@wabrix/providers";
+import { recordMediaLifecycle } from "@wabrix/observability";
 
 /** Default retention periods in days */
 const DEFAULT_CLEAN_RETENTION_DAYS = 90;

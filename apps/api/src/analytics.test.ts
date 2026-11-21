@@ -1,8 +1,8 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@flowdesk/config";
-import type { DbClient } from "@flowdesk/db";
-import { serializeSessionCookie, hashSessionToken } from "@flowdesk/security";
+import { loadAuthConfig } from "@wabrix/config";
+import type { DbClient } from "@wabrix/db";
+import { serializeSessionCookie, hashSessionToken } from "@wabrix/security";
 import { createApiApp } from "./app.js";
 
 function createMockDb(): DbClient {
@@ -12,7 +12,7 @@ function createMockDb(): DbClient {
   return {
     async query(sql: string, params: unknown[] = []) {
       await Promise.resolve();
-      if (sql.includes("FROM flowdesk.auth_sessions") || sql.includes("flowdesk.sessions")) {
+      if (sql.includes("FROM wabrix.auth_sessions") || sql.includes("wabrix.sessions")) {
         const tokenHashParam = params[0] as string;
         if (tokenHashParam === expectedHash) {
           return {
@@ -24,7 +24,7 @@ function createMockDb(): DbClient {
                 created_at: new Date(),
                 expires_at: new Date(Date.now() + 86400000),
                 revoked_at: null,
-                user_email: "admin@flowdesk.dev",
+                user_email: "admin@wabrix.dev",
                 user_display_name: "Admin Analytics",
                 user_status: "active"
               }
@@ -37,10 +37,7 @@ function createMockDb(): DbClient {
         }
       }
 
-      if (
-        sql.includes("SELECT * FROM flowdesk.memberships") ||
-        sql.includes("flowdesk.memberships")
-      ) {
+      if (sql.includes("SELECT * FROM wabrix.memberships") || sql.includes("wabrix.memberships")) {
         return {
           rows: [
             {
@@ -60,7 +57,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("flowdesk.conversations")) {
+      if (sql.includes("wabrix.conversations")) {
         return {
           rows: [{ total: "45", open: "12", assigned: "25", resolved: "33" }],
           rowCount: 1,
@@ -70,7 +67,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("flowdesk.messages") && sql.includes("GROUP BY")) {
+      if (sql.includes("wabrix.messages") && sql.includes("GROUP BY")) {
         return {
           rows: [
             { day: "2026-08-28", inbound: "20", outbound: "15", bot: "10" },
@@ -83,7 +80,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("flowdesk.messages")) {
+      if (sql.includes("wabrix.messages")) {
         return {
           rows: [{ total: "180", inbound: "90", outbound: "90", bot: "120", human: "60" }],
           rowCount: 1,
@@ -93,7 +90,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("flowdesk.audit_events") || sql.includes("audit")) {
+      if (sql.includes("wabrix.audit_events") || sql.includes("audit")) {
         return {
           rows: [{ id: "audit-1", occurred_at: new Date() }],
           rowCount: 1,
@@ -148,7 +145,7 @@ describe("Analytics REST API Router (M6-04)", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers["content-type"]).toContain("text/csv");
-    expect(res.headers["content-disposition"]).toContain("flowdesk-analytics-org-123.csv");
+    expect(res.headers["content-disposition"]).toContain("wabrix-analytics-org-123.csv");
     expect(res.text).toContain("Category,Metric,Value");
     expect(res.text).toContain("Conversations,Total,45");
     expect(res.text).toContain("Automation,Bot Automation Rate (%),66.7%");

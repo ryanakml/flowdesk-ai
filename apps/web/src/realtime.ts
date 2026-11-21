@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { io, type Socket } from "socket.io-client";
-import type { RealtimeHint, RealtimeReady } from "@flowdesk/contracts";
+import type { RealtimeHint, RealtimeReady } from "@wabrix/contracts";
 
 export interface RealtimeSyncOptions {
   organizationId: string | null;

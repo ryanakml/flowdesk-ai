@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { DbClient, ClaimedOutboxEvent } from "@flowdesk/db";
+import type { DbClient, ClaimedOutboxEvent } from "@wabrix/db";
 import { processCompletedAutoRun } from "./auto-send.js";
 import { dispatchOutboundMessageCrashSafe, type OutboundMessagePayload } from "./dispatch.js";
-import type { WhatsAppProvider } from "@flowdesk/providers";
-import { encryptWhatsAppChannelCredentials } from "@flowdesk/security";
+import type { WhatsAppProvider } from "@wabrix/providers";
+import { encryptWhatsAppChannelCredentials } from "@wabrix/security";
 
 describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)", () => {
   const orgId = "10000000-0000-4000-8000-000000000001";
@@ -13,17 +13,17 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
   const triggerMsgId = "50000000-0000-4000-8000-000000000001";
   const encryptionKey = "test-encryption-key-32-chars-long!";
 
-  const originalEnv = process.env["FLOWDESK_GLOBAL_KILLSWITCH"];
+  const originalEnv = process.env["WABRIX_GLOBAL_KILLSWITCH"];
 
   beforeEach(() => {
-    delete process.env["FLOWDESK_GLOBAL_KILLSWITCH"];
+    delete process.env["WABRIX_GLOBAL_KILLSWITCH"];
   });
 
   afterEach(() => {
     if (originalEnv !== undefined) {
-      process.env["FLOWDESK_GLOBAL_KILLSWITCH"] = originalEnv;
+      process.env["WABRIX_GLOBAL_KILLSWITCH"] = originalEnv;
     } else {
-      delete process.env["FLOWDESK_GLOBAL_KILLSWITCH"];
+      delete process.env["WABRIX_GLOBAL_KILLSWITCH"];
     }
   });
 
@@ -72,7 +72,7 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
         }
 
         // State query
-        if (sql.includes("FROM flowdesk.bot_runs AS run")) {
+        if (sql.includes("FROM wabrix.bot_runs AS run")) {
           return {
             rows: [
               {
@@ -108,7 +108,7 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
 
         // Automation safety query
         if (
-          sql.includes("flowdesk.automation_safety_controls") ||
+          sql.includes("wabrix.automation_safety_controls") ||
           sql.includes("resolve_automation_safety")
         ) {
           return { rows: [] };
@@ -125,7 +125,7 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
         }
 
         // Conversation query
-        if (sql.includes("FROM flowdesk.conversations") && !sql.includes("JOIN")) {
+        if (sql.includes("FROM wabrix.conversations") && !sql.includes("JOIN")) {
           return {
             rows: [
               {
@@ -153,7 +153,7 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
         }
 
         // Insert outbound message
-        if (sql.includes("INSERT INTO flowdesk.messages")) {
+        if (sql.includes("INSERT INTO wabrix.messages")) {
           const newMsg = {
             id: `msg-beta-${insertedMessages.length + 1}`,
             organizationId: orgId,
@@ -171,7 +171,7 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
         }
 
         // Audit logs
-        if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
+        if (sql.includes("INSERT INTO wabrix.audit_logs")) {
           auditLogs.push(params);
           return { rows: [{ id: "audit-1" }], rowCount: 1 };
         }
@@ -290,7 +290,7 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
       async query(queryText: string) {
         await Promise.resolve();
         const sql = queryText.replace(/\s+/g, " ").trim();
-        if (sql.includes("FROM flowdesk.messages")) {
+        if (sql.includes("FROM wabrix.messages")) {
           return {
             rows: [
               {
@@ -318,8 +318,8 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
           return { rows: [] };
         }
         if (
-          sql.includes("UPDATE flowdesk.outbound_intents") ||
-          sql.includes("UPDATE flowdesk.messages")
+          sql.includes("UPDATE wabrix.outbound_intents") ||
+          sql.includes("UPDATE wabrix.messages")
         ) {
           return {
             rows: [{ id: "msg-outbox-fail", status: "failed", conversationId: convId, channelId }],
@@ -361,7 +361,7 @@ describe("Controlled Beta FAQ: Operational Proof & Safety Matrix (M5-08 / #179)"
   });
 
   it("Proof 6: Global kill switch immediately halts all automation across tenants", async () => {
-    process.env["FLOWDESK_GLOBAL_KILLSWITCH"] = "true";
+    process.env["WABRIX_GLOBAL_KILLSWITCH"] = "true";
 
     const { db, insertedMessages } = createBetaFaqDb({
       autoEnabled: true

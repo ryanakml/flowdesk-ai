@@ -2,7 +2,7 @@
 
 ## 1. Context & Scope
 
-This runbook covers operator and platform engineering procedures for investigating and managing attachments that enter the `quarantine` or `rejected` states in Flowdesk.
+This runbook covers operator and platform engineering procedures for investigating and managing attachments that enter the `quarantine` or `rejected` states in Wabrix.
 
 - **Threat Reference:** `TM-006` (_Malicious attachment / SSRF / MIME Spoofing_)
 - **Target Capability:** `MEDIA-PIPE-001`
@@ -30,7 +30,7 @@ When an attachment is rejected, query its record in PostgreSQL:
 ```sql
 SELECT id, organization_id, file_name, content_type, detected_mime_type,
        byte_size, sha256_checksum, status, quarantine_reason, scanned_at, scanner_name
-FROM flowdesk.attachments
+FROM wabrix.attachments
 WHERE status = 'rejected'
 ORDER BY updated_at DESC
 LIMIT 10;
@@ -70,7 +70,7 @@ To verify one deletion without exposing customer data:
 
 ```sql
 SELECT id, organization_id, status, deleted_at, deletion_reason
-FROM flowdesk.attachments
+FROM wabrix.attachments
 WHERE id = '<attachment-id>' AND organization_id = '<organization-id>';
 ```
 
@@ -82,10 +82,10 @@ To purge quarantined objects older than retention window:
 
 ```bash
 # Verify S3 connectivity
-mc ls local/flowdesk-local/
+mc ls local/wabrix-local/
 
 # Delete rejected objects from storage key
-mc rm --recursive --force local/flowdesk-local/org-<orgId>/quarantine/<attachmentId>/
+mc rm --recursive --force local/wabrix-local/org-<orgId>/quarantine/<attachmentId>/
 ```
 
 After an approved manual object deletion, invoke the tenant-scoped tombstone path or record equivalent audited evidence. Deleting only the database row is prohibited because it can orphan private bytes.

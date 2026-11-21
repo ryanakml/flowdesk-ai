@@ -40,31 +40,30 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
   describe("validateImageDigest", () => {
     it("accepts image reference pinned with valid sha256 digest", () => {
       const validRef =
-        "ghcr.io/ryanakml/flowdesk-api@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        "ghcr.io/ryanakml/wabrix-api@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
       const result = validateImageDigest(validRef);
       expect(result.valid).toBe(true);
       expect(result.error).toBeUndefined();
     });
 
     it("rejects mutable tag or reference without sha256 prefix", () => {
-      expect(validateImageDigest("ghcr.io/ryanakml/flowdesk-api:latest").valid).toBe(false);
+      expect(validateImageDigest("ghcr.io/ryanakml/wabrix-api:latest").valid).toBe(false);
       expect(
-        validateImageDigest(
-          "ghcr.io/ryanakml/flowdesk-api:1fed41e3a777ea017222d27aada4c2929b9a4f6a"
-        ).valid
+        validateImageDigest("ghcr.io/ryanakml/wabrix-api:1fed41e3a777ea017222d27aada4c2929b9a4f6a")
+          .valid
       ).toBe(false);
-      expect(validateImageDigest("ghcr.io/ryanakml/flowdesk-api@md5:123456").valid).toBe(false);
+      expect(validateImageDigest("ghcr.io/ryanakml/wabrix-api@md5:123456").valid).toBe(false);
       expect(validateImageDigest("").valid).toBe(false);
     });
 
     it("rejects invalid sha256 digest length", () => {
-      expect(validateImageDigest("ghcr.io/ryanakml/flowdesk-api@sha256:short").valid).toBe(false);
+      expect(validateImageDigest("ghcr.io/ryanakml/wabrix-api@sha256:short").valid).toBe(false);
     });
   });
 
   describe("validateRunningWorkloadDigest", () => {
     const validDigest =
-      "ghcr.io/ryanakml/flowdesk-api@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+      "ghcr.io/ryanakml/wabrix-api@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
     it("passes when running digest matches expected digest exactly", () => {
       const result = validateRunningWorkloadDigest(validDigest, validDigest);
@@ -80,7 +79,7 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
 
     it("rejects when running digest differs from expected digest", () => {
       const differentDigest =
-        "ghcr.io/ryanakml/flowdesk-api@sha256:0000000000000000000000000000000000000000000000000000000000000000";
+        "ghcr.io/ryanakml/wabrix-api@sha256:0000000000000000000000000000000000000000000000000000000000000000";
       const result = validateRunningWorkloadDigest(validDigest, differentDigest);
       expect(result.valid).toBe(false);
       expect(result.error).toContain("mismatch");
@@ -151,7 +150,7 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
           "arn:aws:elasticloadbalancing:ap-southeast-1:111122223333:targetgroup/prod-stable/456",
         canaryTgArn:
           "arn:aws:elasticloadbalancing:ap-southeast-1:111122223333:targetgroup/prod-canary/789",
-        canaryEndpointUrl: "https://canary.flowdesk.ai"
+        canaryEndpointUrl: "https://canary.wabrix.ai"
       };
       const result = validateProductionEnvironmentConfig(config);
       expect(result.valid).toBe(true);
@@ -160,7 +159,7 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
 
     it("fails closed when required ARNs are missing", () => {
       const config = {
-        canaryEndpointUrl: "https://canary.flowdesk.ai"
+        canaryEndpointUrl: "https://canary.wabrix.ai"
       };
       const result = validateProductionEnvironmentConfig(config);
       expect(result.valid).toBe(false);
@@ -294,9 +293,9 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
   describe("validateMigrationExpandCompatibility", () => {
     it("approves expand-compatible SQL (CREATE TABLE, ADD COLUMN nullable or with DEFAULT)", () => {
       const safeMigrations = [
-        "CREATE TABLE flowdesk.new_feature (id text primary key);",
-        "ALTER TABLE flowdesk.users ADD COLUMN nickname text;",
-        "ALTER TABLE flowdesk.orders ADD COLUMN status text NOT NULL DEFAULT 'draft';"
+        "CREATE TABLE wabrix.new_feature (id text primary key);",
+        "ALTER TABLE wabrix.users ADD COLUMN nickname text;",
+        "ALTER TABLE wabrix.orders ADD COLUMN status text NOT NULL DEFAULT 'draft';"
       ];
 
       const result = validateMigrationExpandCompatibility(safeMigrations);
@@ -306,8 +305,8 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
 
     it("rejects DROP COLUMN or DROP TABLE in expand phase", () => {
       const dangerousMigrations = [
-        "ALTER TABLE flowdesk.users DROP COLUMN legacy_field;",
-        "DROP TABLE flowdesk.old_analytics;"
+        "ALTER TABLE wabrix.users DROP COLUMN legacy_field;",
+        "DROP TABLE wabrix.old_analytics;"
       ];
 
       const result = validateMigrationExpandCompatibility(dangerousMigrations);
@@ -319,7 +318,7 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
 
     it("rejects ADD COLUMN NOT NULL without DEFAULT", () => {
       const breakingMigration = [
-        "ALTER TABLE flowdesk.conversations ADD COLUMN priority integer NOT NULL;"
+        "ALTER TABLE wabrix.conversations ADD COLUMN priority integer NOT NULL;"
       ];
 
       const result = validateMigrationExpandCompatibility(breakingMigration);
@@ -331,16 +330,16 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
 
   describe("createProductionDeploymentRecord", () => {
     const dummyDigests = {
-      web: "ghcr.io/ryanakml/flowdesk-web@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      api: "ghcr.io/ryanakml/flowdesk-api@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      web: "ghcr.io/ryanakml/wabrix-web@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      api: "ghcr.io/ryanakml/wabrix-api@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       ingress:
-        "ghcr.io/ryanakml/flowdesk-ingress@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ghcr.io/ryanakml/wabrix-ingress@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       worker:
-        "ghcr.io/ryanakml/flowdesk-worker@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ghcr.io/ryanakml/wabrix-worker@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       scheduler:
-        "ghcr.io/ryanakml/flowdesk-scheduler@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "ghcr.io/ryanakml/wabrix-scheduler@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       migrator:
-        "ghcr.io/ryanakml/flowdesk-migrator@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        "ghcr.io/ryanakml/wabrix-migrator@sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     };
 
     it("generates immutable deployment record with required audit metadata", () => {
@@ -397,7 +396,7 @@ describe("Production Release, Canary Gates, and Rollback Domain (M5-07 / #181, #
           sourceSha: "1234567890abcdef1234567890abcdef12345678",
           imageDigests: {
             ...dummyDigests,
-            web: "ghcr.io/ryanakml/flowdesk-web:latest"
+            web: "ghcr.io/ryanakml/wabrix-web:latest"
           },
           actor: "release-engineer",
           environment: "production",

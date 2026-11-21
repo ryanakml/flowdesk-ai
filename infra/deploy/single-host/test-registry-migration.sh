@@ -9,10 +9,10 @@ current=0123456789abcdef0123456789abcdef01234567
 previous=abcdef0123456789abcdef0123456789abcdef01
 mkdir -p "${scratch}/"{bin,shared,"releases/${current}","releases/${previous}"}
 # Redirect only the fixed staging host path in this temporary script copy.
-sed 's|^shared_dir=/opt/flowdesk/shared$|shared_dir=${TEST_SHARED_DIR}|' \
+sed 's|^shared_dir=/opt/wabrix/shared$|shared_dir=${TEST_SHARED_DIR}|' \
   "${script_dir}/deploy.sh" > "${scratch}/releases/${current}/deploy.sh"
 cp "${script_dir}/"{compose.yaml,health-check.sh} "${scratch}/releases/${current}/"
-sed 's|/wabrix-|/flowdesk-|g' "${script_dir}/compose.yaml" > "${scratch}/releases/${previous}/compose.yaml"
+cp "${script_dir}/compose.yaml" "${scratch}/releases/${previous}/compose.yaml"
 printf '%s\n' "${previous}" > "${scratch}/shared/current-image"
 printf '%s\n' 'PUBLIC_BASE_URL=https://staging.example.com' > "${scratch}/shared/staging.env"
 cat > "${scratch}/bin/docker" <<'STUB'
@@ -32,4 +32,4 @@ fi
 grep -Fq "${current} compose --env-file ${TEST_SHARED_DIR}/staging.env -f compose.yaml --profile release pull" "${TEST_DOCKER_LOG}" || { cat "${scratch}/deploy.log" "${TEST_DOCKER_LOG}" >&2; exit 1; }
 grep -Fq "${previous} compose --env-file ${TEST_SHARED_DIR}/staging.env -f ${scratch}/releases/${previous}/compose.yaml up -d --no-build --remove-orphans web api ingress worker scheduler caddy" "${TEST_DOCKER_LOG}" || { cat "${scratch}/deploy.log" "${TEST_DOCKER_LOG}" >&2; exit 1; }
 test "$(<"${TEST_SHARED_DIR}/current-image")" = "${previous}"
-echo "A failed Wabrix release restored the legacy Compose manifest without changing release state."
+echo "A failed Wabrix release restored the previous Compose manifest without changing release state."

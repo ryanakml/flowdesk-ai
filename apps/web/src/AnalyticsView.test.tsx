@@ -51,7 +51,7 @@ describe("AnalyticsView UI Component (M6-04)", () => {
             status: 200,
             headers: {
               "Content-Type": "text/csv",
-              "Content-Disposition": `attachment; filename="flowdesk-analytics-${orgId}.csv"`
+              "Content-Disposition": `attachment; filename="wabrix-analytics-${orgId}.csv"`
             }
           })
         );

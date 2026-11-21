@@ -2,8 +2,8 @@
 set -Eeuo pipefail
 
 release_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-environment_file=/opt/flowdesk/shared/staging.env
-current_release_file=/opt/flowdesk/shared/current-image
+environment_file=/opt/wabrix/shared/staging.env
+current_release_file=/opt/wabrix/shared/current-image
 since=${SINCE:-15m}
 tail_lines=${TAIL_LINES:-300}
 

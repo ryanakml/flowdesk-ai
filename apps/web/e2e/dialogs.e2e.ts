@@ -83,7 +83,7 @@ const connectedChannel = {
   id: "c0000000-0000-4000-8000-000000000001",
   organizationId: orgId,
   type: "whatsapp",
-  name: "flowdesk",
+  name: "wabrix",
   phoneNumberId: "1100041206524835",
   wabaId: "2088901722795472",
   status: "active",
@@ -207,7 +207,7 @@ test("channel card copies IDs, reconnects, verifies and confirms disconnect", as
     await card.getByRole("button", { name: `Copy ${label}` }).click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(value);
   }
-  await card.getByRole("button", { name: "More actions for flowdesk" }).click();
+  await card.getByRole("button", { name: "More actions for wabrix" }).click();
   await page.getByRole("menuitem", { name: "Reconnect with token" }).click();
   const dialog = page.getByRole("dialog");
   await expectUsableDialog(page, dialog);

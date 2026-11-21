@@ -30,7 +30,7 @@ describe("organization bootstrap browser flow", () => {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              user: { id: userId, email: "owner@flowdesk.dev", displayName: "Owner" },
+              user: { id: userId, email: "owner@wabrix.dev", displayName: "Owner" },
               expiresAt: "2026-08-31T00:00:00.000Z"
             }),
             { status: 200 }

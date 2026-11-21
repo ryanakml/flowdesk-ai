@@ -26,12 +26,12 @@ if ! getent group docker >/dev/null 2>&1; then
 fi
 usermod -aG docker "${deploy_user}"
 install -d -m 0750 -o "${deploy_user}" -g "${deploy_group}" \
-  /opt/flowdesk/releases \
-  /opt/flowdesk/shared
+  /opt/wabrix/releases \
+  /opt/wabrix/shared
 
-if [[ -e /opt/flowdesk/shared/staging.env ]]; then
-  chown "${deploy_user}:${deploy_group}" /opt/flowdesk/shared/staging.env
-  chmod 0600 /opt/flowdesk/shared/staging.env
+if [[ -e /opt/wabrix/shared/staging.env ]]; then
+  chown "${deploy_user}:${deploy_group}" /opt/wabrix/shared/staging.env
+  chmod 0600 /opt/wabrix/shared/staging.env
 fi
 
-echo "Prepared /opt/flowdesk for ${deploy_user}. Start a new login session before using Docker without sudo."
+echo "Prepared /opt/wabrix for ${deploy_user}. Start a new login session before using Docker without sudo."

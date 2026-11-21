@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
-import type { Message } from "@flowdesk/contracts";
-import { Skeleton } from "@flowdesk/ui";
+import type { Message } from "@wabrix/contracts";
+import { Skeleton } from "@wabrix/ui";
 import { MessageBubble } from "./MessageBubble.js";
 
 interface MessageTimelineProps {

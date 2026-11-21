@@ -7,7 +7,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator
-} from "@flowdesk/ui";
+} from "@wabrix/ui";
 
 interface Crumb {
   label: string;

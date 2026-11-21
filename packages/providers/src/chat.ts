@@ -43,7 +43,7 @@ export class FakeAiChatProvider implements AiChatProvider {
     }
 
     return {
-      content: `Berdasarkan dokumentasi resmi FlowDesk: ${userMessage.slice(0, 100)} dapat dibantu oleh tim support kami.`,
+      content: `Berdasarkan dokumentasi resmi Wabrix: ${userMessage.slice(0, 100)} dapat dibantu oleh tim support kami.`,
       reasoning: "Matched customer query with knowledge context",
       confidence: 0.92,
       promptTokens: 250,

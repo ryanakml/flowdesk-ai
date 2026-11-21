@@ -46,15 +46,15 @@ describe("OIDC authorization request", () => {
 describe("OIDC logout URL", () => {
   it("constructs correct Auth0 v2 logout URL with client_id and returnTo", () => {
     const logoutUrl = createOidcLogoutUrl({
-      issuer: "https://auth.flowdesk.dev/",
+      issuer: "https://auth.wabrix.dev/",
       clientId: "test-client-id-123",
-      returnTo: "https://app.flowdesk.dev/logged-out"
+      returnTo: "https://app.wabrix.dev/logged-out"
     });
 
-    expect(logoutUrl.origin).toBe("https://auth.flowdesk.dev");
+    expect(logoutUrl.origin).toBe("https://auth.wabrix.dev");
     expect(logoutUrl.pathname).toBe("/v2/logout");
     expect(logoutUrl.searchParams.get("client_id")).toBe("test-client-id-123");
-    expect(logoutUrl.searchParams.get("returnTo")).toBe("https://app.flowdesk.dev/logged-out");
+    expect(logoutUrl.searchParams.get("returnTo")).toBe("https://app.wabrix.dev/logged-out");
     expect(logoutUrl.toString()).not.toContain("client_secret");
     expect(logoutUrl.toString()).not.toContain("secret");
   });
@@ -74,19 +74,19 @@ describe("OIDC logout URL", () => {
 });
 
 describe("validateLogoutReturnUrl", () => {
-  const appBaseUrl = "https://app.flowdesk.dev";
+  const appBaseUrl = "https://app.wabrix.dev";
 
   it("resolves safe relative paths against appBaseUrl", () => {
-    expect(validateLogoutReturnUrl("/", appBaseUrl)).toBe("https://app.flowdesk.dev/");
-    expect(validateLogoutReturnUrl("/login", appBaseUrl)).toBe("https://app.flowdesk.dev/login");
+    expect(validateLogoutReturnUrl("/", appBaseUrl)).toBe("https://app.wabrix.dev/");
+    expect(validateLogoutReturnUrl("/login", appBaseUrl)).toBe("https://app.wabrix.dev/login");
     expect(validateLogoutReturnUrl("/auth/signed-out?reason=user", appBaseUrl)).toBe(
-      "https://app.flowdesk.dev/auth/signed-out?reason=user"
+      "https://app.wabrix.dev/auth/signed-out?reason=user"
     );
   });
 
   it("accepts same-origin absolute URLs", () => {
-    expect(validateLogoutReturnUrl("https://app.flowdesk.dev/dashboard", appBaseUrl)).toBe(
-      "https://app.flowdesk.dev/dashboard"
+    expect(validateLogoutReturnUrl("https://app.wabrix.dev/dashboard", appBaseUrl)).toBe(
+      "https://app.wabrix.dev/dashboard"
     );
   });
 

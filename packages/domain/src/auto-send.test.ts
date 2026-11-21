@@ -28,7 +28,7 @@ describe("Pre-Send Auto-Send Policy Engine (M5-02)", () => {
     const appended = appendAiDisclaimer(original);
     expect(appended).toContain(AI_DISCLAIMER_FOOTER);
     expect(appended).toBe(
-      "Halo, terima kasih telah menghubungi CS kami.\n\n_Balasan otomatis oleh AI FlowDesk_"
+      "Halo, terima kasih telah menghubungi CS kami.\n\n_Balasan otomatis oleh AI Wabrix_"
     );
 
     // Idempotent check

@@ -42,7 +42,7 @@ import {
   Label
 } from "./index.js";
 
-describe("@flowdesk/ui Foundation Primitives", () => {
+describe("@wabrix/ui Foundation Primitives", () => {
   it("StatusBadge preserves backwards compatibility and encodes data-status", () => {
     const { container: healthyContainer } = render(
       <StatusBadge healthy={true}>Operational</StatusBadge>

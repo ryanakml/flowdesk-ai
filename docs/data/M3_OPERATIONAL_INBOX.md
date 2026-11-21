@@ -34,4 +34,4 @@ The primary workflow uses native controls, listbox keyboard navigation, visible 
 
 ## Privacy boundary
 
-No third-party analytics or browser telemetry SDK is installed in `@flowdesk/web`. Realtime events contain identifiers and projection versions, never message bodies, private-note bodies, phone numbers, filenames, or attachment bytes. Customer content travels only to first-party authenticated REST endpoints and the explicitly authorized short-lived object-store upload URL. Introducing browser telemetry requires a separate privacy review and payload test before release.
+No third-party analytics or browser telemetry SDK is installed in `@wabrix/web`. Realtime events contain identifiers and projection versions, never message bodies, private-note bodies, phone numbers, filenames, or attachment bytes. Customer content travels only to first-party authenticated REST endpoints and the explicitly authorized short-lived object-store upload URL. Introducing browser telemetry requires a separate privacy review and payload test before release.

@@ -14,13 +14,13 @@ import {
   upsertBotConfig,
   createWebhookSubscription,
   listWebhookDeliveries
-} from "@flowdesk/db";
-import { FakeWhatsAppProvider } from "@flowdesk/providers";
+} from "@wabrix/db";
+import { FakeWhatsAppProvider } from "@wabrix/providers";
 import {
   encryptWhatsAppChannelCredentials,
   encryptWebhookSecret,
   verifyWebhookSignature
-} from "@flowdesk/security";
+} from "@wabrix/security";
 import { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { processOutboxOutboundBatch } from "./dispatch.js";
@@ -42,7 +42,7 @@ const encryptionKey = "m2-real-postgres-integration-key";
 beforeAll(async () => {
   if (!pool) return;
   await pool.query(
-    `INSERT INTO flowdesk.organizations (id, slug, display_name)
+    `INSERT INTO wabrix.organizations (id, slug, display_name)
      VALUES ($1, $2, 'M2 Integration A'), ($3, $4, 'M2 Integration B')`,
     [
       organizationA,
@@ -52,9 +52,9 @@ beforeAll(async () => {
     ]
   );
   await pool.query(
-    `INSERT INTO flowdesk.users (id, email, display_name)
+    `INSERT INTO wabrix.users (id, email, display_name)
      VALUES ($1, $2, 'M2 Integration Agent')`,
-    [agentUserId, `m2-${agentUserId}@flowdesk.test`]
+    [agentUserId, `m2-${agentUserId}@wabrix.test`]
   );
 });
 
@@ -156,15 +156,15 @@ integration("M2 vertical slice against PostgreSQL RLS", () => {
         const conversation = await getConversationById(db, organizationA, conversationId);
         const messages = await listMessagesByConversation(db, organizationA, conversationId, 20);
         const contacts = await db.query<{ count: string }>(
-          "SELECT count(*)::text AS count FROM flowdesk.contacts WHERE organization_id = $1",
+          "SELECT count(*)::text AS count FROM wabrix.contacts WHERE organization_id = $1",
           [organizationA]
         );
         const statusEvents = await db.query<{ count: string }>(
-          "SELECT count(*)::text AS count FROM flowdesk.message_status_events WHERE organization_id = $1",
+          "SELECT count(*)::text AS count FROM wabrix.message_status_events WHERE organization_id = $1",
           [organizationA]
         );
         const intents = await db.query<{ state: string; provider_message_id: string | null }>(
-          `SELECT state, provider_message_id FROM flowdesk.outbound_intents
+          `SELECT state, provider_message_id FROM wabrix.outbound_intents
            WHERE organization_id = $1 AND message_id = $2`,
           [organizationA, outbound.id]
         );
@@ -195,7 +195,7 @@ integration("M2 vertical slice against PostgreSQL RLS", () => {
           correlationId: randomUUID()
         });
         await db.query(
-          `UPDATE flowdesk.outbound_intents
+          `UPDATE wabrix.outbound_intents
            SET state = 'dispatching', claimed_at = clock_timestamp() - interval '1 minute'
            WHERE organization_id = $1 AND message_id = $2`,
           [organizationA, message.id]
@@ -210,7 +210,7 @@ integration("M2 vertical slice against PostgreSQL RLS", () => {
       { organizationId: organizationA },
       (db) =>
         db.query<{ state: string }>(
-          `SELECT state FROM flowdesk.outbound_intents
+          `SELECT state FROM wabrix.outbound_intents
            WHERE organization_id = $1 AND message_id = $2`,
           [organizationA, interrupted.id]
         )
@@ -337,7 +337,7 @@ integration("M5 AUTO post-generation runtime against PostgreSQL RLS (#178)", () 
         { organizationId: organizationA },
         (db) =>
           db.query<{ count: string }>(
-            `SELECT count(*)::text AS count FROM flowdesk.messages
+            `SELECT count(*)::text AS count FROM wabrix.messages
              WHERE organization_id = $1 AND conversation_id = $2 AND direction = 'outbound'`,
             [organizationA, prepared.conversationId]
           )
@@ -381,10 +381,10 @@ integration("M5 AUTO post-generation runtime against PostgreSQL RLS (#178)", () 
              count(DISTINCT intent.id)::text AS intents,
              count(DISTINCT event.id)::text AS outbox_events,
              (count(DISTINCT intent.id) FILTER (WHERE intent.state = 'sent'))::text AS sent_intents
-           FROM flowdesk.messages AS message
-           LEFT JOIN flowdesk.outbound_intents AS intent
+           FROM wabrix.messages AS message
+           LEFT JOIN wabrix.outbound_intents AS intent
              ON intent.organization_id = message.organization_id AND intent.message_id = message.id
-           LEFT JOIN flowdesk.outbox_events AS event
+           LEFT JOIN wabrix.outbox_events AS event
              ON event.organization_id = message.organization_id
             AND event.aggregate_id = message.id
             AND event.event_type = 'message.outbound.created'
@@ -420,8 +420,8 @@ integration("M5 AUTO post-generation runtime against PostgreSQL RLS (#178)", () 
       req.on("end", () => {
         receivedRequests.push({
           body: data,
-          signature: req.headers["x-flowdesk-signature"] as string | null,
-          eventId: req.headers["x-flowdesk-event-id"] as string | null
+          signature: req.headers["x-wabrix-signature"] as string | null,
+          eventId: req.headers["x-wabrix-event-id"] as string | null
         });
 
         if (shouldFailWith503) {
@@ -458,7 +458,7 @@ integration("M5 AUTO post-generation runtime against PostgreSQL RLS (#178)", () 
       // Enqueue test outbox event (WITHOUT url and WITHOUT secret)
       const eventId = `evt_test_${randomUUID()}`;
       await pool.query(
-        `INSERT INTO flowdesk.outbox_events
+        `INSERT INTO wabrix.outbox_events
          (organization_id, aggregate_type, aggregate_id, event_type, schema_version, payload)
          VALUES ($1, 'webhook_subscription', $2, 'developer.webhook.dispatch', 1, $3::jsonb)`,
         [
@@ -498,7 +498,7 @@ integration("M5 AUTO post-generation runtime against PostgreSQL RLS (#178)", () 
       shouldFailWith503 = true;
       const eventId2 = `evt_test_${randomUUID()}`;
       await pool.query(
-        `INSERT INTO flowdesk.outbox_events
+        `INSERT INTO wabrix.outbox_events
          (organization_id, aggregate_type, aggregate_id, event_type, schema_version, payload)
          VALUES ($1, 'webhook_subscription', $2, 'developer.webhook.dispatch', 1, $3::jsonb)`,
         [
@@ -526,7 +526,7 @@ integration("M5 AUTO post-generation runtime against PostgreSQL RLS (#178)", () 
       // Test dead letter on attempts = 5
       const eventId3 = `evt_test_${randomUUID()}`;
       await pool.query(
-        `INSERT INTO flowdesk.outbox_events
+        `INSERT INTO wabrix.outbox_events
          (organization_id, aggregate_type, aggregate_id, event_type, schema_version, payload, attempts)
          VALUES ($1, 'webhook_subscription', $2, 'developer.webhook.dispatch', 1, $3::jsonb, 4)`,
         [
@@ -551,13 +551,12 @@ integration("M5 AUTO post-generation runtime against PostgreSQL RLS (#178)", () 
       expect(dlqDelivery?.status).toBe("dead_letter");
 
       // Test inactive subscription skipped
-      await pool.query(
-        "UPDATE flowdesk.webhook_subscriptions SET is_active = false WHERE id = $1",
-        [sub.id]
-      );
+      await pool.query("UPDATE wabrix.webhook_subscriptions SET is_active = false WHERE id = $1", [
+        sub.id
+      ]);
       const eventId4 = `evt_test_${randomUUID()}`;
       await pool.query(
-        `INSERT INTO flowdesk.outbox_events
+        `INSERT INTO wabrix.outbox_events
          (organization_id, aggregate_type, aggregate_id, event_type, schema_version, payload)
          VALUES ($1, 'webhook_subscription', $2, 'developer.webhook.dispatch', 1, $3::jsonb)`,
         [
@@ -576,13 +575,13 @@ integration("M5 AUTO post-generation runtime against PostgreSQL RLS (#178)", () 
       expect(receivedRequests.length).toBe(countBefore);
     } finally {
       subscriberServer.close();
-      await pool.query("DELETE FROM flowdesk.webhook_deliveries WHERE organization_id = $1", [
+      await pool.query("DELETE FROM wabrix.webhook_deliveries WHERE organization_id = $1", [
         organizationA
       ]);
-      await pool.query("DELETE FROM flowdesk.outbox_events WHERE organization_id = $1", [
+      await pool.query("DELETE FROM wabrix.outbox_events WHERE organization_id = $1", [
         organizationA
       ]);
-      await pool.query("DELETE FROM flowdesk.webhook_subscriptions WHERE organization_id = $1", [
+      await pool.query("DELETE FROM wabrix.webhook_subscriptions WHERE organization_id = $1", [
         organizationA
       ]);
     }

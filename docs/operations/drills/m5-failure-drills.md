@@ -1,4 +1,4 @@
-# FlowDesk M5 Executable Failure Drills & Incident Operations Evidence
+# Wabrix M5 Executable Failure Drills & Incident Operations Evidence
 
 This document records the execution evidence, boundary assertions, recovery verifications, and zero-data-loss guarantees for the M5 operational resilience drills specified in Issue #176.
 

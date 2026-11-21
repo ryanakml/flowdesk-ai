@@ -50,7 +50,7 @@ describe("Anti-SSRF Security Pipeline", () => {
     });
 
     it("allows public domain names", () => {
-      expect(isBlockedHostname("flowdesk.dev")).toBe(false);
+      expect(isBlockedHostname("wabrix.dev")).toBe(false);
       expect(isBlockedHostname("docs.google.com")).toBe(false);
       expect(isBlockedHostname("api.github.com")).toBe(false);
     });
@@ -82,10 +82,10 @@ describe("Anti-SSRF Security Pipeline", () => {
     });
 
     it("accepts valid public HTTP/HTTPS URLs", async () => {
-      const url = await validateUrlForIngestion("https://flowdesk.dev/docs", {
+      const url = await validateUrlForIngestion("https://wabrix.dev/docs", {
         allowLoopbackForTest: true
       });
-      expect(url.hostname).toBe("flowdesk.dev");
+      expect(url.hostname).toBe("wabrix.dev");
       expect(url.protocol).toBe("https:");
     });
   });
@@ -93,20 +93,20 @@ describe("Anti-SSRF Security Pipeline", () => {
   describe("fetchWithAntiSsrf", () => {
     it("fetches content from valid target URL", async () => {
       const mockFetcher = vi.fn().mockResolvedValue(
-        new Response("Welcome to FlowDesk Docs", {
+        new Response("Welcome to Wabrix Docs", {
           status: 200,
           headers: { "Content-Type": "text/plain" }
         })
       );
 
-      const result = await fetchWithAntiSsrf("https://flowdesk.dev/docs", {
+      const result = await fetchWithAntiSsrf("https://wabrix.dev/docs", {
         allowLoopbackForTest: true,
         customFetcher: mockFetcher
       });
 
-      expect(result.content).toBe("Welcome to FlowDesk Docs");
+      expect(result.content).toBe("Welcome to Wabrix Docs");
       expect(result.contentType).toBe("text/plain");
-      expect(result.byteSize).toBe(24);
+      expect(result.byteSize).toBe(22);
     });
 
     it("rejects responses exceeding size limits", async () => {
@@ -119,7 +119,7 @@ describe("Anti-SSRF Security Pipeline", () => {
       );
 
       await expect(
-        fetchWithAntiSsrf("https://flowdesk.dev/large", {
+        fetchWithAntiSsrf("https://wabrix.dev/large", {
           maxSizeBytes: 50,
           allowLoopbackForTest: true,
           customFetcher: mockFetcher
@@ -136,7 +136,7 @@ describe("Anti-SSRF Security Pipeline", () => {
       );
 
       await expect(
-        fetchWithAntiSsrf("https://flowdesk.dev/redirect", {
+        fetchWithAntiSsrf("https://wabrix.dev/redirect", {
           allowLoopbackForTest: false,
           customFetcher: mockFetcher
         })
@@ -146,8 +146,8 @@ describe("Anti-SSRF Security Pipeline", () => {
 
   describe("validateWebhookUrl", () => {
     it("allows valid public HTTPS URLs", async () => {
-      const parsed = await validateWebhookUrl("https://flowdesk.dev/webhook-receiver");
-      expect(parsed.hostname).toBe("flowdesk.dev");
+      const parsed = await validateWebhookUrl("https://wabrix.dev/webhook-receiver");
+      expect(parsed.hostname).toBe("wabrix.dev");
       expect(parsed.protocol).toBe("https:");
     });
 

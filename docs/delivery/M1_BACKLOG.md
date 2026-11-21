@@ -51,11 +51,11 @@ M1 is one vertical platform slice. Database isolation precedes identity and UI; 
 
 ### M1-04 — Select identity provider and implement secure application sessions
 
-- **Outcome:** a verified identity obtains a revocable FlowDesk session without FlowDesk storing unnecessary credentials.
+- **Outcome:** a verified identity obtains a revocable Wabrix session without Wabrix storing unnecessary credentials.
 - **Depends on:** M1-01..03; approved identity-provider ADR.
 - **Scope:** OIDC provider integration, callback state/nonce/PKCE, secure HttpOnly session cookie, refresh rotation, logout/revocation, verified email. Local password/MFA is excluded unless the ADR explicitly adds it.
 - **Acceptance:** forged/expired/replayed callbacks and sessions are denied; logout/revocation invalidates access; cookie, CSRF, CORS, CSP, and rotation behaviors pass tests; tokens never enter browser storage or logs.
-- **Design:** provider identity maps to application identity; permissions and tenant membership remain FlowDesk-owned.
+- **Design:** provider identity maps to application identity; permissions and tenant membership remain Wabrix-owned.
 - **Cross-cutting:** CI/tests/security/observability/docs/support `new`; Docker/config `update`; data `update`.
 - **Delivery:** provider sandbox only, feature flag disabled outside preview until security review; rollback disables login and revokes created sessions.
 - **Evidence:** auth contract tests, browser security evidence, redaction logs, ADR and provider setup runbook.

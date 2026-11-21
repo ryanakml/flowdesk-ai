@@ -2,7 +2,7 @@ import {
   assertValidConversationStatusTransition,
   calculateBusinessDeadline,
   type BusinessHoursSchedule
-} from "@flowdesk/domain";
+} from "@wabrix/domain";
 import { recordAuditEvent } from "./audit.js";
 import type { DbClient } from "./auth.js";
 import {
@@ -90,25 +90,25 @@ async function lockAuthorizedConversation(
               conversation.queue_id IS NULL
               OR role.key IN ('owner', 'admin', 'supervisor')
               OR EXISTS (
-                SELECT 1 FROM flowdesk.queue_memberships AS queue_member
+                SELECT 1 FROM wabrix.queue_memberships AS queue_member
                 WHERE queue_member.organization_id = conversation.organization_id
                   AND queue_member.queue_id = conversation.queue_id
                   AND queue_member.user_id = membership.user_id
                   AND queue_member.status = 'active'
               )
             ) AS "canAccess"
-     FROM flowdesk.conversations AS conversation
-     JOIN flowdesk.memberships AS membership
+     FROM wabrix.conversations AS conversation
+     JOIN wabrix.memberships AS membership
        ON membership.organization_id = conversation.organization_id
       AND membership.user_id = $3
       AND membership.status = 'active'
-     JOIN flowdesk.roles AS role ON role.id = membership.role_id
-     LEFT JOIN flowdesk.queues AS queue
+     JOIN wabrix.roles AS role ON role.id = membership.role_id
+     LEFT JOIN wabrix.queues AS queue
        ON queue.organization_id = conversation.organization_id
       AND queue.id = conversation.queue_id
-     LEFT JOIN flowdesk.sla_policies AS sla
+     LEFT JOIN wabrix.sla_policies AS sla
        ON sla.organization_id = queue.organization_id AND sla.id = queue.sla_policy_id
-     LEFT JOIN flowdesk.business_hours_policies AS business_hours
+     LEFT JOIN wabrix.business_hours_policies AS business_hours
        ON business_hours.organization_id = queue.organization_id
       AND business_hours.id = queue.business_hours_policy_id
      WHERE conversation.organization_id = $1 AND conversation.id = $2
@@ -119,7 +119,7 @@ async function lockAuthorizedConversation(
   if (!access || !access.canAccess) throw new ConversationAccessRevokedError();
   if (access.queueId && !["owner", "admin", "supervisor"].includes(access.roleKey)) {
     const queueAccess = await db.query(
-      `SELECT id FROM flowdesk.queue_memberships
+      `SELECT id FROM wabrix.queue_memberships
        WHERE organization_id = $1 AND queue_id = $2 AND user_id = $3 AND status = 'active'
        FOR SHARE`,
       [input.organizationId, access.queueId, input.actorUserId]
@@ -138,15 +138,15 @@ async function assertTargetCanAccessQueue(
 ): Promise<void> {
   const result = await db.query(
     `SELECT 1
-     FROM flowdesk.memberships AS membership
-     JOIN flowdesk.roles AS role ON role.id = membership.role_id
+     FROM wabrix.memberships AS membership
+     JOIN wabrix.roles AS role ON role.id = membership.role_id
      WHERE membership.organization_id = $1 AND membership.user_id = $2
        AND membership.status = 'active'
        AND (
          $3::uuid IS NULL
          OR role.key IN ('owner', 'admin', 'supervisor')
          OR EXISTS (
-           SELECT 1 FROM flowdesk.queue_memberships AS queue_member
+           SELECT 1 FROM wabrix.queue_memberships AS queue_member
            WHERE queue_member.organization_id = membership.organization_id
              AND queue_member.queue_id = $3 AND queue_member.user_id = membership.user_id
              AND queue_member.status = 'active'
@@ -171,7 +171,7 @@ async function bumpConversation(
   const conversationIndex = values.length - 1;
   const versionIndex = values.length;
   const result = await db.query(
-    `UPDATE flowdesk.conversations
+    `UPDATE wabrix.conversations
      SET ${assignments.length > 0 ? `${assignments.join(", ")}, ` : ""}
          version = version + 1, updated_at = clock_timestamp()
      WHERE organization_id = $${organizationIndex} AND id = $${conversationIndex}
@@ -187,7 +187,7 @@ async function recordTimeline(
   payload: Record<string, unknown> = {}
 ): Promise<void> {
   await db.query(
-    `INSERT INTO flowdesk.conversation_events
+    `INSERT INTO wabrix.conversation_events
        (organization_id, conversation_id, event_type, actor_user_id, payload)
      VALUES ($1, $2, $3, $4, $5::jsonb)`,
     [
@@ -271,7 +271,7 @@ export async function performConversationOperation(
     case "note": {
       await bumpConversation(db, input);
       const note = await db.query<{ id: string }>(
-        `INSERT INTO flowdesk.conversation_notes
+        `INSERT INTO wabrix.conversation_notes
            (organization_id, conversation_id, author_user_id, body)
          VALUES ($1, $2, $3, $4) RETURNING id`,
         [input.organizationId, input.conversationId, input.actorUserId, operation.body]
@@ -282,7 +282,7 @@ export async function performConversationOperation(
     case "tag.add":
       await bumpConversation(db, input);
       await db.query(
-        `INSERT INTO flowdesk.conversation_tags
+        `INSERT INTO wabrix.conversation_tags
            (organization_id, conversation_id, tag_id, added_by_user_id)
          VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
         [input.organizationId, input.conversationId, operation.tagId, input.actorUserId]
@@ -292,7 +292,7 @@ export async function performConversationOperation(
     case "tag.remove":
       await bumpConversation(db, input);
       await db.query(
-        `DELETE FROM flowdesk.conversation_tags
+        `DELETE FROM wabrix.conversation_tags
          WHERE organization_id = $1 AND conversation_id = $2 AND tag_id = $3`,
         [input.organizationId, input.conversationId, operation.tagId]
       );
@@ -301,7 +301,7 @@ export async function performConversationOperation(
     case "read":
       await bumpConversation(db, input);
       await db.query(
-        `INSERT INTO flowdesk.conversation_read_markers
+        `INSERT INTO wabrix.conversation_read_markers
            (organization_id, conversation_id, user_id, last_read_message_id,
             last_read_at, marked_unread)
          VALUES ($1, $2, $3, $4, clock_timestamp(), false)
@@ -320,7 +320,7 @@ export async function performConversationOperation(
     case "unread":
       await bumpConversation(db, input);
       await db.query(
-        `INSERT INTO flowdesk.conversation_read_markers
+        `INSERT INTO wabrix.conversation_read_markers
            (organization_id, conversation_id, user_id, marked_unread)
          VALUES ($1, $2, $3, true)
          ON CONFLICT (organization_id, conversation_id, user_id)

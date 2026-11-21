@@ -3,7 +3,7 @@ import { createServer, type Socket } from "node:net";
 import { setTimeout as delay } from "node:timers/promises";
 import { createClient } from "redis";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { FakeEmbeddingProvider } from "@flowdesk/providers";
+import { FakeEmbeddingProvider } from "@wabrix/providers";
 import { createQueryEmbeddingCache } from "./query-embedding-cache.js";
 import { createRedisEmbeddingStore } from "./redis-embedding-store.js";
 

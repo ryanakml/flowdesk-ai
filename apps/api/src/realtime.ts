@@ -7,7 +7,7 @@ import {
   RealtimeRoomRequestSchema,
   type RealtimeHint,
   type RealtimeRoomRequest
-} from "@flowdesk/contracts";
+} from "@wabrix/contracts";
 import {
   canAccessRealtimeRoom,
   getActiveSessionByTokenHash,
@@ -15,14 +15,14 @@ import {
   runInTenantTransaction,
   type DbClient,
   type RealtimeRoom
-} from "@flowdesk/db";
+} from "@wabrix/db";
 import {
   recordRealtimeAuthorizationDenial,
   recordRealtimeConnection,
   recordRealtimeDroppedHint,
   recordRealtimeReconnectGap
-} from "@flowdesk/observability";
-import { hashSessionToken, parseSessionCookie } from "@flowdesk/security";
+} from "@wabrix/observability";
+import { hashSessionToken, parseSessionCookie } from "@wabrix/security";
 import { createClient, type RedisClientType } from "redis";
 import { Server as SocketIOServer, type Socket } from "socket.io";
 

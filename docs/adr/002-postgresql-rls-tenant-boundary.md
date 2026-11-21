@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-26
-- Owners: FlowDesk engineering and security
+- Owners: Wabrix engineering and security
 - Requirement: SEC-TENANT-001; M1 prerequisite
 
 ## Context

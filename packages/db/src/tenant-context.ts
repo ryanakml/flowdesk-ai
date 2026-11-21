@@ -17,8 +17,8 @@ export async function withTenantTransaction<T>(
     // Never rely on the login role being correctly constrained. Production and
     // local development commonly connect through a role that can SET ROLE; the
     // transaction must still execute as the NOBYPASSRLS runtime principal.
-    await client.query("SET LOCAL ROLE flowdesk_runtime");
-    await client.query("SET LOCAL search_path = flowdesk, public");
+    await client.query("SET LOCAL ROLE wabrix_runtime");
+    await client.query("SET LOCAL search_path = wabrix, public");
     await client.query(
       "SELECT set_config('app.organization_id', $1, true), set_config('app.current_organization_id', $1, true)",
       [context.organizationId]

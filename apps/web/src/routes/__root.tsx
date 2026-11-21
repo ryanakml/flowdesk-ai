@@ -8,7 +8,7 @@ import { OnboardingView } from "../features/onboarding/OnboardingView.js";
 import { InvitationView } from "../features/invitations/InvitationView.js";
 
 import { Card } from "../components/ui/card.js";
-import { Button } from "@flowdesk/ui";
+import { Button } from "@wabrix/ui";
 import { AlertCircle, FileQuestion, RefreshCw } from "lucide-react";
 
 export const Route = createRootRoute({

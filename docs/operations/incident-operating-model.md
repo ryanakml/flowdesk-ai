@@ -1,4 +1,4 @@
-# FlowDesk Incident Operating Model & Alert Routing
+# Wabrix Incident Operating Model & Alert Routing
 
 This document specifies the incident response structure, severity tiers, alert routing, on-call ownership, status communication procedures, and post-mortem expectations.
 
@@ -50,7 +50,7 @@ flowchart LR
 1. **Safety First**: If automated replies or data safety is compromised, trigger the emergency killswitch immediately:
    ```bash
    # Emergency killswitch invocation
-   curl -X POST https://api.flowdesk.dev/api/v1/organizations/:orgId/bot/emergency-stop \
+   curl -X POST https://api.wabrix.dev/api/v1/organizations/:orgId/bot/emergency-stop \
      -H "Authorization: Bearer $TOKEN" -d '{"enabled": true}'
    ```
 2. If WhatsApp provider is degraded, transition outbox worker to safe-mode backoff.
@@ -60,12 +60,12 @@ flowchart LR
 
 If incident impacts customers or lasts > 15 minutes:
 
-- Post update to `https://status.flowdesk.dev`.
+- Post update to `https://status.wabrix.dev`.
 - Update customer support agents with customer-facing talking points.
 
 ### Phase 4: Resolution & Post-Mortem (< 48h)
 
-1. Verify metrics return to baseline on Grafana dashboard `flowdesk-m5-slo`.
+1. Verify metrics return to baseline on Grafana dashboard `wabrix-m5-slo`.
 2. Schedule blameless post-mortem within 48 hours.
 3. File corrective action Jira issues with SLAs for resolution.
 

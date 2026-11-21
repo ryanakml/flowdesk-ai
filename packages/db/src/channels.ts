@@ -3,7 +3,7 @@ import {
   type ChannelStatus,
   type ChannelType,
   assertValidChannelStatusTransition
-} from "@flowdesk/domain";
+} from "@wabrix/domain";
 
 export interface ChannelRecord {
   id: string;
@@ -80,7 +80,7 @@ export async function createChannel(
   const metadata = input.metadata ?? {};
 
   const res = await db.query<RawChannelRow>(
-    `INSERT INTO flowdesk.channels (
+    `INSERT INTO wabrix.channels (
        organization_id, type, name, phone_number_id, waba_id,
        encrypted_credentials, status, status_reason, metadata
      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -108,7 +108,7 @@ export async function getChannelById(
   id: string,
   organizationId?: string
 ): Promise<ChannelRecord | null> {
-  let queryText = "SELECT * FROM flowdesk.channels WHERE id = $1";
+  let queryText = "SELECT * FROM wabrix.channels WHERE id = $1";
   const values: unknown[] = [id];
 
   if (organizationId) {
@@ -126,7 +126,7 @@ export async function getChannelByPhoneNumberId(
   phoneNumberId: string
 ): Promise<ChannelRecord | null> {
   const res = await db.query<RawChannelRow>(
-    "SELECT * FROM flowdesk.channels WHERE phone_number_id = $1 LIMIT 1",
+    "SELECT * FROM wabrix.channels WHERE phone_number_id = $1 LIMIT 1",
     [phoneNumberId]
   );
   const row = res.rows[0];
@@ -138,7 +138,7 @@ export async function listChannels(
   organizationId: string,
   status?: ChannelStatus
 ): Promise<ChannelRecord[]> {
-  let queryText = "SELECT * FROM flowdesk.channels WHERE organization_id = $1";
+  let queryText = "SELECT * FROM wabrix.channels WHERE organization_id = $1";
   const values: unknown[] = [organizationId];
 
   if (status) {
@@ -169,7 +169,7 @@ export async function updateChannelStatus(
 
   // 3. Update status
   const res = await db.query<RawChannelRow>(
-    `UPDATE flowdesk.channels
+    `UPDATE wabrix.channels
      SET status = $2,
          status_reason = $3,
          updated_at = clock_timestamp()
@@ -188,7 +188,7 @@ export async function updateChannelCredentials(
   input: UpdateChannelCredentialsInput
 ): Promise<ChannelRecord | null> {
   const res = await db.query<RawChannelRow>(
-    `UPDATE flowdesk.channels
+    `UPDATE wabrix.channels
      SET encrypted_credentials = $3,
          updated_at = clock_timestamp()
      WHERE id = $1 AND organization_id = $2
@@ -206,7 +206,7 @@ export async function updateChannelMetadata(
   metadata: Record<string, unknown>
 ): Promise<ChannelRecord | null> {
   const res = await db.query<RawChannelRow>(
-    `UPDATE flowdesk.channels
+    `UPDATE wabrix.channels
      SET metadata = metadata || $3::jsonb,
          updated_at = clock_timestamp()
      WHERE id = $1 AND organization_id = $2
@@ -222,9 +222,9 @@ export async function deleteChannel(
   id: string,
   organizationId: string
 ): Promise<boolean> {
-  const res = await db.query(
-    "DELETE FROM flowdesk.channels WHERE id = $1 AND organization_id = $2",
-    [id, organizationId]
-  );
+  const res = await db.query("DELETE FROM wabrix.channels WHERE id = $1 AND organization_id = $2", [
+    id,
+    organizationId
+  ]);
   return (res.rowCount ?? 0) > 0;
 }

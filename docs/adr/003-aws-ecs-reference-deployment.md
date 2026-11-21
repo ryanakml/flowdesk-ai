@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-26
-- Owners: FlowDesk engineering and platform
+- Owners: Wabrix engineering and platform
 - Requirement: OPS-DEPLOY-001
 
 ## Context

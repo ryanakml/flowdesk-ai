@@ -1,5 +1,5 @@
 {
-  "name": "@flowdesk/testkit",
+  "name": "@wabrix/testkit",
   "version": "0.0.0",
   "private": true,
   "type": "module",

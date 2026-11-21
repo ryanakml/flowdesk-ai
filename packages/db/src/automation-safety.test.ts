@@ -87,10 +87,10 @@ describe("automation safety controls", () => {
       async query(statement: string) {
         await Promise.resolve();
         sql.push(statement);
-        if (statement.includes("UPDATE flowdesk.bot_runs")) return result([], 2);
-        if (statement.includes("UPDATE flowdesk.messages AS message")) return result([], 1);
-        if (statement.includes("UPDATE flowdesk.outbound_intents")) return result([], 1);
-        if (statement.includes("INSERT INTO flowdesk.audit_logs")) {
+        if (statement.includes("UPDATE wabrix.bot_runs")) return result([], 2);
+        if (statement.includes("UPDATE wabrix.messages AS message")) return result([], 1);
+        if (statement.includes("UPDATE wabrix.outbound_intents")) return result([], 1);
+        if (statement.includes("INSERT INTO wabrix.audit_logs")) {
           return result([
             {
               id: "50000000-0000-4000-8000-000000000001",
@@ -112,8 +112,6 @@ describe("automation safety controls", () => {
     expect(cancelled).toEqual({ runsCancelled: 2, messagesCancelled: 1 });
     expect(sql.some((statement) => statement.includes("status = 'cancelled'"))).toBe(true);
     expect(sql.some((statement) => statement.includes("intent.state = 'queued'"))).toBe(true);
-    expect(sql.some((statement) => statement.includes("INSERT INTO flowdesk.audit_logs"))).toBe(
-      true
-    );
+    expect(sql.some((statement) => statement.includes("INSERT INTO wabrix.audit_logs"))).toBe(true);
   });
 });

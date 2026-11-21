@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToString } from "react-dom/server";
 import { InboxView } from "./InboxView.js";
-import type { Conversation, Message } from "@flowdesk/contracts";
+import type { Conversation, Message } from "@wabrix/contracts";
 
 const mockOrgId = "a0000000-0000-4000-8000-000000000001";
 const mockUserId = "a0000000-0000-4000-8000-000000000012";

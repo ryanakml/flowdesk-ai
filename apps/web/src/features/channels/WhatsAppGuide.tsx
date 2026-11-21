@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowUpRight, Check, Info } from "lucide-react";
-import { Button } from "@flowdesk/ui";
+import { Button } from "@wabrix/ui";
 import { Card } from "../../components/ui/card.js";
 
 const steps = [

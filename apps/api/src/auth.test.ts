@@ -1,9 +1,9 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@flowdesk/config";
-import type { DbClient } from "@flowdesk/db";
-import { MockIdentityProvider } from "@flowdesk/providers";
-import { SESSION_COOKIE_NAME } from "@flowdesk/security";
+import { loadAuthConfig } from "@wabrix/config";
+import type { DbClient } from "@wabrix/db";
+import { MockIdentityProvider } from "@wabrix/providers";
+import { SESSION_COOKIE_NAME } from "@wabrix/security";
 import { createApiApp } from "./app.js";
 
 // In-memory mock database state for testing auth API contracts
@@ -49,7 +49,7 @@ function createMockDb(): DbClient {
       const sql = queryText.replace(/\s+/g, " ").trim();
 
       // INSERT oidc_authorization_transactions
-      if (sql.includes("INSERT INTO flowdesk.oidc_authorization_transactions")) {
+      if (sql.includes("INSERT INTO wabrix.oidc_authorization_transactions")) {
         const [stateHash, nonceHash, codeVerifierHash, returnTo, expiresAt] = values as [
           string,
           string,
@@ -71,7 +71,7 @@ function createMockDb(): DbClient {
       }
 
       // UPDATE oidc_authorization_transactions (consume)
-      if (sql.includes("UPDATE flowdesk.oidc_authorization_transactions")) {
+      if (sql.includes("UPDATE wabrix.oidc_authorization_transactions")) {
         const [stateHash] = values as [string];
         const tx = transactions.get(stateHash);
         if (!tx || tx.consumedAt !== null || tx.expiresAt.getTime() <= Date.now()) {
@@ -92,7 +92,7 @@ function createMockDb(): DbClient {
       }
 
       // SELECT identities JOIN users
-      if (sql.includes("FROM flowdesk.identities i JOIN flowdesk.users u")) {
+      if (sql.includes("FROM wabrix.identities i JOIN wabrix.users u")) {
         const [provider, subject] = values as [string, string];
         const key = `${provider}:${subject}`;
         const identity = identities.get(key);
@@ -115,7 +115,7 @@ function createMockDb(): DbClient {
       }
 
       // SELECT users WHERE email
-      if (sql.includes("FROM flowdesk.users WHERE email")) {
+      if (sql.includes("FROM wabrix.users WHERE email")) {
         const [email] = values as [string];
         for (const user of users.values()) {
           if (user.email === email) {
@@ -135,7 +135,7 @@ function createMockDb(): DbClient {
       }
 
       // INSERT users
-      if (sql.includes("INSERT INTO flowdesk.users")) {
+      if (sql.includes("INSERT INTO wabrix.users")) {
         const [email, displayName] = values as [string, string];
         const id = `00000000-0000-7000-8000-${String(users.size + 1).padStart(12, "0")}`;
         const user = { id, email, displayName, status: "active" };
@@ -144,7 +144,7 @@ function createMockDb(): DbClient {
       }
 
       // INSERT identities
-      if (sql.includes("INSERT INTO flowdesk.identities")) {
+      if (sql.includes("INSERT INTO wabrix.identities")) {
         const [userId, provider, subject] = values as [string, string, string];
         const id = `id-${identities.size + 1}`;
         identities.set(`${provider}:${subject}`, { id, userId, provider, subject });
@@ -152,7 +152,7 @@ function createMockDb(): DbClient {
       }
 
       // INSERT auth_sessions
-      if (sql.includes("INSERT INTO flowdesk.auth_sessions")) {
+      if (sql.includes("INSERT INTO wabrix.auth_sessions")) {
         const [userId, tokenHash, expiresAt] = values as [string, string, Date];
         const id = `sess-${sessions.size + 1}`;
         sessions.set(tokenHash, {
@@ -167,7 +167,7 @@ function createMockDb(): DbClient {
       }
 
       // SELECT auth_sessions JOIN users
-      if (sql.includes("FROM flowdesk.auth_sessions s JOIN flowdesk.users u")) {
+      if (sql.includes("FROM wabrix.auth_sessions s JOIN wabrix.users u")) {
         const [tokenHash] = values as [string];
         const session = sessions.get(tokenHash);
         if (!session || session.revokedAt !== null || session.expiresAt.getTime() <= Date.now()) {
@@ -192,7 +192,7 @@ function createMockDb(): DbClient {
       }
 
       // UPDATE auth_sessions (revoke)
-      if (sql.includes("UPDATE flowdesk.auth_sessions")) {
+      if (sql.includes("UPDATE wabrix.auth_sessions")) {
         const [tokenHash] = values as [string];
         const session = sessions.get(tokenHash);
         if (session && session.revokedAt === null) {
@@ -252,7 +252,7 @@ describe("API Auth and Session lifecycle (M1-04)", () => {
     const cookies = getCookies(response.headers["set-cookie"]);
     expect(cookies.length).toBeGreaterThan(0);
     const pkceCookie = cookies[0] ?? "";
-    expect(pkceCookie).toContain("flowdesk_pkce=");
+    expect(pkceCookie).toContain("wabrix_pkce=");
     expect(pkceCookie).toContain("HttpOnly");
   });
 
@@ -293,7 +293,7 @@ describe("API Auth and Session lifecycle (M1-04)", () => {
 
     // 2. Perform callback with the generated state
     const callbackRes = await request(app)
-      .get(`/api/v1/auth/callback?code=user:alice@flowdesk.dev&state=${state}`)
+      .get(`/api/v1/auth/callback?code=user:alice@wabrix.dev&state=${state}`)
       .set("Cookie", pkceCookie)
       .set("Accept", "application/json")
       .expect(200);
@@ -302,7 +302,7 @@ describe("API Auth and Session lifecycle (M1-04)", () => {
       status: "ok",
       returnTo: "/dashboard",
       user: {
-        email: "alice@flowdesk.dev",
+        email: "alice@wabrix.dev",
         displayName: "Alice"
       }
     });
@@ -311,9 +311,9 @@ describe("API Auth and Session lifecycle (M1-04)", () => {
     const cookies = getCookies(callbackRes.headers["set-cookie"]);
     expect(cookies.length).toBeGreaterThan(0);
     const sessionCookieStr = cookies.find(
-      (c) => c.includes(SESSION_COOKIE_NAME) || c.includes("flowdesk_session")
+      (c) => c.includes(SESSION_COOKIE_NAME) || c.includes("wabrix_session")
     );
-    const clearedPkce = cookies.find((c) => c.includes("flowdesk_pkce="));
+    const clearedPkce = cookies.find((c) => c.includes("wabrix_pkce="));
     expect(sessionCookieStr).toBeDefined();
     expect(sessionCookieStr).toContain("HttpOnly");
     expect(sessionCookieStr).toContain("SameSite=Lax");
@@ -321,7 +321,7 @@ describe("API Auth and Session lifecycle (M1-04)", () => {
 
     // 3. Verify state cannot be replayed (idempotent one-time transaction)
     const replayRes = await request(app)
-      .get(`/api/v1/auth/callback?code=user:alice@flowdesk.dev&state=${state}`)
+      .get(`/api/v1/auth/callback?code=user:alice@wabrix.dev&state=${state}`)
       .set("Cookie", pkceCookie)
       .expect(400);
     const replayBody = replayRes.body as { code: string };
@@ -335,7 +335,7 @@ describe("API Auth and Session lifecycle (M1-04)", () => {
 
     expect(sessionRes.body).toMatchObject({
       user: {
-        email: "alice@flowdesk.dev",
+        email: "alice@wabrix.dev",
         displayName: "Alice"
       }
     });
@@ -372,8 +372,8 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
     const config = loadAuthConfig({
       AUTH_COOKIE_SECURE: "false",
       AUTH_MOCK_ENABLED: "true",
-      APP_BASE_URL: "https://app.flowdesk.dev",
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/flowdesk"
+      APP_BASE_URL: "https://app.wabrix.dev",
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/wabrix"
     });
     const app = createApiApp({
       service: "api",
@@ -410,7 +410,7 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
 
     expect(logoutRes.body).toEqual({
       status: "ok",
-      logoutUrl: "https://app.flowdesk.dev"
+      logoutUrl: "https://app.wabrix.dev"
     });
     expect(getCookies(logoutRes.headers["set-cookie"])[0]).toContain("Max-Age=0");
 
@@ -423,8 +423,8 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
     const config = loadAuthConfig({
       AUTH_COOKIE_SECURE: "false",
       AUTH_MOCK_ENABLED: "true",
-      APP_BASE_URL: "https://app.flowdesk.dev",
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/flowdesk"
+      APP_BASE_URL: "https://app.wabrix.dev",
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/wabrix"
     });
     const app = createApiApp({
       service: "api",
@@ -441,7 +441,7 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
     // Perform GET logout
     const logoutRes = await request(app).get("/api/v1/auth/logout?returnTo=/login").expect(302);
 
-    expect(logoutRes.headers["location"]).toBe("https://app.flowdesk.dev/login");
+    expect(logoutRes.headers["location"]).toBe("https://app.wabrix.dev/login");
     expect(getCookies(logoutRes.headers["set-cookie"])[0]).toContain("Max-Age=0");
   });
 
@@ -450,8 +450,8 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
     const config = loadAuthConfig({
       AUTH_COOKIE_SECURE: "false",
       AUTH_MOCK_ENABLED: "true",
-      APP_BASE_URL: "https://app.flowdesk.dev",
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/flowdesk"
+      APP_BASE_URL: "https://app.wabrix.dev",
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/wabrix"
     });
     const app = createApiApp({
       service: "api",
@@ -472,7 +472,7 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
       .expect(200);
 
     // Falls back to safe APP_BASE_URL
-    expect((maliciousRes.body as { logoutUrl: string }).logoutUrl).toBe("https://app.flowdesk.dev");
+    expect((maliciousRes.body as { logoutUrl: string }).logoutUrl).toBe("https://app.wabrix.dev");
 
     // Valid relative path returnTo
     const safeRes = await request(app)
@@ -481,7 +481,7 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
       .expect(200);
 
     expect((safeRes.body as { logoutUrl: string }).logoutUrl).toBe(
-      "https://app.flowdesk.dev/logged-out"
+      "https://app.wabrix.dev/logged-out"
     );
   });
 
@@ -490,11 +490,11 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
     const config = loadAuthConfig({
       AUTH_COOKIE_SECURE: "false",
       AUTH_MOCK_ENABLED: "false",
-      AUTH_OIDC_ISSUER: "https://flowdesk-dev.us.auth0.com",
+      AUTH_OIDC_ISSUER: "https://wabrix-dev.us.auth0.com",
       AUTH_OIDC_CLIENT_ID: "auth0-client-id-abc",
       AUTH_OIDC_CLIENT_SECRET: "super-secret-key-12345",
-      APP_BASE_URL: "https://app.flowdesk.dev",
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/flowdesk"
+      APP_BASE_URL: "https://app.wabrix.dev",
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/wabrix"
     });
     const app = createApiApp({
       service: "api",
@@ -515,7 +515,7 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
 
     const logoutUrl = (logoutRes.body as { logoutUrl: string }).logoutUrl;
     expect(logoutUrl).toBe(
-      "https://flowdesk-dev.us.auth0.com/v2/logout?client_id=auth0-client-id-abc&returnTo=https%3A%2F%2Fapp.flowdesk.dev%2Fgoodbye"
+      "https://wabrix-dev.us.auth0.com/v2/logout?client_id=auth0-client-id-abc&returnTo=https%3A%2F%2Fapp.wabrix.dev%2Fgoodbye"
     );
     expect(logoutUrl).not.toContain("super-secret-key");
     expect(logoutUrl).not.toContain("client_secret");
@@ -526,10 +526,10 @@ describe("M1-10 Upstream Auth0/OIDC SSO termination on logout and prompt control
     const config = loadAuthConfig({
       AUTH_COOKIE_SECURE: "false",
       AUTH_MOCK_ENABLED: "false",
-      AUTH_OIDC_ISSUER: "https://flowdesk-dev.us.auth0.com",
+      AUTH_OIDC_ISSUER: "https://wabrix-dev.us.auth0.com",
       AUTH_OIDC_CLIENT_ID: "auth0-client-id-abc",
-      APP_BASE_URL: "https://app.flowdesk.dev",
-      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/flowdesk"
+      APP_BASE_URL: "https://app.wabrix.dev",
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/wabrix"
     });
     const app = createApiApp({
       service: "api",

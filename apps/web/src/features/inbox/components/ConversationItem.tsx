@@ -1,5 +1,5 @@
-import type { Conversation } from "@flowdesk/contracts";
-import { cn } from "@flowdesk/ui";
+import type { Conversation } from "@wabrix/contracts";
+import { cn } from "@wabrix/ui";
 
 interface ConversationItemProps {
   conversation: Conversation;

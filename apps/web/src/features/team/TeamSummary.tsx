@@ -1,6 +1,6 @@
-import type { MembershipMember } from "@flowdesk/contracts";
+import type { MembershipMember } from "@wabrix/contracts";
 import { ArrowUp, Shield, UserCheck, Users } from "lucide-react";
-import { Card, Skeleton } from "@flowdesk/ui";
+import { Card, Skeleton } from "@wabrix/ui";
 
 function ShareRing({ value, label }: { value: number; label: string }) {
   return (

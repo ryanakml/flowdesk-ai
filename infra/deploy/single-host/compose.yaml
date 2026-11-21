@@ -1,4 +1,4 @@
-name: flowdesk-staging
+name: wabrix-staging
 
 x-app-environment: &app-environment
   NODE_ENV: production
@@ -6,19 +6,19 @@ x-app-environment: &app-environment
   SERVICE_VERSION: ${IMAGE_TAG:?IMAGE_TAG is required}
   GIT_SHA: ${IMAGE_TAG:?IMAGE_TAG is required}
   LOG_LEVEL: ${LOG_LEVEL:-info}
-  DATABASE_URL: "postgresql://flowdesk_app:${POSTGRES_RUNTIME_PASSWORD:-flowdesk_runtime_password}@postgres:5432/${POSTGRES_DB:-flowdesk_staging}"
-  REDIS_URL: "redis://:${REDIS_PASSWORD:-flowdesk_redis_password}@redis:6379"
-  S3_BUCKET: flowdesk-staging
+  DATABASE_URL: "postgresql://wabrix_app:${POSTGRES_RUNTIME_PASSWORD:-wabrix_runtime_password}@postgres:5432/${POSTGRES_DB:-wabrix_staging}"
+  REDIS_URL: "redis://:${REDIS_PASSWORD:-wabrix_redis_password}@redis:6379"
+  S3_BUCKET: wabrix-staging
   S3_REGION: sgp1
   S3_ENDPOINT: "http://minio:9000"
   S3_FORCE_PATH_STYLE: "true"
-  S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-flowdesk_staging}
-  S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-flowdesk_minio_password}
+  S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-wabrix_staging}
+  S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-wabrix_minio_password}
   CLAMAV_HOST: clamav
   CLAMAV_PORT: "3310"
-  AUTH_OIDC_ISSUER: ${AUTH_OIDC_ISSUER:-https://flowdesk.local.auth0.com/}
-  AUTH_OIDC_CLIENT_ID: ${AUTH_OIDC_CLIENT_ID:-flowdesk-staging-client}
-  AUTH_OIDC_CLIENT_SECRET: ${AUTH_OIDC_CLIENT_SECRET:-flowdesk-staging-secret}
+  AUTH_OIDC_ISSUER: ${AUTH_OIDC_ISSUER:-https://wabrix.local.auth0.com/}
+  AUTH_OIDC_CLIENT_ID: ${AUTH_OIDC_CLIENT_ID:-wabrix-staging-client}
+  AUTH_OIDC_CLIENT_SECRET: ${AUTH_OIDC_CLIENT_SECRET:-wabrix-staging-secret}
   AUTH_OIDC_REDIRECT_URI: "${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}/api/v1/auth/callback"
   AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
   AUTH_MOCK_ENABLED: ${AUTH_MOCK_ENABLED:-true}
@@ -27,11 +27,11 @@ x-app-environment: &app-environment
   META_GRAPH_API_BASE_URL: ${META_GRAPH_API_BASE_URL:-https://graph.facebook.com/v25.0}
 
 x-api-meta-environment: &api-meta-environment
-  META_APP_ID: ${META_APP_ID:-replace-with-flowdesk-meta-app-id}
-  META_APP_SECRET: ${META_APP_SECRET:-replace-with-flowdesk-meta-app-secret}
+  META_APP_ID: ${META_APP_ID:-replace-with-wabrix-meta-app-id}
+  META_APP_SECRET: ${META_APP_SECRET:-replace-with-wabrix-meta-app-secret}
   META_EMBEDDED_SIGNUP_CONFIG_ID: ${META_EMBEDDED_SIGNUP_CONFIG_ID:-replace-with-meta-embedded-signup-config-id}
-  META_SYSTEM_USER_ACCESS_TOKEN: ${META_SYSTEM_USER_ACCESS_TOKEN:-replace-with-flowdesk-system-user-access-token}
-  META_SYSTEM_USER_ID: ${META_SYSTEM_USER_ID:-replace-with-flowdesk-system-user-id}
+  META_SYSTEM_USER_ACCESS_TOKEN: ${META_SYSTEM_USER_ACCESS_TOKEN:-replace-with-wabrix-system-user-access-token}
+  META_SYSTEM_USER_ID: ${META_SYSTEM_USER_ID:-replace-with-wabrix-system-user-id}
   META_ADMIN_SYSTEM_USER_ACCESS_TOKEN: ${META_ADMIN_SYSTEM_USER_ACCESS_TOKEN:-replace-with-business-admin-system-user-access-token}
 
 x-worker-ai-environment: &worker-ai-environment
@@ -139,8 +139,8 @@ services:
     image: pgvector/pgvector:0.8.0-pg16-bookworm
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-flowdesk_staging}
-      POSTGRES_USER: ${POSTGRES_USER:-flowdesk_bootstrap}
+      POSTGRES_DB: ${POSTGRES_DB:-wabrix_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-wabrix_bootstrap}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes: ["postgres-data:/var/lib/postgresql/data"]
     networks: [application]
@@ -178,8 +178,8 @@ services:
     restart: unless-stopped
     command: [server, /data]
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-flowdesk_staging}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-flowdesk_minio_password}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-wabrix_staging}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-wabrix_minio_password}
     volumes: ["minio-data:/data"]
     networks: [application]
     security_opt: ["no-new-privileges:true"]
@@ -195,13 +195,13 @@ services:
     depends_on:
       minio: { condition: service_healthy }
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-flowdesk_staging}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-flowdesk_minio_password}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-wabrix_staging}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-wabrix_minio_password}
     entrypoint: [/bin/sh, -ec]
     command:
       - >-
         mc alias set staging http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
-        mc mb --ignore-existing staging/flowdesk-staging
+        mc mb --ignore-existing staging/wabrix-staging
     networks: [application]
     security_opt: ["no-new-privileges:true"]
 
@@ -221,7 +221,7 @@ services:
     image: ${IMAGE_REGISTRY:-ghcr.io/ryanakml}/wabrix-migrator:${IMAGE_TAG}
     restart: "no"
     environment:
-      DATABASE_MIGRATOR_URL: "postgresql://${POSTGRES_USER:-flowdesk_bootstrap}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-flowdesk_staging}"
+      DATABASE_MIGRATOR_URL: "postgresql://${POSTGRES_USER:-wabrix_bootstrap}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-wabrix_staging}"
     command: [node, scripts/migrate.mjs]
     depends_on:
       postgres: { condition: service_healthy }

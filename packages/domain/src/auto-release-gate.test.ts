@@ -35,7 +35,7 @@ describe("AUTO Release Gate, Staged Tenant Enablement & Safety Evidence (M5-08 /
     monthlyCostCeilingCents: 50000,
     customerConsentRequired: true,
     aiDisclosureEnabled: true,
-    rollbackOwner: "lead-oncall@flowdesk.dev"
+    rollbackOwner: "lead-oncall@wabrix.dev"
   };
 
   describe("validateEvaluationScores", () => {

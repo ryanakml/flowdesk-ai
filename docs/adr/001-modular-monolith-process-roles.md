@@ -2,12 +2,12 @@
 
 - Status: Accepted
 - Date: 2026-08-26
-- Owners: FlowDesk engineering
+- Owners: Wabrix engineering
 - Requirement: M0 execution foundation
 
 ## Context
 
-FlowDesk needs clear failure and scaling boundaries for public APIs, Meta webhook ingress, asynchronous jobs, scheduled reconciliation, and the web application without paying the coordination cost of microservices before domain and load evidence exist.
+Wabrix needs clear failure and scaling boundaries for public APIs, Meta webhook ingress, asynchronous jobs, scheduled reconciliation, and the web application without paying the coordination cost of microservices before domain and load evidence exist.
 
 ## Decision
 

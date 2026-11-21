@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@flowdesk/config";
-import type { DbClient } from "@flowdesk/db";
-import { hashSessionToken, serializeSessionCookie } from "@flowdesk/security";
+import { loadAuthConfig } from "@wabrix/config";
+import type { DbClient } from "@wabrix/db";
+import { hashSessionToken, serializeSessionCookie } from "@wabrix/security";
 import { createApiApp } from "./app.js";
 
 function createMockDb(): DbClient {
@@ -46,7 +46,7 @@ function createMockDb(): DbClient {
 
   users.set("u1", {
     id: "u1",
-    email: "admin@flowdesk.dev",
+    email: "admin@wabrix.dev",
     displayName: "Admin",
     status: "active"
   });
@@ -95,12 +95,12 @@ function createMockDb(): DbClient {
       conversationStatus = "closed";
       return { rows: [] };
     }
-    if (sql.includes("INSERT INTO flowdesk.bot_configs")) {
+    if (sql.includes("INSERT INTO wabrix.bot_configs")) {
       const orgId = params?.[0] as string;
       const existing: MockBotConfigRow = botConfigs.get(orgId) || {
         id: randomUUID(),
         organization_id: orgId,
-        name: "FlowDesk AI Assistant",
+        name: "Wabrix AI Assistant",
         instructions: "System support instructions",
         tone: "professional",
         language: "id",
@@ -136,7 +136,7 @@ function createMockDb(): DbClient {
       return { rows: [] };
     }
 
-    if (sql.includes("INSERT INTO flowdesk.auto_release_gates")) {
+    if (sql.includes("INSERT INTO wabrix.auto_release_gates")) {
       const gateId = randomUUID();
       const evalRaw = params?.[6];
       const approvalsRaw = params?.[7];
@@ -162,7 +162,7 @@ function createMockDb(): DbClient {
       return { rows: [row] };
     }
 
-    if (sql.includes("UPDATE flowdesk.auto_release_gates")) {
+    if (sql.includes("UPDATE wabrix.auto_release_gates")) {
       const approvalsRaw = params?.[0];
       const approvals: unknown =
         typeof approvalsRaw === "string" ? JSON.parse(approvalsRaw) : (approvalsRaw ?? []);
@@ -179,7 +179,7 @@ function createMockDb(): DbClient {
       return { rows: [] };
     }
 
-    if (sql.includes("FROM flowdesk.auto_release_gates") && sql.includes("id = $2")) {
+    if (sql.includes("FROM wabrix.auto_release_gates") && sql.includes("id = $2")) {
       const orgId = params?.[0] as string;
       const gateId = params?.[1] as string;
       const gate = releaseGates.get(gateId);
@@ -189,17 +189,17 @@ function createMockDb(): DbClient {
       return { rows: [] };
     }
 
-    if (sql.includes("FROM flowdesk.auto_release_gates")) {
+    if (sql.includes("FROM wabrix.auto_release_gates")) {
       const orgId = params?.[0] as string;
       const gates = Array.from(releaseGates.values()).filter((g) => g["organization_id"] === orgId);
       return { rows: gates };
     }
 
-    if (sql.includes("UPDATE flowdesk.bot_configs")) {
+    if (sql.includes("UPDATE wabrix.bot_configs")) {
       return { rows: [] };
     }
 
-    if (sql.includes("FROM flowdesk.bot_configs")) {
+    if (sql.includes("FROM wabrix.bot_configs")) {
       const orgId = params?.[0] as string;
       const found = botConfigs.get(orgId);
       if (found) {
@@ -211,7 +211,7 @@ function createMockDb(): DbClient {
       const defaultConfig: MockBotConfigRow = {
         id: randomUUID(),
         organization_id: orgId,
-        name: "FlowDesk AI Assistant",
+        name: "Wabrix AI Assistant",
         instructions: "System support instructions",
         tone: "professional",
         language: "id",
@@ -261,7 +261,7 @@ function createMockDb(): DbClient {
       return { rows: found ? [found] : [] };
     }
 
-    if (sql.includes("INSERT INTO flowdesk.messages")) {
+    if (sql.includes("INSERT INTO wabrix.messages")) {
       const id = randomUUID();
       const message = {
         id,
@@ -317,7 +317,7 @@ function createMockDb(): DbClient {
         rows: [
           {
             id: "chunk1",
-            content: "Garansi resmi produk FlowDesk berlaku selama 1 tahun sejak pembelian.",
+            content: "Garansi resmi produk Wabrix berlaku selama 1 tahun sejak pembelian.",
             similarity: 0.88,
             metadata: { documentTitle: "Policy Guide" }
           }
@@ -325,11 +325,11 @@ function createMockDb(): DbClient {
       };
     }
 
-    if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
+    if (sql.includes("INSERT INTO wabrix.audit_logs")) {
       return { rows: [{ id: randomUUID(), occurred_at: new Date() }] };
     }
 
-    if (sql.includes("INSERT INTO flowdesk.bot_runs")) {
+    if (sql.includes("INSERT INTO wabrix.bot_runs")) {
       const runId = randomUUID();
       const mockRun = {
         id: runId,
@@ -372,12 +372,12 @@ function createMockDb(): DbClient {
       return { rows: [mockRun] };
     }
 
-    if (sql.includes("SELECT * FROM flowdesk.bot_runs WHERE id")) {
+    if (sql.includes("SELECT * FROM wabrix.bot_runs WHERE id")) {
       const run = botRuns.get(params?.[0] as string);
       return { rows: run ? [run] : [] };
     }
 
-    if (sql.includes("FROM flowdesk.bot_runs") && sql.includes("ORDER BY created_at DESC")) {
+    if (sql.includes("FROM wabrix.bot_runs") && sql.includes("ORDER BY created_at DESC")) {
       const run = [...botRuns.values()].at(-1);
       return { rows: run ? [run] : [] };
     }
@@ -407,7 +407,7 @@ function createMockDb(): DbClient {
             token_hash: session.tokenHash,
             expires_at: session.expiresAt.toISOString(),
             revoked_at: session.revokedAt ? session.revokedAt.toISOString() : null,
-            email: "admin@flowdesk.dev",
+            email: "admin@wabrix.dev",
             display_name: "Admin",
             user_status: "active"
           }
@@ -687,7 +687,7 @@ describe("Bot Configuration & AI Draft Generation API", () => {
     const db = createMockDb();
     const originalQuery = db.query.bind(db);
     db.query = (async (sql: string, params?: unknown[]) => {
-      if (sql.includes("INSERT INTO flowdesk.bot_runs")) {
+      if (sql.includes("INSERT INTO wabrix.bot_runs")) {
         const error = new Error("Database transaction constraint violation") as Error & {
           code: string;
           detail: string;

@@ -14,7 +14,7 @@ import {
   testWebhookApi
 } from "./api.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card.js";
-import { Badge, Button } from "@flowdesk/ui";
+import { Badge, Button } from "@wabrix/ui";
 import { Key, Webhook, Copy, Trash2 } from "lucide-react";
 import { ConfirmDialog } from "./components/ConfirmDialog.js";
 
@@ -790,7 +790,7 @@ export function DeveloperSettingsView({
                 <input
                   type="url"
                   required
-                  placeholder="https://your-domain.com/webhooks/flowdesk"
+                  placeholder="https://your-domain.com/webhooks/wabrix"
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   value={webhookUrl}
                   onChange={(event) => setWebhookUrl(event.target.value)}

@@ -10,7 +10,7 @@
  * 6. Redis disconnect / socket.io graceful fallback & REST reconciliation
  */
 import { describe, expect, it } from "vitest";
-import type { DbClient, ClaimedOutboxEvent } from "@flowdesk/db";
+import type { DbClient, ClaimedOutboxEvent } from "@wabrix/db";
 import { evaluateAndProcessAutoSend } from "./auto-send.js";
 import {
   dispatchOutboundMessageCrashSafe,
@@ -21,8 +21,8 @@ import {
   WhatsAppProviderError,
   type WhatsAppProvider,
   type SendTextMessageInput
-} from "@flowdesk/providers";
-import { encryptWhatsAppChannelCredentials } from "@flowdesk/security";
+} from "@wabrix/providers";
+import { encryptWhatsAppChannelCredentials } from "@wabrix/security";
 
 describe("M5 Executable Failure Drills & Incident Operations (#176)", () => {
   describe("Drill 1: Database Connection Failure & Recovery", () => {
@@ -133,7 +133,7 @@ describe("M5 Executable Failure Drills & Incident Operations (#176)", () => {
       const db = {
         async query(sql: string) {
           await Promise.resolve();
-          if (sql.includes("FROM flowdesk.messages AS message")) {
+          if (sql.includes("FROM wabrix.messages AS message")) {
             return {
               rows: [
                 {
@@ -158,7 +158,7 @@ describe("M5 Executable Failure Drills & Incident Operations (#176)", () => {
               fields: []
             };
           }
-          if (sql.includes("SELECT") && sql.includes("FROM flowdesk.messages")) {
+          if (sql.includes("SELECT") && sql.includes("FROM wabrix.messages")) {
             return {
               rows: [
                 {
@@ -186,7 +186,7 @@ describe("M5 Executable Failure Drills & Incident Operations (#176)", () => {
               fields: []
             };
           }
-          if (sql.includes("UPDATE flowdesk.messages")) {
+          if (sql.includes("UPDATE wabrix.messages")) {
             return {
               rows: [
                 {
@@ -206,7 +206,7 @@ describe("M5 Executable Failure Drills & Incident Operations (#176)", () => {
           }
           if (
             sql.includes("mark_outbox_event_published") ||
-            sql.includes("UPDATE flowdesk.outbox_events")
+            sql.includes("UPDATE wabrix.outbox_events")
           ) {
             publishedOutbox = true;
             return {
@@ -288,7 +288,7 @@ describe("M5 Executable Failure Drills & Incident Operations (#176)", () => {
       const db = {
         async query(sql: string) {
           await Promise.resolve();
-          if (sql.includes("FROM flowdesk.messages AS message")) {
+          if (sql.includes("FROM wabrix.messages AS message")) {
             return {
               rows: [
                 {
@@ -316,14 +316,11 @@ describe("M5 Executable Failure Drills & Incident Operations (#176)", () => {
           if (sql.includes("resolve_automation_safety")) {
             return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
           }
-          if (
-            sql.includes("UPDATE flowdesk.outbound_intents") &&
-            sql.includes("state = 'queued'")
-          ) {
+          if (sql.includes("UPDATE wabrix.outbound_intents") && sql.includes("state = 'queued'")) {
             intentKeptQueued = true;
             return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
           }
-          if (sql.includes("UPDATE flowdesk.outbox_events")) {
+          if (sql.includes("UPDATE wabrix.outbox_events")) {
             recordedFailure = true;
             return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
           }
@@ -348,7 +345,7 @@ describe("M5 Executable Failure Drills & Incident Operations (#176)", () => {
           if (sql.includes("resolve_automation_safety")) {
             return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
           }
-          if (sql.includes("FROM flowdesk.messages")) {
+          if (sql.includes("FROM wabrix.messages")) {
             return { rows: [{ count: "0" }], rowCount: 1, command: "SELECT", oid: 0, fields: [] };
           }
           return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };

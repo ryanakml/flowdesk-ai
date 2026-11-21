@@ -81,10 +81,10 @@ function mockDb(options?: {
       if (sql.includes("FOR SHARE OF membership")) {
         return { rows: options?.targetAllowed === false ? [] : [{ "?column?": 1 }], rowCount: 1 };
       }
-      if (sql.includes("FROM flowdesk.queue_memberships") && sql.includes("FOR SHARE")) {
+      if (sql.includes("FROM wabrix.queue_memberships") && sql.includes("FOR SHARE")) {
         return { rows: [{ id: "queue-member-1" }], rowCount: 1 };
       }
-      if (sql.startsWith("UPDATE flowdesk.conversations")) {
+      if (sql.startsWith("UPDATE wabrix.conversations")) {
         return { rows: [], rowCount: options?.updateCount ?? 1 };
       }
       if (sql.includes("RETURNING id") && sql.includes("conversation_notes")) {
@@ -93,7 +93,7 @@ function mockDb(options?: {
       if (sql.includes("RETURNING id, occurred_at")) {
         return { rows: [{ id: "audit-1", occurred_at: new Date() }], rowCount: 1 };
       }
-      if (sql.includes("FROM flowdesk.conversations WHERE organization_id = $1 AND id = $2")) {
+      if (sql.includes("FROM wabrix.conversations WHERE organization_id = $1 AND id = $2")) {
         return { rows: [{ ...conversation }], rowCount: 1 };
       }
       return { rows: [], rowCount: 1 };
@@ -134,8 +134,8 @@ describe("race-safe conversation operations", () => {
         operation
       });
       expect(result).toEqual(conversation);
-      expect(sqlCalls.some((sql) => sql.startsWith("UPDATE flowdesk.conversations"))).toBe(true);
-      expect(sqlCalls.some((sql) => sql.includes("INSERT INTO flowdesk.audit_logs"))).toBe(true);
+      expect(sqlCalls.some((sql) => sql.startsWith("UPDATE wabrix.conversations"))).toBe(true);
+      expect(sqlCalls.some((sql) => sql.includes("INSERT INTO wabrix.audit_logs"))).toBe(true);
     });
   }
 

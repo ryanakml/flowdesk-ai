@@ -1,5 +1,5 @@
 {
-  "name": "@flowdesk/worker",
+  "name": "@wabrix/worker",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -17,13 +17,13 @@
     "clean": "rm -rf dist coverage"
   },
   "dependencies": {
-    "@flowdesk/config": "workspace:*",
-    "@flowdesk/contracts": "workspace:*",
-    "@flowdesk/db": "workspace:*",
-    "@flowdesk/domain": "workspace:*",
-    "@flowdesk/observability": "workspace:*",
-    "@flowdesk/providers": "workspace:*",
-    "@flowdesk/security": "workspace:*",
+    "@wabrix/config": "workspace:*",
+    "@wabrix/contracts": "workspace:*",
+    "@wabrix/db": "workspace:*",
+    "@wabrix/domain": "workspace:*",
+    "@wabrix/observability": "workspace:*",
+    "@wabrix/providers": "workspace:*",
+    "@wabrix/security": "workspace:*",
     "pg": "8.16.3",
     "redis": "^5.12.1"
   },

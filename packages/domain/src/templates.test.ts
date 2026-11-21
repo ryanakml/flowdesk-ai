@@ -227,7 +227,7 @@ describe("WhatsApp Templates Domain Logic (M3-04)", () => {
       },
       {
         type: "FOOTER" as const,
-        text: "FlowDesk Support"
+        text: "Wabrix Support"
       }
     ];
 
@@ -256,7 +256,7 @@ describe("WhatsApp Templates Domain Logic (M3-04)", () => {
         "Tagihan sebesar Rp 150.000 telah lunas pada 29 Agustus 2026."
       );
       const renderedFooterComp = result1.renderedComponents.find((c) => c.type === "FOOTER");
-      expect(renderedFooterComp?.text).toBe("FlowDesk Support");
+      expect(renderedFooterComp?.text).toBe("Wabrix Support");
     });
 
     it("throws error when variables are invalid", () => {

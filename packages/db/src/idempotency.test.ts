@@ -31,7 +31,7 @@ function createMockDb(): DbClient {
       const sql = sqlText.replace(/\s+/g, " ").trim();
 
       // SELECT
-      if (sql.startsWith("SELECT") && sql.includes("FROM flowdesk.idempotency_keys")) {
+      if (sql.startsWith("SELECT") && sql.includes("FROM wabrix.idempotency_keys")) {
         const [orgId, actorId, route, key] = values as [string, string, string, string];
         const row = table.get(makeRowKey(orgId, actorId, route, key));
         if (!row) {
@@ -52,7 +52,7 @@ function createMockDb(): DbClient {
       }
 
       // INSERT
-      if (sql.includes("INSERT INTO flowdesk.idempotency_keys")) {
+      if (sql.includes("INSERT INTO wabrix.idempotency_keys")) {
         const [orgId, actorId, route, key, fingerprint, ttlHours] = values as [
           string,
           string,
@@ -85,7 +85,7 @@ function createMockDb(): DbClient {
 
       // UPDATE (complete)
       if (
-        sql.includes("UPDATE flowdesk.idempotency_keys") &&
+        sql.includes("UPDATE wabrix.idempotency_keys") &&
         sql.includes("completed_at = clock_timestamp()")
       ) {
         const [status, bodyJson, orgId, actorId, route, key] = values as [
@@ -108,7 +108,7 @@ function createMockDb(): DbClient {
 
       // UPDATE (expired re-acquire)
       if (
-        sql.includes("UPDATE flowdesk.idempotency_keys") &&
+        sql.includes("UPDATE wabrix.idempotency_keys") &&
         sql.includes("response_status = NULL")
       ) {
         const [fingerprint, ttlHours, id] = values as [string, number, string];
@@ -126,7 +126,7 @@ function createMockDb(): DbClient {
       }
 
       // DELETE (release)
-      if (sql.includes("DELETE FROM flowdesk.idempotency_keys")) {
+      if (sql.includes("DELETE FROM wabrix.idempotency_keys")) {
         const [orgId, actorId, route, key] = values as [string, string, string, string];
         const rowKey = makeRowKey(orgId, actorId, route, key);
         const row = table.get(rowKey);

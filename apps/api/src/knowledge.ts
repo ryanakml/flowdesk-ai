@@ -3,7 +3,7 @@ import {
   CreateKnowledgeSourceRequestSchema,
   type KnowledgeSourceResponse,
   type Problem
-} from "@flowdesk/contracts";
+} from "@wabrix/contracts";
 import {
   createKnowledgeSource,
   enqueueKnowledgeIngestionJob,
@@ -14,8 +14,8 @@ import {
   type DbClient,
   type KnowledgeSource,
   type KnowledgeSourceStatus
-} from "@flowdesk/db";
-import { SsrfProtectionError, validateUrlForIngestion } from "@flowdesk/security";
+} from "@wabrix/db";
+import { SsrfProtectionError, validateUrlForIngestion } from "@wabrix/security";
 import { Router, type Request, type Response } from "express";
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createRequireOrgPermissionMiddleware } from "./organizations.js";
@@ -37,7 +37,7 @@ function sendProblem(
   detail: string
 ) {
   const problem: Problem = {
-    type: `https://flowdesk.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
+    type: `https://wabrix.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
     title,
     status,
     code,

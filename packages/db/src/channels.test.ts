@@ -32,7 +32,7 @@ function createMockDb(): DbClient {
       await Promise.resolve();
       const sql = queryText.replace(/\s+/g, " ").trim();
 
-      if (sql.includes("INSERT INTO flowdesk.channels")) {
+      if (sql.includes("INSERT INTO wabrix.channels")) {
         const id = "c0000000-0000-4000-8000-000000000001";
         const channel: MockChannelRow = {
           id,
@@ -62,7 +62,7 @@ function createMockDb(): DbClient {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("SELECT * FROM flowdesk.channels WHERE id = $1")) {
+      if (sql.includes("SELECT * FROM wabrix.channels WHERE id = $1")) {
         const id = values[0] as string;
         const ch = channels.get(id);
         if (ch) {
@@ -71,13 +71,13 @@ function createMockDb(): DbClient {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("SELECT * FROM flowdesk.channels WHERE organization_id = $1")) {
+      if (sql.includes("SELECT * FROM wabrix.channels WHERE organization_id = $1")) {
         const orgId = values[0] as string;
         const matching = Array.from(channels.values()).filter((c) => c.organization_id === orgId);
         return { rows: matching, rowCount: matching.length, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE flowdesk.channels SET status = $2")) {
+      if (sql.includes("UPDATE wabrix.channels SET status = $2")) {
         const id = values[0] as string;
         const targetStatus = values[1] as string;
         const reason = (values[2] as string | null) ?? null;

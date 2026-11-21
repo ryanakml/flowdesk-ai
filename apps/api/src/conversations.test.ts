@@ -1,9 +1,9 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@flowdesk/config";
-import type { DbClient } from "@flowdesk/db";
-import { MockIdentityProvider } from "@flowdesk/providers";
-import { hashSessionToken, serializeSessionCookie } from "@flowdesk/security";
+import { loadAuthConfig } from "@wabrix/config";
+import type { DbClient } from "@wabrix/db";
+import { MockIdentityProvider } from "@wabrix/providers";
+import { hashSessionToken, serializeSessionCookie } from "@wabrix/security";
 import { createApiApp } from "./app.js";
 
 const orgId = "00000000-0000-7000-8000-000000000001";
@@ -83,19 +83,19 @@ function createConversationsMockDb() {
 
   users.set(aliceId, {
     id: aliceId,
-    email: "alice@flowdesk.dev",
+    email: "alice@wabrix.dev",
     displayName: "Alice Supervisor",
     status: "active"
   });
   users.set(bobId, {
     id: bobId,
-    email: "bob@flowdesk.dev",
+    email: "bob@wabrix.dev",
     displayName: "Bob Agent",
     status: "active"
   });
   users.set(charlieId, {
     id: charlieId,
-    email: "charlie@flowdesk.dev",
+    email: "charlie@wabrix.dev",
     displayName: "Charlie Analyst",
     status: "active"
   });
@@ -216,12 +216,12 @@ function createConversationsMockDb() {
         };
       }
 
-      if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
+      if (sql.includes("INSERT INTO wabrix.audit_logs")) {
         return { rows: [{ id: "audit-operation", occurred_at: new Date() }], rowCount: 1 };
       }
 
       if (
-        sql.startsWith("UPDATE flowdesk.conversations") &&
+        sql.startsWith("UPDATE wabrix.conversations") &&
         sql.includes("WHERE organization_id = $")
       ) {
         const targetOrg = values[values.length - 3] as string;
@@ -241,7 +241,7 @@ function createConversationsMockDb() {
       }
 
       // Auth Session lookup
-      if (sql.includes("FROM flowdesk.auth_sessions s JOIN flowdesk.users u")) {
+      if (sql.includes("FROM wabrix.auth_sessions s JOIN wabrix.users u")) {
         const [tokenHash] = values as [string];
         const session = sessions.get(tokenHash);
         if (!session || session.revokedAt !== null || session.expiresAt.getTime() <= Date.now()) {
@@ -266,7 +266,7 @@ function createConversationsMockDb() {
       }
 
       // Member role lookup
-      if (sql.includes("FROM flowdesk.memberships m") && sql.includes("JOIN flowdesk.roles r")) {
+      if (sql.includes("FROM wabrix.memberships m") && sql.includes("JOIN wabrix.roles r")) {
         const [targetOrgId, targetUserId] = values as [string, string];
         const member = memberRoles.get(`${targetOrgId}:${targetUserId}`);
         if (!member) return { rows: [] };
@@ -277,7 +277,7 @@ function createConversationsMockDb() {
 
       // List conversations
       if (
-        sql.includes("FROM flowdesk.conversations WHERE") &&
+        sql.includes("FROM wabrix.conversations WHERE") &&
         sql.includes("ORDER BY last_message_at DESC, id DESC")
       ) {
         let matching = Array.from(conversations.values()).filter(
@@ -322,7 +322,7 @@ function createConversationsMockDb() {
       // Get conversation by ID
       if (
         sql.includes("SELECT") &&
-        sql.includes("FROM flowdesk.conversations WHERE organization_id = $1 AND id = $2")
+        sql.includes("FROM wabrix.conversations WHERE organization_id = $1 AND id = $2")
       ) {
         const [targetOrg, targetId] = values as [string, string];
         const c = conversations.get(targetId);
@@ -357,7 +357,7 @@ function createConversationsMockDb() {
 
       // List messages by conversation
       if (
-        sql.includes("FROM flowdesk.messages WHERE organization_id = $1 AND conversation_id = $2")
+        sql.includes("FROM wabrix.messages WHERE organization_id = $1 AND conversation_id = $2")
       ) {
         const [targetOrg, targetConv] = values as [string, string];
         const matching = Array.from(messages.values())
@@ -386,7 +386,7 @@ function createConversationsMockDb() {
       }
 
       // Update conversation
-      if (sql.includes("UPDATE flowdesk.conversations")) {
+      if (sql.includes("UPDATE wabrix.conversations")) {
         const id = values[values.length - 3] as string;
         const targetOrg = values[values.length - 2] as string;
         const expectedVer = values[values.length - 1] as number;
@@ -432,7 +432,7 @@ function createConversationsMockDb() {
 
       // Insert message
       if (
-        sql.includes("FROM flowdesk.attachments") &&
+        sql.includes("FROM wabrix.attachments") &&
         sql.includes("organization_id = $1 AND id = $2")
       ) {
         const [targetOrg, attachmentId] = values as [string, string];
@@ -470,7 +470,7 @@ function createConversationsMockDb() {
         };
       }
 
-      if (sql.includes("INSERT INTO flowdesk.messages")) {
+      if (sql.includes("INSERT INTO wabrix.messages")) {
         const newMsgId = `00000000-0000-7000-8000-${String(messages.size + 21).padStart(12, "0")}`;
         const newMsg: MockMessage = {
           id: newMsgId,
@@ -523,7 +523,7 @@ function createConversationsMockDb() {
       }
 
       // Insert outbox event
-      if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
+      if (sql.includes("INSERT INTO wabrix.outbox_events")) {
         outboxEvents.push({
           id: `outbox-${outboxEvents.length + 1}`,
           eventType: "message.outbound.created",
@@ -534,7 +534,7 @@ function createConversationsMockDb() {
       }
 
       // WhatsApp Template lookups
-      if (sql.includes("FROM flowdesk.whatsapp_templates t")) {
+      if (sql.includes("FROM wabrix.whatsapp_templates t")) {
         if (sql.includes("WHERE t.channel_id = $1 AND t.name = $2 AND v.language = $3")) {
           const [chId, tName, tLang] = values as [string, string, string];
           const key = `${chId}:${tName}:${tLang}`;

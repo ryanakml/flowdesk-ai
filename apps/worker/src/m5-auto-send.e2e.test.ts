@@ -2,8 +2,8 @@
  * M5-06: Milestone 5 End-to-End Verification Test Suite
  */
 import { describe, expect, it } from "vitest";
-import type { DbClient } from "@flowdesk/db";
-import { evaluateRoutingRules } from "@flowdesk/domain";
+import type { DbClient } from "@wabrix/db";
+import { evaluateRoutingRules } from "@wabrix/domain";
 import { evaluateAndProcessAutoSend } from "./auto-send.js";
 
 const orgId = "a0000000-0000-4000-8000-000000000001";
@@ -27,7 +27,7 @@ function createMockE2eDb(): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO flowdesk.messages")) {
+      if (sql.includes("INSERT INTO wabrix.messages")) {
         return {
           rows: [
             {
@@ -98,6 +98,6 @@ describe("M5 Full Pipeline E2E Integration (M5-06)", () => {
     const res = await autoSendResult;
     expect(res.autoSent).toBe(true);
     expect(res.messageId).toBe("msg-e2e-m5-1");
-    expect(res.content).toContain("_Balasan otomatis oleh AI FlowDesk_");
+    expect(res.content).toContain("_Balasan otomatis oleh AI Wabrix_");
   });
 });

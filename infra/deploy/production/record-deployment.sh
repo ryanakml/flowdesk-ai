@@ -38,7 +38,7 @@ const actor = '${ACTOR}';
 const digestsPath = '${DIGESTS_FILE}';
 const deployedPath = '${DEPLOYED_DIGESTS_FILE}';
 const failedStage = '${FAILED_STAGE}';
-const imageFamily = process.env.IMAGE_FAMILY === 'flowdesk' ? 'flowdesk' : 'wabrix';
+const imageFamily = process.env.IMAGE_FAMILY || 'wabrix';
 
 let expectedDigests = {};
 if (fs.existsSync(digestsPath)) {

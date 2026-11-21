@@ -29,7 +29,7 @@ describe("App UI Shell (M1-07)", () => {
     globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
         JSON.stringify({
-          type: "https://flowdesk.dev/problems/unauthorized",
+          type: "https://wabrix.dev/problems/unauthorized",
           title: "Unauthorized",
           status: 401,
           code: "UNAUTHORIZED",

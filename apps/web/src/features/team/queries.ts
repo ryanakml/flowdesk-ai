@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { listMembers, inviteMember, updateMemberRole, revokeMember } from "../../api.js";
-import type { RoleKey } from "@flowdesk/domain";
+import type { RoleKey } from "@wabrix/domain";
 import { teamKeys } from "./query-keys.js";
 
 export function useTeamMembers(orgId: string | null, fetcher: typeof fetch = fetch) {

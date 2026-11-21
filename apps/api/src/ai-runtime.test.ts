@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadAiRuntimeConfig } from "@flowdesk/config";
+import { loadAiRuntimeConfig } from "@wabrix/config";
 import { createAiRuntime } from "./ai-runtime.js";
 
 describe("createAiRuntime", () => {

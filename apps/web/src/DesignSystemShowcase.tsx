@@ -70,7 +70,7 @@ import {
   Skeleton,
   EmptyState,
   StatusBadge
-} from "@flowdesk/ui";
+} from "@wabrix/ui";
 import { Inbox, ShieldCheck, Webhook, Sun, Moon } from "lucide-react";
 
 export function DesignSystemShowcase() {

@@ -1,9 +1,9 @@
-import { loadHttpConfig } from "@flowdesk/config";
+import { loadHttpConfig } from "@wabrix/config";
 import {
   createLogger,
   createProcessHealthServer,
   initializeTelemetry
-} from "@flowdesk/observability";
+} from "@wabrix/observability";
 
 import { Pool } from "pg";
 import { runAnalyticsAggregationJob } from "./process.js";

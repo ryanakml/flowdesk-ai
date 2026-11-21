@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import type { DbClient } from "@flowdesk/db";
+import type { DbClient } from "@wabrix/db";
 import {
   AiProviderError,
   FakeAiChatProvider,
   FakeEmbeddingProvider,
   type AiChatProvider,
   type AiEmbeddingProvider
-} from "@flowdesk/providers";
+} from "@wabrix/providers";
 import { createQueryEmbeddingCache, type EmbeddingCacheStore } from "./query-embedding-cache.js";
 import { processBotDraftBatch } from "./bot-drafts.js";
 
@@ -112,8 +112,8 @@ function createMockDb(options?: {
           }
         ]);
       }
-      if (sql.includes("SELECT * FROM flowdesk.bot_runs WHERE id")) return result([runRow()]);
-      if (sql.includes("FROM flowdesk.conversations")) {
+      if (sql.includes("SELECT * FROM wabrix.bot_runs WHERE id")) return result([runRow()]);
+      if (sql.includes("FROM wabrix.conversations")) {
         return result([
           {
             id: "conversation-1",
@@ -144,8 +144,8 @@ function createMockDb(options?: {
           }
         ]);
       }
-      if (sql.includes("FROM flowdesk.messages")) return result(messages);
-      if (sql.includes("FROM flowdesk.bot_configs")) {
+      if (sql.includes("FROM wabrix.messages")) return result(messages);
+      if (sql.includes("FROM wabrix.bot_configs")) {
         return result([
           {
             id: "config-1",
@@ -165,7 +165,7 @@ function createMockDb(options?: {
           }
         ]);
       }
-      if (sql.includes("FROM flowdesk.knowledge_versions")) {
+      if (sql.includes("FROM wabrix.knowledge_versions")) {
         const versionId = options?.currentKnowledgeVersionId ?? null;
         return result(
           versionId
@@ -183,7 +183,7 @@ function createMockDb(options?: {
             : []
         );
       }
-      if (sql.includes("FROM flowdesk.document_chunks")) {
+      if (sql.includes("FROM wabrix.document_chunks")) {
         return result(
           (
             options?.chunks ?? [

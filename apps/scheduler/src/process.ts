@@ -1,9 +1,9 @@
-import type { DbClient } from "@flowdesk/db";
+import type { DbClient } from "@wabrix/db";
 import {
   aggregateHourlyMetricsForOrg,
   listActiveOrganizationIds,
   runInTenantTransaction
-} from "@flowdesk/db";
+} from "@wabrix/db";
 
 export function schedulerState(schedulesJobs = false) {
   const status: "active" | "idle" = schedulesJobs ? "active" : "idle";
@@ -40,7 +40,7 @@ export async function runAnalyticsAggregationJob(
         { organizationId: orgId },
         async (tenantDb) => {
           const watermarkRes = await tenantDb.query<{ last_aggregated_at: Date }>(
-            `SELECT last_aggregated_at FROM flowdesk.analytics_watermarks WHERE organization_id = $1`,
+            `SELECT last_aggregated_at FROM wabrix.analytics_watermarks WHERE organization_id = $1`,
             [orgId]
           );
           const since = watermarkRes.rows[0]?.last_aggregated_at ?? undefined;

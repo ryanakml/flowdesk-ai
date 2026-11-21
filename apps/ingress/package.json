@@ -1,5 +1,5 @@
 {
-  "name": "@flowdesk/ingress",
+  "name": "@wabrix/ingress",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -16,10 +16,10 @@
     "clean": "rm -rf dist coverage"
   },
   "dependencies": {
-    "@flowdesk/config": "workspace:*",
-    "@flowdesk/db": "workspace:*",
-    "@flowdesk/observability": "workspace:*",
-    "@flowdesk/security": "workspace:*",
+    "@wabrix/config": "workspace:*",
+    "@wabrix/db": "workspace:*",
+    "@wabrix/observability": "workspace:*",
+    "@wabrix/security": "workspace:*",
     "express": "^5.1.0",
     "pg": "8.16.3"
   },

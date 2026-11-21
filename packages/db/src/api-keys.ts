@@ -57,7 +57,7 @@ function mapApiKeyRow(row: RawApiKeyRow): ApiKeyRecord {
 
 export async function listApiKeys(db: DbClient, organizationId: string): Promise<ApiKeyRecord[]> {
   const res = await db.query<RawApiKeyRow>(
-    `SELECT * FROM flowdesk.api_keys WHERE organization_id = $1 ORDER BY created_at DESC`,
+    `SELECT * FROM wabrix.api_keys WHERE organization_id = $1 ORDER BY created_at DESC`,
     [organizationId]
   );
   return res.rows.map(mapApiKeyRow);
@@ -78,7 +78,7 @@ export async function createApiKey(
   params: CreateApiKeyParams
 ): Promise<ApiKeyRecord> {
   const res = await db.query<RawApiKeyRow>(
-    `INSERT INTO flowdesk.api_keys (
+    `INSERT INTO wabrix.api_keys (
       organization_id, name, key_prefix, key_hash, scopes, created_by_user_id, expires_at
     ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7)
     RETURNING *`,
@@ -106,7 +106,7 @@ export async function revokeApiKey(
   organizationId: string
 ): Promise<boolean> {
   const res = await db.query(
-    `UPDATE flowdesk.api_keys
+    `UPDATE wabrix.api_keys
      SET revoked_at = clock_timestamp(), updated_at = clock_timestamp()
      WHERE id = $1 AND organization_id = $2 AND revoked_at IS NULL`,
     [id, organizationId]
@@ -120,7 +120,7 @@ export async function findApiKeyByHash(
 ): Promise<ApiKeyRecord | null> {
   const res = await db.query<RawApiKeyRow>(
     `SELECT id, organization_id, name, key_prefix, scopes, created_by_user_id, expires_at
-     FROM flowdesk.authenticate_api_key($1)`,
+     FROM wabrix.authenticate_api_key($1)`,
     [keyHash]
   );
   const row = res.rows[0];

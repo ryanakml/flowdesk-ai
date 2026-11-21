@@ -463,7 +463,7 @@ export class MetaWhatsAppProvider implements WhatsAppProvider {
         ? error.code
         : undefined;
     throw new WhatsAppProviderError({
-      message: "Meta rejected FlowDesk system-user assignment to the WABA.",
+      message: "Meta rejected Wabrix system-user assignment to the WABA.",
       classification: classifyMetaError(response.status, code),
       statusCode: response.status,
       providerCode: code

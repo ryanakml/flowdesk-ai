@@ -10,7 +10,7 @@ import {
 import { OrgSwitcher } from "./OrgSwitcher.js";
 import { UserNav } from "./UserNav.js";
 import { activeNavClassName } from "./nav-styles.js";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@flowdesk/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@wabrix/ui";
 
 export function WabrixIcon({ size = 20 }: { size?: number }) {
   return <img src="/logo-icon.svg" alt="" width={size} height={size} />;

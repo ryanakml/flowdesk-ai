@@ -24,7 +24,7 @@ function createMockDb(): DbClient {
       const sql = sqlText.replace(/\s+/g, " ").trim();
 
       // INSERT
-      if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
+      if (sql.includes("INSERT INTO wabrix.audit_logs")) {
         const [orgId, actorId, action, targetType, targetId, result, corrId, metaJson] = values as [
           string,
           string | null,
@@ -55,7 +55,7 @@ function createMockDb(): DbClient {
       }
 
       // SELECT
-      if (sql.includes("FROM flowdesk.audit_logs")) {
+      if (sql.includes("FROM wabrix.audit_logs")) {
         const orgId = values[0] as string;
         let filtered = logs.filter((l) => l.organization_id === orgId);
 

@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@flowdesk/config";
-import type { DbClient } from "@flowdesk/db";
-import { MockIdentityProvider } from "@flowdesk/providers";
-import { hashSessionToken, serializeSessionCookie } from "@flowdesk/security";
+import { loadAuthConfig } from "@wabrix/config";
+import type { DbClient } from "@wabrix/db";
+import { MockIdentityProvider } from "@wabrix/providers";
+import { hashSessionToken, serializeSessionCookie } from "@wabrix/security";
 import { createApiApp } from "./app.js";
 
 function createMockDb(): DbClient {
@@ -37,19 +37,19 @@ function createMockDb(): DbClient {
   const orgId = "a0000000-0000-4000-8000-000000000001";
   users.set("u-owner", {
     id: "u-owner",
-    email: "owner@flowdesk.dev",
+    email: "owner@wabrix.dev",
     displayName: "Owner",
     status: "active"
   });
   users.set("u-agent", {
     id: "u-agent",
-    email: "agent@flowdesk.dev",
+    email: "agent@wabrix.dev",
     displayName: "Agent",
     status: "active"
   });
   users.set("u-stranger", {
     id: "u-stranger",
-    email: "stranger@flowdesk.dev",
+    email: "stranger@wabrix.dev",
     displayName: "Stranger",
     status: "active"
   });
@@ -99,7 +99,7 @@ function createMockDb(): DbClient {
       const sql = queryText.replace(/\s+/g, " ").trim();
 
       // Session lookup
-      if (sql.includes("FROM flowdesk.auth_sessions s JOIN flowdesk.users u")) {
+      if (sql.includes("FROM wabrix.auth_sessions s JOIN wabrix.users u")) {
         const [tokenHash] = values as [string];
         const session = sessions.get(tokenHash);
         if (!session || session.revokedAt !== null || session.expiresAt.getTime() <= Date.now()) {
@@ -131,8 +131,8 @@ function createMockDb(): DbClient {
         return { rows: [] };
       }
 
-      // Audit logs select: SELECT id, organization_id... FROM flowdesk.audit_logs
-      if (sql.includes("FROM flowdesk.audit_logs")) {
+      // Audit logs select: SELECT id, organization_id... FROM wabrix.audit_logs
+      if (sql.includes("FROM wabrix.audit_logs")) {
         const orgIdVal = values[0] as string;
         const filtered = auditLogs.filter((l) => l.organization_id === orgIdVal);
         const limit = Number(values[values.length - 1]);
@@ -153,7 +153,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
+      if (sql.includes("INSERT INTO wabrix.audit_logs")) {
         return { rows: [{ id: randomUUID(), occurred_at: new Date() }] };
       }
 

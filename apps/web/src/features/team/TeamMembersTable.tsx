@@ -1,5 +1,5 @@
-import type { MembershipMember } from "@flowdesk/contracts";
-import type { RoleKey } from "@flowdesk/domain";
+import type { MembershipMember } from "@wabrix/contracts";
+import type { RoleKey } from "@wabrix/domain";
 import { MoreHorizontal, UserX } from "lucide-react";
 import {
   Badge,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from "@flowdesk/ui";
+} from "@wabrix/ui";
 
 export const teamRoles = [
   {

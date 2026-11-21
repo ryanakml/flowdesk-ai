@@ -2,14 +2,14 @@ import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { loadAuthConfig } from "@flowdesk/config";
-import { createChannel, withTenantTransaction } from "@flowdesk/db";
+import { loadAuthConfig } from "@wabrix/config";
+import { createChannel, withTenantTransaction } from "@wabrix/db";
 import {
   decryptWhatsAppChannelCredentials,
   hashSessionToken,
   serializeSessionCookie
-} from "@flowdesk/security";
-import { FakeWhatsAppProvider, WhatsAppProviderError } from "@flowdesk/providers";
+} from "@wabrix/security";
+import { FakeWhatsAppProvider, WhatsAppProviderError } from "@wabrix/providers";
 import { Pool } from "pg";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -43,30 +43,30 @@ beforeAll(async () => {
 
   await executeFile(process.execPath, [migrationScript], { env: process.env });
   await pool.query(
-    `INSERT INTO flowdesk.users (id, email, display_name) VALUES
+    `INSERT INTO wabrix.users (id, email, display_name) VALUES
        ($1, $2, 'Channel Integration Owner'),
        ($3, $4, 'Other Tenant Owner')`,
     [
       ownerUserId,
-      `channel-owner-${ownerUserId}@flowdesk.test`,
+      `channel-owner-${ownerUserId}@wabrix.test`,
       otherOwnerUserId,
-      `channel-other-${otherOwnerUserId}@flowdesk.test`
+      `channel-other-${otherOwnerUserId}@wabrix.test`
     ]
   );
 
   const createdA = await pool.query<{ organization_id: string }>(
-    "SELECT organization_id FROM flowdesk.bootstrap_organization($1, $2, $3)",
+    "SELECT organization_id FROM wabrix.bootstrap_organization($1, $2, $3)",
     [`channel-a-${ownerUserId.slice(0, 8)}`, "Channel Integration A", ownerUserId]
   );
   const createdB = await pool.query<{ organization_id: string }>(
-    "SELECT organization_id FROM flowdesk.bootstrap_organization($1, $2, $3)",
+    "SELECT organization_id FROM wabrix.bootstrap_organization($1, $2, $3)",
     [`channel-b-${otherOwnerUserId.slice(0, 8)}`, "Channel Integration B", otherOwnerUserId]
   );
   organizationA = createdA.rows[0]!.organization_id;
   organizationB = createdB.rows[0]!.organization_id;
 
   await pool.query(
-    `INSERT INTO flowdesk.auth_sessions (user_id, token_hash, expires_at)
+    `INSERT INTO wabrix.auth_sessions (user_id, token_hash, expires_at)
      VALUES ($1, $2, clock_timestamp() + interval '1 hour')`,
     [ownerUserId, hashSessionToken(sessionToken)]
   );
@@ -75,54 +75,52 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!pool) return;
 
-  await pool.query(
-    "DELETE FROM flowdesk.outbound_intents WHERE organization_id = ANY($1::uuid[])",
-    [[organizationA, organizationB]]
-  );
-  await pool.query("DELETE FROM flowdesk.messages WHERE organization_id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.outbound_intents WHERE organization_id = ANY($1::uuid[])", [
     [organizationA, organizationB]
   ]);
-  await pool.query("DELETE FROM flowdesk.conversations WHERE organization_id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.messages WHERE organization_id = ANY($1::uuid[])", [
     [organizationA, organizationB]
   ]);
-  await pool.query("DELETE FROM flowdesk.contacts WHERE organization_id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.conversations WHERE organization_id = ANY($1::uuid[])", [
     [organizationA, organizationB]
   ]);
-  await pool.query("DELETE FROM flowdesk.channels WHERE organization_id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.contacts WHERE organization_id = ANY($1::uuid[])", [
     [organizationA, organizationB]
   ]);
-  await pool.query(
-    "DELETE FROM flowdesk.whatsapp_embedded_signup_attempts WHERE organization_id = ANY($1::uuid[])",
-    [[organizationA, organizationB]]
-  );
-  await pool.query(
-    "DELETE FROM flowdesk.whatsapp_business_accounts WHERE organization_id = ANY($1::uuid[])",
-    [[organizationA, organizationB]]
-  );
-  await pool.query("DELETE FROM flowdesk.audit_logs WHERE organization_id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.channels WHERE organization_id = ANY($1::uuid[])", [
     [organizationA, organizationB]
   ]);
   await pool.query(
-    "DELETE FROM flowdesk.realtime_versions WHERE organization_id = ANY($1::uuid[])",
+    "DELETE FROM wabrix.whatsapp_embedded_signup_attempts WHERE organization_id = ANY($1::uuid[])",
     [[organizationA, organizationB]]
   );
   await pool.query(
-    "DELETE FROM flowdesk.organization_settings WHERE organization_id = ANY($1::uuid[])",
+    "DELETE FROM wabrix.whatsapp_business_accounts WHERE organization_id = ANY($1::uuid[])",
     [[organizationA, organizationB]]
   );
-  await pool.query("DELETE FROM flowdesk.memberships WHERE organization_id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.audit_logs WHERE organization_id = ANY($1::uuid[])", [
     [organizationA, organizationB]
   ]);
-  await pool.query("DELETE FROM flowdesk.roles WHERE organization_id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.realtime_versions WHERE organization_id = ANY($1::uuid[])", [
     [organizationA, organizationB]
   ]);
-  await pool.query("DELETE FROM flowdesk.organizations WHERE id = ANY($1::uuid[])", [
+  await pool.query(
+    "DELETE FROM wabrix.organization_settings WHERE organization_id = ANY($1::uuid[])",
+    [[organizationA, organizationB]]
+  );
+  await pool.query("DELETE FROM wabrix.memberships WHERE organization_id = ANY($1::uuid[])", [
     [organizationA, organizationB]
   ]);
-  await pool.query("DELETE FROM flowdesk.auth_sessions WHERE user_id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.roles WHERE organization_id = ANY($1::uuid[])", [
+    [organizationA, organizationB]
+  ]);
+  await pool.query("DELETE FROM wabrix.organizations WHERE id = ANY($1::uuid[])", [
+    [organizationA, organizationB]
+  ]);
+  await pool.query("DELETE FROM wabrix.auth_sessions WHERE user_id = ANY($1::uuid[])", [
     [ownerUserId, otherOwnerUserId]
   ]);
-  await pool.query("DELETE FROM flowdesk.users WHERE id = ANY($1::uuid[])", [
+  await pool.query("DELETE FROM wabrix.users WHERE id = ANY($1::uuid[])", [
     [ownerUserId, otherOwnerUserId]
   ]);
   await pool.end();
@@ -156,7 +154,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     : undefined;
   const ownerCookie = serializeSessionCookie(sessionToken, false);
 
-  it("connects with the exact verified customer token as flowdesk_runtime", async () => {
+  it("connects with the exact verified customer token as wabrix_runtime", async () => {
     if (!pool || !app) throw new Error("integration database unavailable");
 
     const runtimeIdentity = await withTenantTransaction(
@@ -164,7 +162,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
       { organizationId: organizationA },
       (db) => db.query<{ current_user: string }>("SELECT current_user")
     );
-    expect(runtimeIdentity.rows[0]?.current_user).toBe("flowdesk_runtime");
+    expect(runtimeIdentity.rows[0]?.current_user).toBe("wabrix_runtime");
 
     const response = await request(app)
       .post(`/api/v1/organizations/${organizationA}/channels`)
@@ -194,7 +192,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     }
     channelId = responseBody.channel.id;
     const stored = await pool.query<{ encrypted_credentials: string }>(
-      "SELECT encrypted_credentials FROM flowdesk.channels WHERE id = $1",
+      "SELECT encrypted_credentials FROM wabrix.channels WHERE id = $1",
       [channelId]
     );
     expect(stored.rows[0]?.encrypted_credentials).not.toContain(initialAccessToken);
@@ -210,7 +208,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     expect(
       (
         await pool.query<{ count: string }>(
-          "SELECT count(*) FROM flowdesk.channels WHERE organization_id = $1",
+          "SELECT count(*) FROM wabrix.channels WHERE organization_id = $1",
           [organizationA]
         )
       ).rows[0]?.count
@@ -221,19 +219,19 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     if (!pool || !app) throw new Error("integration database unavailable");
 
     const contact = await pool.query<{ id: string }>(
-      `INSERT INTO flowdesk.contacts (organization_id, channel_id, phone_number)
+      `INSERT INTO wabrix.contacts (organization_id, channel_id, phone_number)
        VALUES ($1, $2, '+628123456789') RETURNING id`,
       [organizationA, channelId]
     );
     const conversation = await pool.query<{ id: string }>(
-      `INSERT INTO flowdesk.conversations
+      `INSERT INTO wabrix.conversations
          (organization_id, channel_id, contact_id, customer_phone, customer_name)
        VALUES ($1, $2, $3, '+628123456789', 'Credential Rotation Customer') RETURNING id`,
       [organizationA, channelId, contact.rows[0]!.id]
     );
     conversationId = conversation.rows[0]!.id;
     const message = await pool.query<{ id: string }>(
-      `INSERT INTO flowdesk.messages
+      `INSERT INTO wabrix.messages
          (organization_id, conversation_id, channel_id, direction, sender_type, content, status)
        VALUES ($1, $2, $3, 'inbound', 'customer', 'Preserve me', 'delivered') RETURNING id`,
       [organizationA, conversationId, channelId]
@@ -253,7 +251,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     const persisted = await pool.query<{
       id: string;
       encrypted_credentials: string;
-    }>("SELECT id, encrypted_credentials FROM flowdesk.channels WHERE id = $1", [channelId]);
+    }>("SELECT id, encrypted_credentials FROM wabrix.channels WHERE id = $1", [channelId]);
     expect(persisted.rows[0]?.id).toBe(channelId);
     expect(
       resolveAccessToken(persisted.rows[0]!.encrypted_credentials, encryptionKey, {
@@ -264,7 +262,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     expect(
       (
         await pool.query<{ channel_id: string }>(
-          "SELECT channel_id FROM flowdesk.conversations WHERE id = $1",
+          "SELECT channel_id FROM wabrix.conversations WHERE id = $1",
           [conversationId]
         )
       ).rows[0]?.channel_id
@@ -272,7 +270,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     expect(
       (
         await pool.query<{ channel_id: string; conversation_id: string }>(
-          "SELECT channel_id, conversation_id FROM flowdesk.messages WHERE id = $1",
+          "SELECT channel_id, conversation_id FROM wabrix.messages WHERE id = $1",
           [messageId]
         )
       ).rows[0]
@@ -313,7 +311,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     }
 
     const persisted = await pool.query<{ status: string }>(
-      "SELECT status FROM flowdesk.channels WHERE id = $1",
+      "SELECT status FROM wabrix.channels WHERE id = $1",
       [channelId]
     );
     expect(persisted.rows[0]?.status).toBe("active");
@@ -357,7 +355,7 @@ integration("POST /api/v1/organizations/:orgId/channels with PostgreSQL RLS", ()
     expect(
       (
         await pool.query<{ count: string }>(
-          "SELECT count(*) FROM flowdesk.channels WHERE organization_id = $1",
+          "SELECT count(*) FROM wabrix.channels WHERE organization_id = $1",
           [organizationB]
         )
       ).rows[0]?.count

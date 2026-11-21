@@ -6,8 +6,8 @@ import {
   RotateChannelCredentialsRequestSchema,
   UpdateChannelStatusRequestSchema,
   type ChannelVerificationState
-} from "@flowdesk/contracts";
-import { loadChannelEncryptionConfig, type MetaEmbeddedSignupConfig } from "@flowdesk/config";
+} from "@wabrix/contracts";
+import { loadChannelEncryptionConfig, type MetaEmbeddedSignupConfig } from "@wabrix/config";
 import {
   beginWhatsAppEmbeddedSignupAttempt,
   claimWhatsAppBusinessAccount,
@@ -25,17 +25,17 @@ import {
   recordAuditEvent,
   runInTenantTransaction,
   type DbClient
-} from "@flowdesk/db";
+} from "@wabrix/db";
 import {
   MetaWhatsAppProvider,
   WhatsAppProviderError,
   type WhatsAppProvider
-} from "@flowdesk/providers";
+} from "@wabrix/providers";
 import {
   decryptWhatsAppChannelCredentials,
   encryptWhatsAppChannelCredentials,
   WhatsAppCredentialError
-} from "@flowdesk/security";
+} from "@wabrix/security";
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createRequireOrgPermissionMiddleware } from "./organizations.js";
 
@@ -132,7 +132,7 @@ function sendProblem(
     .status(status)
     .type("application/problem+json")
     .json({
-      type: `https://flowdesk.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
+      type: `https://wabrix.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
       title,
       status,
       code,
@@ -205,7 +205,7 @@ export function createChannelsRouter(options: ChannelsRouterOptions): Router {
           503,
           "META_EMBEDDED_SIGNUP_UNAVAILABLE",
           "Meta connection is not configured",
-          "FlowDesk has not configured its Meta Embedded Signup credentials for this environment."
+          "Wabrix has not configured its Meta Embedded Signup credentials for this environment."
         );
       }
 
@@ -256,7 +256,7 @@ export function createChannelsRouter(options: ChannelsRouterOptions): Router {
           503,
           "META_EMBEDDED_SIGNUP_UNAVAILABLE",
           "Meta connection is not configured",
-          "FlowDesk has not configured its Meta Embedded Signup credentials for this environment."
+          "Wabrix has not configured its Meta Embedded Signup credentials for this environment."
         );
       }
 
@@ -286,7 +286,7 @@ export function createChannelsRouter(options: ChannelsRouterOptions): Router {
           409,
           "INVALID_OR_EXPIRED_SIGNUP_ATTEMPT",
           "Meta connection could not be completed",
-          "This connection attempt is invalid, expired, or has already been used. Start again from FlowDesk."
+          "This connection attempt is invalid, expired, or has already been used. Start again from Wabrix."
         );
       }
 
@@ -309,7 +309,7 @@ export function createChannelsRouter(options: ChannelsRouterOptions): Router {
           adminAccessToken: options.embeddedSignup.adminSystemUserAccessToken
         });
         // The user-authorized token proves the customer's selection. Persist and
-        // use only the FlowDesk system-user token after Meta has assigned it.
+        // use only the Wabrix system-user token after Meta has assigned it.
         const verified = await provider.verifyPhoneNumber({
           phoneNumberId: selectedAccount.phoneNumberId,
           wabaId: selectedAccount.wabaId,
@@ -448,7 +448,7 @@ export function createChannelsRouter(options: ChannelsRouterOptions): Router {
             409,
             "WABA_OWNERSHIP_CONFLICT",
             "WhatsApp account is already connected",
-            "This WhatsApp Business Account is already connected to another FlowDesk organization."
+            "This WhatsApp Business Account is already connected to another Wabrix organization."
           );
         }
         return sendProblem(
@@ -456,7 +456,7 @@ export function createChannelsRouter(options: ChannelsRouterOptions): Router {
           isProviderError && error.classification === "RESOURCE_MISMATCH" ? 409 : 422,
           "META_CONNECTION_FAILED",
           "Meta connection could not be completed",
-          "FlowDesk could not verify the selected WhatsApp account or subscribe it to the FlowDesk Meta App."
+          "Wabrix could not verify the selected WhatsApp account or subscribe it to the Wabrix Meta App."
         );
       }
     }
@@ -615,7 +615,7 @@ export function createChannelsRouter(options: ChannelsRouterOptions): Router {
             409,
             "WABA_OWNERSHIP_CONFLICT",
             "WhatsApp account is already connected",
-            "This WhatsApp Business Account is already connected to another FlowDesk organization."
+            "This WhatsApp Business Account is already connected to another Wabrix organization."
           );
         }
         if (error instanceof WhatsAppProviderError) {

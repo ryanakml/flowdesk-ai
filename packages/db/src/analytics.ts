@@ -35,7 +35,7 @@ export async function aggregateHourlyMetricsForOrg(
     const watermarkRes = await db.query<{
       last_aggregated_at?: Date;
       last_aggregated_hour?: Date;
-    }>(`SELECT last_aggregated_at FROM flowdesk.analytics_watermarks WHERE organization_id = $1`, [
+    }>(`SELECT last_aggregated_at FROM wabrix.analytics_watermarks WHERE organization_id = $1`, [
       organizationId
     ]);
     const row = watermarkRes.rows[0];
@@ -63,7 +63,7 @@ export async function aggregateHourlyMetricsForOrg(
       COUNT(*) FILTER (WHERE direction = 'outbound') AS outbound,
       COUNT(*) FILTER (WHERE sender_type = 'bot') AS bot,
       COUNT(*) FILTER (WHERE sender_type IN ('agent', 'customer')) AS human
-     FROM flowdesk.messages
+     FROM wabrix.messages
      WHERE organization_id = $1 AND (created_at >= $2 OR updated_at >= $2)
      GROUP BY 1`,
     [organizationId, startTime]
@@ -93,7 +93,7 @@ export async function aggregateHourlyMetricsForOrg(
                          AND (resolution_due_at IS NULL OR resolved_at <= resolution_due_at)) AS sla_met,
       COUNT(*) FILTER (WHERE (first_response_due_at IS NOT NULL AND (first_responded_at IS NULL AND clock_timestamp() > first_response_due_at OR first_responded_at > first_response_due_at))
                           OR (resolution_due_at IS NOT NULL AND (resolved_at IS NULL AND clock_timestamp() > resolution_due_at OR resolved_at > resolution_due_at))) AS sla_breach
-     FROM flowdesk.conversations
+     FROM wabrix.conversations
      WHERE organization_id = $1 AND (created_at >= $2 OR updated_at >= $2)
      GROUP BY 1`,
     [organizationId, startTime]
@@ -168,7 +168,7 @@ export async function aggregateHourlyMetricsForOrg(
   let upsertedCount = 0;
   for (const item of bucketMap.values()) {
     await db.query(
-      `INSERT INTO flowdesk.analytics_aggregates_hourly (
+      `INSERT INTO wabrix.analytics_aggregates_hourly (
         organization_id, bucket_start, inbound_count, outbound_count, bot_count, human_count,
         conversations_created, conversations_resolved, first_response_count, first_response_total_seconds,
         resolution_count, resolution_total_seconds, sla_met_count, sla_breach_count, updated_at
@@ -208,7 +208,7 @@ export async function aggregateHourlyMetricsForOrg(
   }
 
   await db.query(
-    `INSERT INTO flowdesk.analytics_watermarks (organization_id, last_aggregated_at, updated_at)
+    `INSERT INTO wabrix.analytics_watermarks (organization_id, last_aggregated_at, updated_at)
      VALUES ($1, date_trunc('hour', clock_timestamp()), clock_timestamp())
      ON CONFLICT (organization_id) DO UPDATE
        SET last_aggregated_at = date_trunc('hour', clock_timestamp()), updated_at = clock_timestamp()`,
@@ -251,7 +251,7 @@ export async function getAnalyticsOverview(
       COALESCE(SUM(resolution_total_seconds), 0) AS res_seconds,
       COALESCE(SUM(sla_met_count), 0) AS sla_met,
       COALESCE(SUM(sla_breach_count), 0) AS sla_breach
-     FROM flowdesk.analytics_aggregates_hourly
+     FROM wabrix.analytics_aggregates_hourly
      WHERE organization_id = $1 AND bucket_start >= clock_timestamp() - ($2 || ' days')::interval`,
     [organizationId, days]
   );
@@ -274,7 +274,7 @@ export async function getAnalyticsOverview(
         COUNT(*) FILTER (WHERE status = 'open') AS open,
         COUNT(*) FILTER (WHERE assigned_to_user_id IS NOT NULL OR team_id IS NOT NULL) AS assigned,
         COUNT(*) FILTER (WHERE status IN ('resolved', 'closed')) AS resolved
-       FROM flowdesk.conversations
+       FROM wabrix.conversations
        WHERE organization_id = $1 AND created_at >= clock_timestamp() - ($2 || ' days')::interval`,
       [organizationId, days]
     );
@@ -343,7 +343,7 @@ export async function getAnalyticsOverview(
                          AND (resolution_due_at IS NULL OR resolved_at <= resolution_due_at)) AS sla_met,
       COUNT(*) FILTER (WHERE (first_response_due_at IS NOT NULL AND (first_responded_at IS NULL AND clock_timestamp() > first_response_due_at OR first_responded_at > first_response_due_at))
                           OR (resolution_due_at IS NOT NULL AND (resolved_at IS NULL AND clock_timestamp() > resolution_due_at OR resolved_at > resolution_due_at))) AS sla_breach
-     FROM flowdesk.conversations
+     FROM wabrix.conversations
      WHERE organization_id = $1 AND created_at >= clock_timestamp() - ($2 || ' days')::interval`,
     [organizationId, days]
   );
@@ -361,7 +361,7 @@ export async function getAnalyticsOverview(
       COUNT(*) FILTER (WHERE direction = 'outbound') AS outbound,
       COUNT(*) FILTER (WHERE sender_type = 'bot') AS bot,
       COUNT(*) FILTER (WHERE sender_type IN ('agent', 'customer')) AS human
-     FROM flowdesk.messages
+     FROM wabrix.messages
      WHERE organization_id = $1 AND created_at >= clock_timestamp() - ($2 || ' days')::interval`,
     [organizationId, days]
   );
@@ -442,7 +442,7 @@ export async function getVolumeTimeSeries(
       SUM(inbound_count) AS inbound,
       SUM(outbound_count) AS outbound,
       SUM(bot_count) AS bot
-     FROM flowdesk.analytics_aggregates_hourly
+     FROM wabrix.analytics_aggregates_hourly
      WHERE organization_id = $1 AND bucket_start >= clock_timestamp() - ($2 || ' days')::interval
      GROUP BY 1
      ORDER BY 1 ASC`,
@@ -470,7 +470,7 @@ export async function getVolumeTimeSeries(
       COUNT(*) FILTER (WHERE direction = 'inbound') AS inbound,
       COUNT(*) FILTER (WHERE direction = 'outbound') AS outbound,
       COUNT(*) FILTER (WHERE sender_type = 'bot') AS bot
-     FROM flowdesk.messages
+     FROM wabrix.messages
      WHERE organization_id = $1 AND created_at >= clock_timestamp() - ($2 || ' days')::interval
      GROUP BY 1
      ORDER BY 1 ASC`,

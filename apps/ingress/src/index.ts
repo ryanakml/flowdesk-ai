@@ -1,5 +1,5 @@
-import { loadHttpConfig, loadWebhookConfig } from "@flowdesk/config";
-import { createLogger, initializeTelemetry } from "@flowdesk/observability";
+import { loadHttpConfig, loadWebhookConfig } from "@wabrix/config";
+import { createLogger, initializeTelemetry } from "@wabrix/observability";
 import { Pool } from "pg";
 import { createIngressApp } from "./app.js";
 

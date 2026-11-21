@@ -1,8 +1,8 @@
-# FlowDesk — Blueprint Eksekusi Teknis (Versi Indo)
+# Wabrix — Blueprint Eksekusi Teknis (Versi Indo)
 
 **Status:** rencana eksekusi resmi
 **Versi:** 1.0.0
-**Bergantung sama:** `FLOWDESK_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md`
+**Bergantung sama:** `WABRIX_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md`
 **Buat siapa:** product, design, engineering, QA, security, platform/SRE, support
 **Status project:** belum mulai development
 
@@ -16,7 +16,7 @@ Ada tiga level "sumber kebenaran":
 
 | Level                            | Dokumen/sistem                                                       | Jawab apa                                                                                 |
 | -------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Spesifikasi produk & engineering | `FLOWDESK_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md`                | FlowDesk itu apa, batasan arsitektur, kebijakan, standar kualitas.                        |
+| Spesifikasi produk & engineering | `WABRIX_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md`                | Wabrix itu apa, batasan arsitektur, kebijakan, standar kualitas.                        |
 | Blueprint eksekusi               | Dokumen ini                                                          | Apa yang harus dibangun berikutnya, urutan dependensinya, dan definisi "selesai" itu apa. |
 | Sistem delivery                  | GitHub Issues/Projects, PR, ADR, hasil CI, catatan deploy, dashboard | Status saat ini dan bukti objektif kalau satu fase udah kelar.                            |
 
@@ -507,13 +507,13 @@ Tenant beta yang terkontrol nyalain auto-send buat satu FAQ yang udah disetujui.
 
 ### Tujuan
 
-Bikin FlowDesk siap secara komersial: customer ngerti entitlement/usage mereka, admin bisa self-manage, developer bisa integrasi dengan aman, dan tim dapet analytics yang actionable.
+Bikin Wabrix siap secara komersial: customer ngerti entitlement/usage mereka, admin bisa self-manage, developer bisa integrasi dengan aman, dan tim dapet analytics yang actionable.
 
 ### Urutan kerja
 
 1. **Fondasi entitlement dan billing**
    - Tambahin katalog/version plan, entitlement, state subscription, ledger usage yang immutable, referensi invoice/provider, kebijakan grace/suspension, adjustment, dan job reconciliation.
-   - Adapter billing provider verifikasi signature webhook raw, simpan/dedup event sebelum di-project, dan jangan pernah bikin batas data kartu jadi bagian dari FlowDesk.
+   - Adapter billing provider verifikasi signature webhook raw, simpan/dedup event sebelum di-project, dan jangan pernah bikin batas data kartu jadi bagian dari Wabrix.
    - Batasin channel/seat/AI/retensi/limit API lewat satu entitlement service. Waktu billing provider lagi down, terapin perilaku grace yang terdokumentasi — bukan penolakan yang acak dan gak konsisten.
 2. **Self-service customer**
    - Sediain handoff billing portal, tampilan invoice/usage/plan, manajemen seat/tim/channel, lifecycle API-key (cuma prefix + hash), webhook integrasi yang scoped, verifikasi endpoint, delivery yang signed, retry/history/DLQ, dan audit trail.
@@ -540,7 +540,7 @@ Lifecycle billing sandbox ngubah entitlement persis sekali walau ada callback ya
 
 ### Tujuan
 
-Validasi FlowDesk sama design partner beneran dan lengkapin kontrol-kontrol yang dibutuhin biar bisa bikin janji enterprise yang kredibel.
+Validasi Wabrix sama design partner beneran dan lengkapin kontrol-kontrol yang dibutuhin biar bisa bikin janji enterprise yang kredibel.
 
 ### Urutan kerja
 
@@ -572,7 +572,7 @@ Validasi FlowDesk sama design partner beneran dan lengkapin kontrol-kontrol yang
 
 ### Tujuan
 
-Launch dengan hati-hati, operasi berbasis SLO/error budget, dan terus kembangin FlowDesk tanpa ngerusak kontrol fondasi yang udah dibangun.
+Launch dengan hati-hati, operasi berbasis SLO/error budget, dan terus kembangin Wabrix tanpa ngerusak kontrol fondasi yang udah dibangun.
 
 ### Urutan launch
 
@@ -705,4 +705,4 @@ Ini antrean pertama yang bisa langsung dikerjain setelah blueprint ini disetujui
 
 ### Langkah selanjutnya yang persis
 
-Mulai dari **item 1 M0** dan bikin hierarki issue buat M0 di waktu yang sama. Begitu M0 udah hijau semua, jangan langsung loncat ke AI atau UI inbox: mulai M1 dari fondasi database tenant/RLS. Urutan ini nyegah rework paling mahal yang mungkin kejadian di FlowDesk — yaitu balik lagi masangin tenant isolation, auditability, dan disiplin delivery setelah data messaging beneran udah ada.
+Mulai dari **item 1 M0** dan bikin hierarki issue buat M0 di waktu yang sama. Begitu M0 udah hijau semua, jangan langsung loncat ke AI atau UI inbox: mulai M1 dari fondasi database tenant/RLS. Urutan ini nyegah rework paling mahal yang mungkin kejadian di Wabrix — yaitu balik lagi masangin tenant isolation, auditability, dan disiplin delivery setelah data messaging beneran udah ada.

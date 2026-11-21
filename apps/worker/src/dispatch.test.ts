@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient, ClaimedOutboxEvent } from "@flowdesk/db";
+import type { DbClient, ClaimedOutboxEvent } from "@wabrix/db";
 import {
   FakeWhatsAppProvider,
   InMemoryObjectStore,
   WhatsAppProviderError
-} from "@flowdesk/providers";
+} from "@wabrix/providers";
 import {
   dispatchOutboundMessage,
   processOutboxOutboundBatch,
@@ -16,7 +16,7 @@ import {
   encryptWhatsAppChannelCredentials,
   WhatsAppCredentialError,
   type WhatsAppCredentialErrorCode
-} from "@flowdesk/security";
+} from "@wabrix/security";
 
 const orgId = "00000000-0000-7000-8000-000000000001";
 const channelId = "00000000-0000-7000-8000-000000000002";
@@ -151,7 +151,7 @@ function createDispatchMockDb() {
       }
 
       // Get channel by ID
-      if (sql.includes("FROM flowdesk.channels WHERE id = $1")) {
+      if (sql.includes("FROM wabrix.channels WHERE id = $1")) {
         const id = values[0] as string;
         const targetOrg = values[1] as string | undefined;
         const ch = channels.get(id);
@@ -162,7 +162,7 @@ function createDispatchMockDb() {
       }
 
       // Get channel by phone number ID (for webhook normalization)
-      if (sql.includes("FROM flowdesk.channels WHERE phone_number_id = $1")) {
+      if (sql.includes("FROM wabrix.channels WHERE phone_number_id = $1")) {
         const phoneId = values[0] as string;
         for (const ch of channels.values()) {
           if (ch.phone_number_id === phoneId) {
@@ -173,7 +173,7 @@ function createDispatchMockDb() {
       }
 
       // Get message by ID
-      if (sql.includes("FROM flowdesk.attachments")) {
+      if (sql.includes("FROM wabrix.attachments")) {
         const attachment = attachments.get(values[1] as string);
         return {
           rows: attachment ? [attachment] : [],
@@ -185,8 +185,8 @@ function createDispatchMockDb() {
       }
 
       if (
-        sql.includes("FROM flowdesk.messages WHERE id = $1 AND organization_id = $2") ||
-        sql.includes("FROM flowdesk.messages WHERE organization_id = $1 AND id = $2")
+        sql.includes("FROM wabrix.messages WHERE id = $1 AND organization_id = $2") ||
+        sql.includes("FROM wabrix.messages WHERE organization_id = $1 AND id = $2")
       ) {
         const [p1, p2] = values as [string, string];
         const msgId = sql.startsWith("SELECT") && sql.includes("WHERE id = $1") ? p1 : p2;
@@ -199,9 +199,7 @@ function createDispatchMockDb() {
 
       // Find message by provider_message_id (for status reconciliation)
       if (
-        sql.includes(
-          "FROM flowdesk.messages WHERE organization_id = $1 AND provider_message_id = $2"
-        )
+        sql.includes("FROM wabrix.messages WHERE organization_id = $1 AND provider_message_id = $2")
       ) {
         const [targetOrg, targetProviderId] = values as [string, string];
         for (const m of messages.values()) {
@@ -213,7 +211,7 @@ function createDispatchMockDb() {
       }
 
       // Update message status
-      if (sql.includes("UPDATE flowdesk.messages SET status = $1")) {
+      if (sql.includes("UPDATE wabrix.messages SET status = $1")) {
         const targetStatus = values[0] as string;
         const msgId = values[1] as string;
         const providerMessageId = (values[2] as string | null) ?? null;
@@ -240,7 +238,7 @@ function createDispatchMockDb() {
       // Claim unpublished outbox events
       if (
         sql.includes("claim_outbox_events('message.outbound.created'") ||
-        (sql.includes("FROM flowdesk.outbox_events") &&
+        (sql.includes("FROM wabrix.outbox_events") &&
           sql.includes("event_type = 'message.outbound.created'") &&
           sql.includes("published_at IS NULL"))
       ) {
@@ -259,7 +257,7 @@ function createDispatchMockDb() {
       }
 
       // Mark outbox published
-      if (sql.includes("UPDATE flowdesk.outbox_events SET published_at = clock_timestamp()")) {
+      if (sql.includes("UPDATE wabrix.outbox_events SET published_at = clock_timestamp()")) {
         const id = values[0] as string;
         const ev = outboxEvents.get(id);
         if (ev) {
@@ -270,7 +268,7 @@ function createDispatchMockDb() {
       }
 
       // Record outbox failure
-      if (sql.includes("UPDATE flowdesk.outbox_events SET attempts = attempts + 1")) {
+      if (sql.includes("UPDATE wabrix.outbox_events SET attempts = attempts + 1")) {
         const id = values[0] as string;
         const err = values[1] as string;
         const isTerminal = values[2] as boolean;
@@ -288,7 +286,7 @@ function createDispatchMockDb() {
       }
 
       // WhatsApp Template lookup
-      if (sql.includes("FROM flowdesk.whatsapp_templates t")) {
+      if (sql.includes("FROM wabrix.whatsapp_templates t")) {
         const [chId, tName, tLang] = values as [string, string, string];
         const key = `${chId}:${tName}:${tLang}`;
         const match = templates.get(key);
@@ -347,7 +345,7 @@ describe("Outbound Dispatch Worker (M2-08)", () => {
       senderType: "agent",
       senderUserId: "user-123",
       providerMessageId: null,
-      content: "Hello from FlowDesk agent!",
+      content: "Hello from Wabrix agent!",
       status: "queued",
       errorDetail: null,
       sentAt: null,
@@ -369,7 +367,7 @@ describe("Outbound Dispatch Worker (M2-08)", () => {
         conversationId: convId,
         channelId,
         customerPhone: "6281234567890",
-        content: "Hello from FlowDesk agent!"
+        content: "Hello from Wabrix agent!"
       },
       correlation_id: null,
       causation_id: null,

@@ -10,25 +10,21 @@ import {
   runInTenantTransaction,
   searchDocumentChunks,
   type DbClient
-} from "@flowdesk/db";
+} from "@wabrix/db";
 import {
   assemblePromptContext,
   buildCitations,
   formatKnowledgeContext,
   type ConversationMessageContext
-} from "@flowdesk/domain";
-import {
-  AiProviderError,
-  type AiChatProvider,
-  type AiEmbeddingProvider
-} from "@flowdesk/providers";
+} from "@wabrix/domain";
+import { AiProviderError, type AiChatProvider, type AiEmbeddingProvider } from "@wabrix/providers";
 import {
   checkPromptInjection,
   checkTokenBudget,
   LlmCircuitBreaker,
   redactPiiFromPrompt
-} from "@flowdesk/security";
-import { recordAiDraftRun } from "@flowdesk/observability";
+} from "@wabrix/security";
+import { recordAiDraftRun } from "@wabrix/observability";
 import { processCompletedAutoRun } from "./auto-send.js";
 import type { QueryEmbeddingCache } from "./query-embedding-cache.js";
 

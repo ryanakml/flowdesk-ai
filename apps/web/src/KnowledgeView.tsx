@@ -3,7 +3,7 @@ import type {
   KnowledgeSourceResponse,
   AutomationPolicyResponse,
   SimulatePolicyResponse
-} from "@flowdesk/contracts";
+} from "@wabrix/contracts";
 import { Brain, Plus, Sliders, Play } from "lucide-react";
 import {
   Badge,
@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
   Textarea
-} from "@flowdesk/ui";
+} from "@wabrix/ui";
 import { createKnowledgeSourceApi, listKnowledgeSourcesApi } from "./api.js";
 import {
   fetchAutomationPolicies,

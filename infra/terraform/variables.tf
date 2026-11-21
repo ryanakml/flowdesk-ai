@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Stable project identifier used for resource naming."
   type        = string
-  default     = "flowdesk"
+  default     = "wabrix"
 }
 
 variable "environment" {

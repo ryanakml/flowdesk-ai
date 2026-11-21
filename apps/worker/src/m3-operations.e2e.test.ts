@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient, AttachmentRecord } from "@flowdesk/db";
+import type { DbClient, AttachmentRecord } from "@wabrix/db";
 import {
   isWithinServiceWindow,
   renderTemplateText,
   validateMediaAttachment,
   ALLOWED_MIME_TYPES,
   getMediaSizeLimit
-} from "@flowdesk/domain";
-import { FakeWhatsAppProvider, InMemoryObjectStore, FakeMalwareScanner } from "@flowdesk/providers";
+} from "@wabrix/domain";
+import { FakeWhatsAppProvider, InMemoryObjectStore, FakeMalwareScanner } from "@wabrix/providers";
 import { scanQuarantinedAttachment } from "./media-scanner.js";
 import { runRetentionJob } from "./media-retention.js";
 
@@ -173,7 +173,7 @@ describe("Milestone 3 End-to-End Operational Workflow (M3-09)", () => {
     const mockDbClient = {
       async query(sql: string, values: unknown[] = []) {
         await Promise.resolve();
-        if (sql.includes("FROM flowdesk.attachments") && sql.includes("deleted_at IS NULL")) {
+        if (sql.includes("FROM wabrix.attachments") && sql.includes("deleted_at IS NULL")) {
           const id = String(values[1]);
           const rec = attachmentsDb.get(id);
           if (rec && rec.deletedAt === null) {
@@ -218,10 +218,10 @@ describe("Milestone 3 End-to-End Operational Workflow (M3-09)", () => {
             };
           }
         }
-        if (sql.includes("UPDATE flowdesk.outbox_events")) {
+        if (sql.includes("UPDATE wabrix.outbox_events")) {
           return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
         }
-        if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
+        if (sql.includes("INSERT INTO wabrix.outbox_events")) {
           return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
         }
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
@@ -264,7 +264,7 @@ describe("Milestone 3 End-to-End Operational Workflow (M3-09)", () => {
     const mockRetentionDb = {
       async query(sql: string) {
         await Promise.resolve();
-        if (sql.includes("FROM flowdesk.attachments") && sql.includes("deleted_at IS NULL")) {
+        if (sql.includes("FROM wabrix.attachments") && sql.includes("deleted_at IS NULL")) {
           return {
             rows: [
               {
@@ -295,7 +295,7 @@ describe("Milestone 3 End-to-End Operational Workflow (M3-09)", () => {
             };
           }
         }
-        if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
+        if (sql.includes("INSERT INTO wabrix.outbox_events")) {
           return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
         }
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };

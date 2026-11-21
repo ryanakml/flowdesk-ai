@@ -27,7 +27,7 @@ export class MockIdentityProvider implements IdentityProvider {
     if (!input.code || input.code === "invalid-code") {
       throw new Error("Invalid or rejected authorization code");
     }
-    const email = input.code.startsWith("user:") ? input.code.slice(5) : "operator@flowdesk.dev";
+    const email = input.code.startsWith("user:") ? input.code.slice(5) : "operator@wabrix.dev";
     const namePart = email.split("@")[0] ?? "Operator";
     const displayName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
     return {

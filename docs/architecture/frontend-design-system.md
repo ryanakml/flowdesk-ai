@@ -1,7 +1,7 @@
-# FlowDesk Frontend Design System Specification
+# Wabrix Frontend Design System Specification
 
 > **Milestone**: M6.5 — Frontend Architecture & Product UI Redesign  
-> **Package**: `@flowdesk/ui`  
+> **Package**: `@wabrix/ui`  
 > **Status**: Authoritative Architectural Standard  
 > **Target Stack**: React 19 + Tailwind CSS v4 + Radix UI Primitives + CVA + Lucide Icons  
 > **Aesthetic Philosophy**: Linear × Attio × Intercom × Modern shadcn
@@ -10,7 +10,7 @@
 
 ## 1. Design Principles & Aesthetic Philosophy
 
-FlowDesk's design system establishes a high-density, restrained operational cockpit for customer operations, WhatsApp automations, and developer tooling:
+Wabrix's design system establishes a high-density, restrained operational cockpit for customer operations, WhatsApp automations, and developer tooling:
 
 1. **Restrained Enterprise Neutrality**:
    - Eliminates heavy prototype glassmorphism (`--shadow-glass`, blur filters), dark radial glows, and high-saturation neon accents.
@@ -28,11 +28,11 @@ FlowDesk's design system establishes a high-density, restrained operational cock
 
 To maintain clean separation of concerns and avoid competing UI directories across the monorepo, strict ownership rules are enforced:
 
-| Layer                        | Location                                     | Purpose & Dependencies                                                                                                                                                 |
-| :--------------------------- | :------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Universal Primitives**     | `packages/ui`                                | 100% domain-neutral presentation components (Button, Dialog, Card, Input, etc.). **Zero dependencies** on FlowDesk business logic, API clients, or database contracts. |
-| **Application Composite UI** | `apps/web/src/components`                    | App-wide cross-cutting layouts and composites (Theme toggles, navigation shells, toast providers).                                                                     |
-| **Feature / Domain UI**      | `apps/web/src/features/<feature>/components` | Domain-specific surfaces (e.g. `AiDraftCard`, `ConversationTimeline`, `WebhookDeliveryDrawer`, `ChannelConfigSheet`).                                                  |
+| Layer                        | Location                                     | Purpose & Dependencies                                                                                                                                               |
+| :--------------------------- | :------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Universal Primitives**     | `packages/ui`                                | 100% domain-neutral presentation components (Button, Dialog, Card, Input, etc.). **Zero dependencies** on Wabrix business logic, API clients, or database contracts. |
+| **Application Composite UI** | `apps/web/src/components`                    | App-wide cross-cutting layouts and composites (Theme toggles, navigation shells, toast providers).                                                                   |
+| **Feature / Domain UI**      | `apps/web/src/features/<feature>/components` | Domain-specific surfaces (e.g. `AiDraftCard`, `ConversationTimeline`, `WebhookDeliveryDrawer`, `ChannelConfigSheet`).                                                |
 
 > **Strict Rule**: Do NOT create competing `apps/web/src/components/ui/*` directories. All shadcn-style primitives must live in `packages/ui`.
 
@@ -105,10 +105,10 @@ All 17 required universal primitives are implemented in `packages/ui`:
 
 ## 5. Backwards Compatibility: `StatusBadge`
 
-The legacy export `StatusBadge` in `@flowdesk/ui` is preserved with 100% API compatibility:
+The legacy export `StatusBadge` in `@wabrix/ui` is preserved with 100% API compatibility:
 
 ```tsx
-import { StatusBadge } from "@flowdesk/ui";
+import { StatusBadge } from "@wabrix/ui";
 
 // Works identically to pre-redesign callers:
 <StatusBadge healthy={true}>Operational</StatusBadge>
@@ -121,7 +121,7 @@ Internally, `StatusBadge` delegates to the modernized `Badge` with semantic `var
 
 ## 6. Icon Conventions (`lucide-react`)
 
-`lucide-react` is established as the sole authoritative icon system across FlowDesk:
+`lucide-react` is established as the sole authoritative icon system across Wabrix:
 
 - **Consistent Sizing**:
   - `size-4` (16px) for inline button icons and badges.
@@ -160,7 +160,7 @@ Captured visual evidence:
 
 ## 9. Accessibility Verification & Evidence
 
-FlowDesk primitives are engineered with an accessibility-first posture, with evidence scoped accurately:
+Wabrix primitives are engineered with an accessibility-first posture, with evidence scoped accurately:
 
 - **Automated Fixture Scan**: The automated test suite (`packages/ui/src/index.test.tsx`) runs `axe-core` against a representative interactive fixture (containing Card, Label, Input, Switch, Checkbox, Tabs, and Button). The fixture has **zero serious or critical automated violations**.
 - **Contrast Verification (Deterministic Calculation)**:
@@ -179,15 +179,15 @@ FlowDesk primitives are engineered with an accessibility-first posture, with evi
 
 ## 10. How to Add a New Shared Primitive
 
-1. Verify that the candidate primitive is **strictly domain-neutral** (no WhatsApp, billing, or FlowDesk entity logic).
-2. Install the underlying Radix UI primitive in `packages/ui` if applicable (`pnpm add @radix-ui/react-<primitive> --filter @flowdesk/ui`).
+1. Verify that the candidate primitive is **strictly domain-neutral** (no WhatsApp, billing, or Wabrix entity logic).
+2. Install the underlying Radix UI primitive in `packages/ui` if applicable (`pnpm add @radix-ui/react-<primitive> --filter @wabrix/ui`).
 3. Author the component in `packages/ui/src/components/<name>.tsx` using CVA and `cn()`.
 4. Export the component from `packages/ui/src/index.tsx`.
 5. Add unit and accessibility tests in `packages/ui/src/index.test.tsx` verifying render, interaction, and automated `axe-core` clean status.
-6. Verify monorepo build and linting: `pnpm --filter @flowdesk/ui test && pnpm --filter @flowdesk/ui build`.
+6. Verify monorepo build and linting: `pnpm --filter @wabrix/ui test && pnpm --filter @wabrix/ui build`.
 
 ### What NOT to Put in `packages/ui`
 
 - Do NOT put business logic, API calls (`api.ts`), or React Query hooks in `packages/ui`.
-- Do NOT put FlowDesk domain models (Conversations, Messages, AuditLogs, Policies) in `packages/ui`.
+- Do NOT put Wabrix domain models (Conversations, Messages, AuditLogs, Policies) in `packages/ui`.
 - Do NOT put page layouts or routing components in `packages/ui`.

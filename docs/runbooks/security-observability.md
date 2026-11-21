@@ -2,11 +2,11 @@
 
 ## Overview
 
-FlowDesk implements defense-in-depth security controls and real-time operational telemetry across all service boundaries.
+Wabrix implements defense-in-depth security controls and real-time operational telemetry across all service boundaries.
 
 ## 1. HTTP Security Headers
 
-All HTTP responses from the FlowDesk API and web application shell are automatically decorated with standardized security headers:
+All HTTP responses from the Wabrix API and web application shell are automatically decorated with standardized security headers:
 
 - `Content-Security-Policy`: Restricts resource loading to trusted origins, prevents clickjacking (`frame-ancestors 'none'`), disables legacy plugins (`object-src 'none'`), and sets secure base URI.
 - `X-Content-Type-Options: nosniff`: Prevents MIME-sniffing attacks.
@@ -19,7 +19,7 @@ All HTTP responses from the FlowDesk API and web application shell are automatic
 
 ## 2. Rate Limiting
 
-FlowDesk implements in-memory sliding window rate limiters to protect public and authenticated endpoints against brute-force, credential stuffing, and denial-of-service attempts.
+Wabrix implements in-memory sliding window rate limiters to protect public and authenticated endpoints against brute-force, credential stuffing, and denial-of-service attempts.
 
 - **Authentication Endpoints (`/api/v1/auth/*`)**:
   - Quota: 20 requests per 60-second window.
@@ -43,7 +43,7 @@ To prevent sensitive information leakage into log aggregators, telemetry pipelin
 - **Identity Fields**:
   - Email addresses in logs/telemetry are partially masked (e.g. `a***e@example.com`) preserving domain for debugging while redacting user handle.
 - **Audit Metadata**:
-  - Sensitive metadata in `flowdesk.audit_logs` is recursively sanitized before database persistence.
+  - Sensitive metadata in `wabrix.audit_logs` is recursively sanitized before database persistence.
 
 ## 4. Operational Telemetry & Metrics
 

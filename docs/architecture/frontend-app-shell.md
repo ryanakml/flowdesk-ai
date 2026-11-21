@@ -21,7 +21,7 @@ Each navigation item can optionally specify a required RBAC permission key (e.g.
 ## Component Ownership
 
 - **Layout Structure**: `AppShell.tsx`, `AppSidebar.tsx`, `Header.tsx`, `OrgSwitcher.tsx`, `UserNav.tsx`, `CommandMenu.tsx` (all housed in `apps/web/src/components/layout/`).
-- **Primitives**: `@flowdesk/ui` (`Command`, `Dialog`, `Sheet`, `DropdownMenu`, `Avatar`, `Button`, `Badge`).
+- **Primitives**: `@wabrix/ui` (`Command`, `Dialog`, `Sheet`, `DropdownMenu`, `Avatar`, `Button`, `Badge`).
 - **Routing**: `apps/web/src/routes/__root.tsx` is responsible for evaluating the authentication state and wrapping the application in the `AppShell` if the user is signed in.
 
 ## Workspace / Org Switcher
@@ -34,7 +34,7 @@ The `CommandMenu` provides rapid keyboard-driven navigation (`Cmd+K` or `Ctrl+K`
 
 ## Theme Persistence
 
-The application supports system, light, and dark modes. Theme preference is managed by `ThemeProvider` and persisted in `localStorage` under the `flowdesk-theme` key. Toggling the theme immediately updates the UI without a flash of unstyled content.
+The application supports system, light, and dark modes. Theme preference is managed by `ThemeProvider` and persisted in `localStorage` under the `wabrix-theme` key. Toggling the theme immediately updates the UI without a flash of unstyled content.
 
 ## Rollback
 

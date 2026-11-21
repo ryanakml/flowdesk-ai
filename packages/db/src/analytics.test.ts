@@ -11,7 +11,7 @@ describe("Database Analytics Module (M6-03)", () => {
       async query(sql: string) {
         await Promise.resolve();
         queries.push(sql);
-        if (sql.includes("flowdesk.conversations")) {
+        if (sql.includes("wabrix.conversations")) {
           return {
             rows: [{ total: "50", open: "10", assigned: "30", resolved: "40" }],
             rowCount: 1,
@@ -20,7 +20,7 @@ describe("Database Analytics Module (M6-03)", () => {
             fields: []
           };
         }
-        if (sql.includes("flowdesk.messages")) {
+        if (sql.includes("wabrix.messages")) {
           return {
             rows: [{ total: "200", inbound: "100", outbound: "100", bot: "150", human: "50" }],
             rowCount: 1,
@@ -39,7 +39,7 @@ describe("Database Analytics Module (M6-03)", () => {
     expect(metrics.resolvedConversations).toBe(40);
     expect(metrics.totalMessages).toBe(200);
     expect(metrics.botMessages).toBe(150);
-    const convQuery = queries.find((q) => q.includes("flowdesk.conversations"));
+    const convQuery = queries.find((q) => q.includes("wabrix.conversations"));
     expect(convQuery).toBeDefined();
     expect(convQuery).toContain("assigned_to_user_id IS NOT NULL");
     expect(convQuery).toContain("team_id IS NOT NULL");

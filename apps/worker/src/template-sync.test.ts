@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { FakeWhatsAppProvider, WhatsAppProviderError } from "@flowdesk/providers";
-import type { DbClient } from "@flowdesk/db";
+import { FakeWhatsAppProvider, WhatsAppProviderError } from "@wabrix/providers";
+import type { DbClient } from "@wabrix/db";
 import { syncWhatsAppTemplates } from "./template-sync.js";
 
 function createMockDb(): DbClient {
@@ -23,7 +23,7 @@ function createMockDb(): DbClient {
       await Promise.resolve();
       const sql = queryText.replace(/\s+/g, " ").trim();
 
-      if (sql.includes("INSERT INTO flowdesk.whatsapp_templates")) {
+      if (sql.includes("INSERT INTO wabrix.whatsapp_templates")) {
         const [, chanId, name, category] = values as [string, string, string, string];
         const key = `${chanId}:${name}`;
         let tpl = templates.get(key);
@@ -50,7 +50,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("FROM flowdesk.whatsapp_template_versions") && sql.includes("FOR UPDATE")) {
+      if (sql.includes("FROM wabrix.whatsapp_template_versions") && sql.includes("FOR UPDATE")) {
         const [templateId, language] = values as [string, string];
         const key = `${templateId}:${language}`;
         const ver = versions.get(key);
@@ -63,7 +63,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("UPDATE flowdesk.whatsapp_template_versions")) {
+      if (sql.includes("UPDATE wabrix.whatsapp_template_versions")) {
         const [provId, status, rejReason, comps, varCount, hash, verNum, vId] = values as [
           string,
           string,
@@ -107,7 +107,7 @@ function createMockDb(): DbClient {
         }
       }
 
-      if (sql.includes("INSERT INTO flowdesk.whatsapp_template_versions")) {
+      if (sql.includes("INSERT INTO wabrix.whatsapp_template_versions")) {
         const [templateId, orgId, provId, language, status, rejReason, comps, varCount, hash] =
           values as [string, string, string, string, string, string | null, string, number, string];
         const newVer = {
@@ -143,11 +143,11 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO flowdesk.whatsapp_template_status_history")) {
+      if (sql.includes("INSERT INTO wabrix.whatsapp_template_status_history")) {
         return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("SELECT cursor FROM flowdesk.whatsapp_template_sync_cursors")) {
+      if (sql.includes("SELECT cursor FROM wabrix.whatsapp_template_sync_cursors")) {
         const [chanId] = values as [string];
         const cursor = cursors.get(chanId) ?? null;
         return {
@@ -159,7 +159,7 @@ function createMockDb(): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO flowdesk.whatsapp_template_sync_cursors")) {
+      if (sql.includes("INSERT INTO wabrix.whatsapp_template_sync_cursors")) {
         const [, chanId, cursor] = values as [string, string, string | null];
         cursors.set(chanId, cursor);
         return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };

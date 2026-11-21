@@ -1,15 +1,15 @@
-# FlowDesk Frontend Redesign Baseline, Inventory & Migration Contract
+# Wabrix Frontend Redesign Baseline, Inventory & Migration Contract
 
 > **Milestone**: M6.5 — Frontend Architecture & Product UI Redesign  
 > **Status**: Authoritative Reference Specification  
-> **Target Stack**: Vite + React 19 + Tailwind CSS v4 + `@flowdesk/ui` + TanStack Router + TanStack Query + TanStack Table  
+> **Target Stack**: Vite + React 19 + Tailwind CSS v4 + `@wabrix/ui` + TanStack Router + TanStack Query + TanStack Table  
 > **Aesthetic Philosophy**: Linear × Attio × Intercom × modern shadcn
 
 ---
 
 ## 1. Executive Summary & Migration Contract
 
-FlowDesk functional engineering through Milestones M0–M6 is complete and staging-accepted (encompassing scoped external API keys, HMAC-signed outbound webhooks, tenant-isolated analytics rollups, 30-day CSV compliance export with audit tracking, WhatsApp BYO/embedded onboarding, multi-tenant RBAC, and AI drafting).
+Wabrix functional engineering through Milestones M0–M6 is complete and staging-accepted (encompassing scoped external API keys, HMAC-signed outbound webhooks, tenant-isolated analytics rollups, 30-day CSV compliance export with audit tracking, WhatsApp BYO/embedded onboarding, multi-tenant RBAC, and AI drafting).
 
 However, the existing user interface in `apps/web` retains prototype architectural characteristics:
 
@@ -35,7 +35,7 @@ This baseline document defines what **cannot change** during Milestone M6.5:
 ## 2. Monorepo & Frontend Architecture Overview
 
 ```
-flowdesk/
+wabrix/
 ├── apps/
 │   ├── api/             # Express 5 REST API & contracts (^5.1.0)
 │   ├── web/             # React 19 + Vite SPA (Primary redesign target)
@@ -65,7 +65,7 @@ flowdesk/
 
 ## 3. Exhaustive Surface & View Inventory
 
-FlowDesk currently exposes **8 primary functional surfaces**, plus an unauthenticated/loading state and a 0-organization onboarding view.
+Wabrix currently exposes **8 primary functional surfaces**, plus an unauthenticated/loading state and a 0-organization onboarding view.
 
 ### Surface 1: Conversations / WhatsApp Operator Inbox (`InboxView.tsx`)
 
@@ -187,7 +187,7 @@ FlowDesk currently exposes **8 primary functional surfaces**, plus an unauthenti
   - `GET /api/v1/organizations/:orgId/developer/webhooks/:id/deliveries` (`listWebhookDeliveriesApi`)
 - **Permissions Gated**: `automation:publish` (required for creating/revoking keys and configuring webhooks).
 - **Canonical API Key Scopes**: Strictly `conversation:read` and `message:write`.
-- **Developer Webhook Headers**: `X-FlowDesk-Signature`, `X-FlowDesk-Event-Id`, `X-FlowDesk-Timestamp`.
+- **Developer Webhook Headers**: `X-Wabrix-Signature`, `X-Wabrix-Event-Id`, `X-Wabrix-Timestamp`.
 - **Known Defect #213**: Revoking a key succeeds on the backend but the row fails to immediately reflect `REVOKED` without a full reload. (Assigned to M6.5 and resolved in UI-07).
 - **Non-Existent / Unsupported**: Non-canonical scopes (`conversation:write`, `webhook:manage`), delivery latency metrics.
 
@@ -298,7 +298,7 @@ This matrix documents all 56 API client helper functions across `apps/web/src/ap
 
 ## 5. Realtime Transport & Projection Synchronization
 
-FlowDesk's realtime layer in `apps/web/src/realtime.ts` does **not** emit arbitrary entity-level events (e.g. `message:created` or `conversation:updated`). Instead, it implements a **versioned projection hint synchronization protocol** over Socket.IO:
+Wabrix's realtime layer in `apps/web/src/realtime.ts` does **not** emit arbitrary entity-level events (e.g. `message:created` or `conversation:updated`). Instead, it implements a **versioned projection hint synchronization protocol** over Socket.IO:
 
 ### Current Authoritative Implementation (`realtime.ts`)
 
@@ -406,7 +406,7 @@ The current frontend styling is defined entirely in `apps/web/src/styles.css` (1
 - **Borders & Glass**: `--color-border: rgba(255, 255, 255, 0.08)`, `--shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37)`, `--backdrop-blur: blur(16px)`.
 - **Radii**: `--radius-sm: 6px`, `--radius-md: 10px`, `--radius-lg: 16px`.
 
-### Target Semantic Tokens (Tailwind CSS v4 / `@flowdesk/ui`)
+### Target Semantic Tokens (Tailwind CSS v4 / `@wabrix/ui`)
 
 The redesign transforms these custom tokens into standard semantic CSS variables:
 
@@ -499,7 +499,7 @@ The existing codebase includes automated accessibility suites executed with `axe
 
 ### Baseline Test Execution Results (Pre-Redesign)
 
-- **`@flowdesk/web` Test Suite**:
+- **`@wabrix/web` Test Suite**:
   - `src/InboxView.test.tsx` (17 tests passed)
   - `src/InboxView.browser.test.tsx` (4 tests passed)
   - `src/AnalyticsView.test.tsx` (3 tests passed)
@@ -511,7 +511,7 @@ The existing codebase includes automated accessibility suites executed with `axe
   - `src/api.test.ts` (20 tests passed)
   - `src/realtime.test.tsx` (8 tests passed)
   - **Total**: **10 test files, 67 tests passing (0 failures)**.
-- **`@flowdesk/ui` Test Suite**:
+- **`@wabrix/ui` Test Suite**:
   - `src/index.test.tsx` (1 test passed)
 - **Code Quality Checks**:
   - `pnpm lint` (ESLint 9 passing 100%)
@@ -545,7 +545,7 @@ No existing behavioral test may be deleted during the redesign. Tests targeting 
 
 ### The Immutable Donor Rule
 
-FlowDesk's domain types, API contracts, PostgreSQL models, RBAC rules, and Socket.IO projection protocols remain authoritative. Code donors provide UI composition and component patterns only.
+Wabrix's domain types, API contracts, PostgreSQL models, RBAC rules, and Socket.IO projection protocols remain authoritative. Code donors provide UI composition and component patterns only.
 
 ---
 

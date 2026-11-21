@@ -302,10 +302,10 @@ export {
 export const DATABASE_PACKAGE_STATE = "m1-foundation-ready" as const;
 
 export const DATABASE_ROLE_NAMES = {
-  migrator: "flowdesk_migrator",
-  runtime: "flowdesk_runtime",
-  reporting: "flowdesk_reporting",
-  breakGlass: "flowdesk_break_glass"
+  migrator: "wabrix_migrator",
+  runtime: "wabrix_runtime",
+  reporting: "wabrix_reporting",
+  breakGlass: "wabrix_break_glass"
 } as const;
 
 export function createDatabaseId(): string {

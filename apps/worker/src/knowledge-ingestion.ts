@@ -9,14 +9,14 @@ import {
   updateKnowledgeIngestionJob,
   updateKnowledgeSourceStatus,
   type DbClient
-} from "@flowdesk/db";
+} from "@wabrix/db";
 import {
   AiProviderError,
   chunkText,
   extractKnowledgeContent,
   type AiEmbeddingProvider
-} from "@flowdesk/providers";
-import { fetchWithAntiSsrf, SsrfProtectionError } from "@flowdesk/security";
+} from "@wabrix/providers";
+import { fetchWithAntiSsrf, SsrfProtectionError } from "@wabrix/security";
 
 const ALLOWED_CONTENT_TYPES = new Set([
   "text/plain",

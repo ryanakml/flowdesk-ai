@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { WhatsAppTemplateComponent } from "@flowdesk/contracts";
+import type { WhatsAppTemplateComponent } from "@wabrix/contracts";
 import type { DbClient } from "./index.js";
 import {
   idempotentSyncTemplate,
@@ -63,7 +63,7 @@ function createMockDb(): {
       const sql = queryText.replace(/\s+/g, " ").trim();
 
       // 1. Insert/Upsert whatsapp_templates
-      if (sql.includes("INSERT INTO flowdesk.whatsapp_templates")) {
+      if (sql.includes("INSERT INTO wabrix.whatsapp_templates")) {
         const [orgId, chanId, name, category] = values as [string, string, string, string];
         let tpl = templates.find((t) => t.channel_id === chanId && t.name === name);
         if (!tpl) {
@@ -85,7 +85,7 @@ function createMockDb(): {
       }
 
       // 2. Select existing version FOR UPDATE
-      if (sql.includes("FROM flowdesk.whatsapp_template_versions") && sql.includes("FOR UPDATE")) {
+      if (sql.includes("FROM wabrix.whatsapp_template_versions") && sql.includes("FOR UPDATE")) {
         const [templateId, language] = values as [string, string];
         const v = versions.find(
           (ver) => ver.template_id === templateId && ver.language === language
@@ -94,7 +94,7 @@ function createMockDb(): {
       }
 
       // 3. Update existing version
-      if (sql.includes("UPDATE flowdesk.whatsapp_template_versions")) {
+      if (sql.includes("UPDATE wabrix.whatsapp_template_versions")) {
         const [providerTplId, status, rejectedReason, compJson, varCount, hash, verNum, vId] =
           values as [string, string, string | null, string, number, string, number, string];
         const v = versions.find((ver) => ver.id === vId);
@@ -112,7 +112,7 @@ function createMockDb(): {
       }
 
       // 4. Insert new version
-      if (sql.includes("INSERT INTO flowdesk.whatsapp_template_versions")) {
+      if (sql.includes("INSERT INTO wabrix.whatsapp_template_versions")) {
         const [
           templateId,
           orgId,
@@ -155,7 +155,7 @@ function createMockDb(): {
       }
 
       // 5. Insert status history
-      if (sql.includes("INSERT INTO flowdesk.whatsapp_template_status_history")) {
+      if (sql.includes("INSERT INTO wabrix.whatsapp_template_status_history")) {
         const [versionId, orgId, fromStatus, toStatus, reason] = values as [
           string,
           string,
@@ -178,8 +178,8 @@ function createMockDb(): {
 
       // 6. Select template by name and language
       if (
-        sql.includes("FROM flowdesk.whatsapp_templates t") &&
-        sql.includes("JOIN flowdesk.whatsapp_template_versions v")
+        sql.includes("FROM wabrix.whatsapp_templates t") &&
+        sql.includes("JOIN wabrix.whatsapp_template_versions v")
       ) {
         const [chanId, name, language] = values as [string, string, string];
         const tpl = templates.find((t) => t.channel_id === chanId && t.name === name);
@@ -219,7 +219,7 @@ function createMockDb(): {
       }
 
       // 7. Cursors
-      if (sql.includes("SELECT cursor FROM flowdesk.whatsapp_template_sync_cursors")) {
+      if (sql.includes("SELECT cursor FROM wabrix.whatsapp_template_sync_cursors")) {
         const [chanId] = values as [string];
         const cursor = cursors.get(chanId) ?? null;
         return {
@@ -231,14 +231,14 @@ function createMockDb(): {
         };
       }
 
-      if (sql.includes("INSERT INTO flowdesk.whatsapp_template_sync_cursors")) {
+      if (sql.includes("INSERT INTO wabrix.whatsapp_template_sync_cursors")) {
         const [, chanId, cursor] = values as [string, string, string | null];
         cursors.set(chanId, cursor);
         return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
       // 8. Status history query
-      if (sql.includes("FROM flowdesk.whatsapp_template_status_history")) {
+      if (sql.includes("FROM wabrix.whatsapp_template_status_history")) {
         const [vId] = values as [string];
         const items = history.filter((h) => h.template_version_id === vId);
         return { rows: items, rowCount: items.length, command: "SELECT", oid: 0, fields: [] };

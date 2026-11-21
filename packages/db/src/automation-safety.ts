@@ -37,7 +37,7 @@ export async function resolveAutomationSafety(
     scope: AutomationSafetyScope;
     reason: string;
     expires_at: Date | null;
-  }>(`SELECT * FROM flowdesk.resolve_automation_safety($1::uuid, $2::uuid, $3::uuid, $4::uuid)`, [
+  }>(`SELECT * FROM wabrix.resolve_automation_safety($1::uuid, $2::uuid, $3::uuid, $4::uuid)`, [
     input.organizationId,
     input.botConfigId ?? null,
     input.channelId ?? null,
@@ -79,7 +79,7 @@ export async function upsertAutomationSafetyControl(
     created_at: Date;
     updated_at: Date;
   }>(
-    `INSERT INTO flowdesk.automation_safety_controls
+    `INSERT INTO wabrix.automation_safety_controls
        (organization_id, scope, scope_id, disabled, reason, actor_user_id, expires_at)
      VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT ${conflictTarget}
@@ -122,7 +122,7 @@ export async function cancelPendingAutomationForConversation(
   }
 ): Promise<{ runsCancelled: number; messagesCancelled: number }> {
   const runs = await db.query(
-    `UPDATE flowdesk.bot_runs
+    `UPDATE wabrix.bot_runs
      SET status = 'cancelled', error_code = 'AUTO_TAKEOVER_CANCELLED', error_detail = $3,
          metadata = metadata || jsonb_build_object('cancelReason', $3::text, 'cancelledAt', clock_timestamp()),
          updated_at = clock_timestamp()
@@ -132,22 +132,22 @@ export async function cancelPendingAutomationForConversation(
   );
 
   const messages = await db.query(
-    `UPDATE flowdesk.messages AS message
+    `UPDATE wabrix.messages AS message
      SET status = 'failed', error_detail = $3, updated_at = clock_timestamp()
      WHERE message.organization_id = $1 AND message.conversation_id = $2
        AND message.sender_type = 'bot' AND message.status = 'queued'
        AND message.metadata ? 'aiBotRunId'
        AND EXISTS (
-         SELECT 1 FROM flowdesk.outbound_intents AS intent
+         SELECT 1 FROM wabrix.outbound_intents AS intent
          WHERE intent.organization_id = message.organization_id
            AND intent.message_id = message.id AND intent.state = 'queued'
        )`,
     [input.organizationId, input.conversationId, input.reason]
   );
   await db.query(
-    `UPDATE flowdesk.outbound_intents AS intent
+    `UPDATE wabrix.outbound_intents AS intent
      SET state = 'failed', last_error = $3, updated_at = clock_timestamp()
-     FROM flowdesk.messages AS message
+     FROM wabrix.messages AS message
      WHERE intent.organization_id = $1 AND message.conversation_id = $2
        AND message.organization_id = intent.organization_id AND message.id = intent.message_id
        AND message.sender_type = 'bot' AND message.metadata ? 'aiBotRunId'

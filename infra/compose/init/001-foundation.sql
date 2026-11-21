@@ -1,13 +1,13 @@
 CREATE EXTENSION IF NOT EXISTS vector;
-CREATE SCHEMA IF NOT EXISTS flowdesk_seed;
+CREATE SCHEMA IF NOT EXISTS wabrix_seed;
 
-CREATE TABLE IF NOT EXISTS flowdesk_seed.synthetic_fixtures (
+CREATE TABLE IF NOT EXISTS wabrix_seed.synthetic_fixtures (
   fixture_type text PRIMARY KEY,
   fixture_id uuid NOT NULL,
   label text NOT NULL CHECK (label LIKE 'Synthetic%')
 );
 
-INSERT INTO flowdesk_seed.synthetic_fixtures (fixture_type, fixture_id, label)
+INSERT INTO wabrix_seed.synthetic_fixtures (fixture_type, fixture_id, label)
 VALUES
   ('organization', '00000000-0000-7000-8000-000000000001', 'Synthetic Organization'),
   ('user', '00000000-0000-7000-8000-000000000002', 'Synthetic Operator'),

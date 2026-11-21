@@ -1,6 +1,6 @@
 import type { DbClient } from "./auth.js";
 import { recordAuditEvent } from "./audit.js";
-import type { RoutingRule, RuleEvaluationTrace } from "@flowdesk/domain";
+import type { RoutingRule, RuleEvaluationTrace } from "@wabrix/domain";
 
 export interface DbAutomationPolicy {
   id: string;
@@ -157,14 +157,14 @@ export async function createPolicyDraft(
 ): Promise<DbAutomationPolicy> {
   const versionResult = await db.query<{ next_version: number }>(
     `SELECT COALESCE(MAX(version), 0) + 1 AS next_version
-     FROM flowdesk.automation_policies
+     FROM wabrix.automation_policies
      WHERE organization_id = $1`,
     [params.organizationId]
   );
   const nextVersion = Number(versionResult.rows[0]?.next_version ?? 1);
 
   const result = await db.query<AutomationPolicyDbRow>(
-    `INSERT INTO flowdesk.automation_policies (
+    `INSERT INTO wabrix.automation_policies (
        organization_id, version, status, name, rules, metadata, created_by_user_id
      ) VALUES ($1, $2, 'draft', $3, $4, $5, $6)
      RETURNING *`,
@@ -202,7 +202,7 @@ export async function updatePolicyDraft(
   params: UpdatePolicyDraftParams
 ): Promise<DbAutomationPolicy | null> {
   const check = await db.query<AutomationPolicyDbRow>(
-    `SELECT * FROM flowdesk.automation_policies
+    `SELECT * FROM wabrix.automation_policies
      WHERE organization_id = $1 AND id = $2`,
     [params.organizationId, params.policyId]
   );
@@ -215,7 +215,7 @@ export async function updatePolicyDraft(
   }
 
   const result = await db.query<AutomationPolicyDbRow>(
-    `UPDATE flowdesk.automation_policies
+    `UPDATE wabrix.automation_policies
      SET name = COALESCE($3, name),
          rules = COALESCE($4, rules),
          metadata = COALESCE($5, metadata),
@@ -243,7 +243,7 @@ export async function publishPolicyDraft(
   params: PublishPolicyParams
 ): Promise<DbAutomationPolicy> {
   const check = await db.query<AutomationPolicyDbRow>(
-    `SELECT * FROM flowdesk.automation_policies
+    `SELECT * FROM wabrix.automation_policies
      WHERE organization_id = $1 AND id = $2
      FOR UPDATE`,
     [params.organizationId, params.policyId]
@@ -258,7 +258,7 @@ export async function publishPolicyDraft(
 
   // 1. Archive previous published policy
   await db.query(
-    `UPDATE flowdesk.automation_policies
+    `UPDATE wabrix.automation_policies
      SET status = 'archived', updated_at = clock_timestamp()
      WHERE organization_id = $1 AND status = 'published'`,
     [params.organizationId]
@@ -266,7 +266,7 @@ export async function publishPolicyDraft(
 
   // 2. Activate draft to published
   const result = await db.query<AutomationPolicyDbRow>(
-    `UPDATE flowdesk.automation_policies
+    `UPDATE wabrix.automation_policies
      SET status = 'published',
          published_by_user_id = $3,
          published_at = clock_timestamp(),
@@ -301,7 +301,7 @@ export async function rollbackPolicyVersion(
   params: RollbackPolicyParams
 ): Promise<DbAutomationPolicy> {
   const targetCheck = await db.query<AutomationPolicyDbRow>(
-    `SELECT * FROM flowdesk.automation_policies
+    `SELECT * FROM wabrix.automation_policies
      WHERE organization_id = $1 AND id = $2`,
     [params.organizationId, params.targetPolicyId]
   );
@@ -310,7 +310,7 @@ export async function rollbackPolicyVersion(
 
   const versionResult = await db.query<{ next_version: number }>(
     `SELECT COALESCE(MAX(version), 0) + 1 AS next_version
-     FROM flowdesk.automation_policies
+     FROM wabrix.automation_policies
      WHERE organization_id = $1`,
     [params.organizationId]
   );
@@ -318,7 +318,7 @@ export async function rollbackPolicyVersion(
 
   // 1. Archive current published policy
   await db.query(
-    `UPDATE flowdesk.automation_policies
+    `UPDATE wabrix.automation_policies
      SET status = 'archived', updated_at = clock_timestamp()
      WHERE organization_id = $1 AND status = 'published'`,
     [params.organizationId]
@@ -326,7 +326,7 @@ export async function rollbackPolicyVersion(
 
   // 2. Insert new published policy with target's rules
   const result = await db.query<AutomationPolicyDbRow>(
-    `INSERT INTO flowdesk.automation_policies (
+    `INSERT INTO wabrix.automation_policies (
        organization_id, version, status, name, rules, metadata,
        created_by_user_id, published_by_user_id, published_at
      ) VALUES ($1, $2, 'published', $3, $4, $5, $6, $6, clock_timestamp())
@@ -372,7 +372,7 @@ export async function getActivePublishedPolicy(
   organizationId: string
 ): Promise<DbAutomationPolicy | null> {
   const result = await db.query<AutomationPolicyDbRow>(
-    `SELECT * FROM flowdesk.automation_policies
+    `SELECT * FROM wabrix.automation_policies
      WHERE organization_id = $1 AND status = 'published'
      LIMIT 1`,
     [organizationId]
@@ -389,7 +389,7 @@ export async function getPolicyById(
   policyId: string
 ): Promise<DbAutomationPolicy | null> {
   const result = await db.query<AutomationPolicyDbRow>(
-    `SELECT * FROM flowdesk.automation_policies
+    `SELECT * FROM wabrix.automation_policies
      WHERE organization_id = $1 AND id = $2`,
     [organizationId, policyId]
   );
@@ -404,7 +404,7 @@ export async function listPolicyVersions(
   organizationId: string
 ): Promise<DbAutomationPolicy[]> {
   const result = await db.query<AutomationPolicyDbRow>(
-    `SELECT * FROM flowdesk.automation_policies
+    `SELECT * FROM wabrix.automation_policies
      WHERE organization_id = $1
      ORDER BY version DESC`,
     [organizationId]
@@ -420,7 +420,7 @@ export async function recordRoutingLogWithTrace(
   params: CreateRoutingLogWithTraceParams
 ): Promise<DetailedRoutingLogRecord> {
   const result = await db.query<DetailedRoutingLogDbRow>(
-    `INSERT INTO flowdesk.routing_logs (
+    `INSERT INTO wabrix.routing_logs (
        organization_id, conversation_id, matched_rule_id, matched_policy_rule_id,
        target_queue_id, target_team_id, target_user_id, reason, policy_id, policy_version,
        decision_trace, inputs_snapshot
@@ -453,7 +453,7 @@ export async function listDetailedRoutingLogsForConversation(
   conversationId: string
 ): Promise<DetailedRoutingLogRecord[]> {
   const result = await db.query<DetailedRoutingLogDbRow>(
-    `SELECT * FROM flowdesk.routing_logs
+    `SELECT * FROM wabrix.routing_logs
      WHERE organization_id = $1 AND conversation_id = $2
      ORDER BY routed_at DESC`,
     [organizationId, conversationId]

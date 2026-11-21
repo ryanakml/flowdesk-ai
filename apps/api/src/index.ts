@@ -5,10 +5,10 @@ import {
   loadMetaEmbeddedSignupConfig,
   loadMediaConfig,
   loadWhatsAppGraphApiConfig
-} from "@flowdesk/config";
-import { createLogger, initializeTelemetry } from "@flowdesk/observability";
+} from "@wabrix/config";
+import { createLogger, initializeTelemetry } from "@wabrix/observability";
 import { Pool } from "pg";
-import { MetaWhatsAppProvider, S3ObjectStore } from "@flowdesk/providers";
+import { MetaWhatsAppProvider, S3ObjectStore } from "@wabrix/providers";
 import { createApiApp } from "./app.js";
 import { createRealtimeServer } from "./realtime.js";
 

@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback } from "react";
-import type { InboxWorkspaceResourcesResponse } from "@flowdesk/contracts";
+import type { InboxWorkspaceResourcesResponse } from "@wabrix/contracts";
 
 export type StatusFilter = "all" | "new" | "open" | "pending" | "resolved" | "closed";
 export type AssigneeFilter = "all" | "me" | "unassigned";

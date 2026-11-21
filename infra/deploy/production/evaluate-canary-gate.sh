@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# FlowDesk Production Canary Health & SLO Gate Evaluator (M5-07 / #181, #203)
+# Wabrix Production Canary Health & SLO Gate Evaluator (M5-07 / #181, #203)
 # Performs real health probes against the canary slice and evaluates SLO metrics
 # (Error Rate <= 0.1%, p99 Latency <= 500ms, Error Budget Burn Rate <= 1.0).
 # Fails closed if canary endpoint is not configured.
@@ -20,7 +20,7 @@ fi
 echo "Evaluating canary gate for ${WEIGHT}% traffic slice..."
 
 # Mock adapter for test and CI rehearsal environments
-if [[ "${FLOWDESK_MOCK_CANARY_PROBE:-false}" == "true" ]]; then
+if [[ "${WABRIX_MOCK_CANARY_PROBE:-false}" == "true" ]]; then
   echo "[MOCK] Evaluating mock canary gate for ${WEIGHT}% slice..."
   if [[ "${MOCK_CANARY_FAIL:-false}" == "true" ]]; then
     echo "::error::[MOCK] Synthetic canary gate failure triggered (MOCK_CANARY_FAIL=true)." >&2

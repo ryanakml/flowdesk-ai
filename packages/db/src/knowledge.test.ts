@@ -26,8 +26,8 @@ describe("M4 Knowledge Base & Vector Database Repository", () => {
       id: sourceId,
       organization_id: orgId,
       type: "url" as const,
-      name: "FlowDesk Docs",
-      source_uri: "https://docs.flowdesk.dev/faq",
+      name: "Wabrix Docs",
+      source_uri: "https://docs.wabrix.dev/faq",
       status: "pending" as const,
       status_reason: null,
       content_hash: "abc123hash",
@@ -46,8 +46,8 @@ describe("M4 Knowledge Base & Vector Database Repository", () => {
     const source = await createKnowledgeSource(mockDb, {
       organizationId: orgId,
       type: "url",
-      name: "FlowDesk Docs",
-      sourceUri: "https://docs.flowdesk.dev/faq",
+      name: "Wabrix Docs",
+      sourceUri: "https://docs.wabrix.dev/faq",
       contentHash: "abc123hash",
       byteSize: 1024,
       metadata: { author: "admin" }
@@ -57,8 +57,8 @@ describe("M4 Knowledge Base & Vector Database Repository", () => {
     expect(source.byteSize).toBe(1024);
     expect(source.type).toBe("url");
     expect(query).toHaveBeenCalledWith(
-      expect.stringContaining("INSERT INTO flowdesk.knowledge_sources"),
-      expect.arrayContaining([orgId, "url", "FlowDesk Docs", "https://docs.flowdesk.dev/faq"])
+      expect.stringContaining("INSERT INTO wabrix.knowledge_sources"),
+      expect.arrayContaining([orgId, "url", "Wabrix Docs", "https://docs.wabrix.dev/faq"])
     );
 
     const fetched = await getKnowledgeSourceById(mockDb, sourceId);
@@ -98,7 +98,7 @@ describe("M4 Knowledge Base & Vector Database Repository", () => {
 
     await updateKnowledgeSourceStatus(mockDb, sourceId, "active");
     expect(query).toHaveBeenLastCalledWith(
-      expect.stringContaining("UPDATE flowdesk.knowledge_sources"),
+      expect.stringContaining("UPDATE wabrix.knowledge_sources"),
       ["active", null, sourceId]
     );
   });
@@ -167,7 +167,7 @@ describe("M4 Knowledge Base & Vector Database Repository", () => {
     expect(results[0]?.similarity).toBe(0.89);
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining(
-        "ORDER BY flowdesk.document_chunks.embedding <=> $1::public.vector ASC"
+        "ORDER BY wabrix.document_chunks.embedding <=> $1::public.vector ASC"
       ),
       ["[0.1,0.2,0.3]", orgId, 0.75, 3]
     );
@@ -178,7 +178,7 @@ describe("M4 Knowledge Base & Vector Database Repository", () => {
       id: botConfigId,
       organization_id: orgId,
       mode: "draft" as const,
-      name: "FlowDesk AI Assistant",
+      name: "Wabrix AI Assistant",
       instructions: "Assist customer politely.",
       tone: "friendly" as const,
       language: "id" as const,
@@ -267,7 +267,7 @@ describe("M4 Knowledge Base & Vector Database Repository", () => {
       action: "approved",
       userId: "user-123"
     });
-    expect(query).toHaveBeenLastCalledWith(expect.stringContaining("UPDATE flowdesk.bot_runs"), [
+    expect(query).toHaveBeenLastCalledWith(expect.stringContaining("UPDATE wabrix.bot_runs"), [
       "approved",
       "user-123",
       botRunId,

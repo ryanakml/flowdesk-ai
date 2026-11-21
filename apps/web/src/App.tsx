@@ -21,7 +21,7 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ThemeProvider defaultTheme="system" storageKey="flowdesk-theme">
+        <ThemeProvider defaultTheme="system" storageKey="wabrix-theme">
           <RouterProvider router={router} />
         </ThemeProvider>
       </AuthProvider>

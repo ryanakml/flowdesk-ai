@@ -1,8 +1,8 @@
-# FlowDesk — Technical Execution Blueprint
+# Wabrix — Technical Execution Blueprint
 
 **Status:** authoritative execution plan  
 **Version:** 1.0.0  
-**Depends on:** `FLOWDESK_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md`  
+**Depends on:** `WABRIX_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md`  
 **Audience:** product, design, engineering, QA, security, platform/SRE, support  
 **Project state:** pre-development
 
@@ -16,7 +16,7 @@ There are three source-of-truth levels:
 
 | Level | Document/system | Answers |
 |---|---|---|
-| Product and engineering specification | `FLOWDESK_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md` | What FlowDesk is, architecture constraints, policies, quality bar. |
+| Product and engineering specification | `WABRIX_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md` | What Wabrix is, architecture constraints, policies, quality bar. |
 | Execution blueprint | This document | What to build next, in what dependency order, and what “done” means. |
 | Delivery system | GitHub Issues/Projects, PRs, ADRs, CI runs, deploy records, dashboards | Current status and objective evidence that a phase is complete. |
 
@@ -509,13 +509,13 @@ A controlled beta tenant enables auto-send for an approved FAQ. A qualifying mes
 
 ### Goal
 
-Make FlowDesk self-service and production-operable for all customers: administrators self-manage channels and seats for free, developers integrate safely via scoped API keys/webhooks, and operational analytics provide rich team performance insights. (Stripe/Paid Billing is held as an optional modular extension for later).
+Make Wabrix self-service and production-operable for all customers: administrators self-manage channels and seats for free, developers integrate safely via scoped API keys/webhooks, and operational analytics provide rich team performance insights. (Stripe/Paid Billing is held as an optional modular extension for later).
 
 ### Ordered work
 
 1. **Customer self-service & Channel Onboarding**
    - Deliver self-service channel management (Meta WhatsApp Business connection UI), seat/team administration, API-key lifecycle (prefix + hash only), scoped integration webhooks, endpoint verification, signed deliveries, retry/history/DLQ, and audit trail.
-   - FlowDesk runs as a **Free & Open Community Tier** by default with zero paywalls.
+   - Wabrix runs as a **Free & Open Community Tier** by default with zero paywalls.
 2. **Analytics and reporting**
    - Define metrics glossary: inbound/outbound volume, first response time, resolution rates, queue/SLA compliance, agent workload, bot draft/accept/escalation metrics, knowledge health, and system telemetry.
    - Create asynchronous aggregate read models; provide exports with authorization, rate limits, watermarks, audit log tracking, and retention.
@@ -540,7 +540,7 @@ Administrator self-connects a WhatsApp channel in the UI, rotates a scoped API k
 
 ### Goal
 
-Validate FlowDesk with real design partners and complete the controls required to make credible enterprise promises.
+Validate Wabrix with real design partners and complete the controls required to make credible enterprise promises.
 
 ### Ordered work
 
@@ -572,7 +572,7 @@ Validate FlowDesk with real design partners and complete the controls required t
 
 ### Goal
 
-Launch deliberately, operate by SLO/error budget, and evolve FlowDesk without degrading foundational controls.
+Launch deliberately, operate by SLO/error budget, and evolve Wabrix without degrading foundational controls.
 
 ### Launch sequence
 
@@ -707,4 +707,4 @@ This is the first actionable queue after approving this blueprint. Do not open f
 
 ### The exact next action
 
-Start with **M0 item 1** and create one issue for each numbered M0 backlog item at the same time. Once M0 is green, do not jump to AI or inbox UI: start M1 with database tenant/RLS foundation. This ordering prevents FlowDesk’s most expensive possible rework—retrofitting tenant isolation, auditability, and delivery discipline after real messaging data exists.
+Start with **M0 item 1** and create one issue for each numbered M0 backlog item at the same time. Once M0 is green, do not jump to AI or inbox UI: start M1 with database tenant/RLS foundation. This ordering prevents Wabrix’s most expensive possible rework—retrofitting tenant isolation, auditability, and delivery discipline after real messaging data exists.

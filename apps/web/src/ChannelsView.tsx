@@ -9,7 +9,7 @@ import {
   type ChannelClientRecord
 } from "./api.js";
 import { Card, CardDescription, CardTitle } from "./components/ui/card.js";
-import { Button } from "@flowdesk/ui";
+import { Button } from "@wabrix/ui";
 import { Plus, Zap, RefreshCw } from "lucide-react";
 import { ConfirmDialog } from "./components/ConfirmDialog.js";
 import { ChannelCard } from "./features/channels/ChannelCard.js";

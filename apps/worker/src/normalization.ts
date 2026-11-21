@@ -12,19 +12,19 @@ import {
   getLatestKnowledgeVersion,
   enqueueBotDraftRun,
   fanoutDeveloperWebhookEvents
-} from "@flowdesk/db";
+} from "@wabrix/db";
 import {
   type MessageStatus,
   type RoutingRule,
   type RoutingEvaluationContext,
   evaluateRoutingRules
-} from "@flowdesk/domain";
-import { createLogger, recordWhatsAppWebhookProcessed } from "@flowdesk/observability";
+} from "@wabrix/domain";
+import { createLogger, recordWhatsAppWebhookProcessed } from "@wabrix/observability";
 
 // Module-level logger used only for silent-drop diagnostics within processWebhookPayload.
 // Individual callers (index.ts) retain their own richer loggers.
 const normalizationLogger = createLogger({
-  service: "flowdesk-worker",
+  service: "wabrix-worker",
   environment: process.env["APP_ENV"] ?? "local",
   version: process.env["SERVICE_VERSION"] ?? "dev",
   level: process.env["LOG_LEVEL"] ?? "info"
@@ -256,7 +256,7 @@ export async function processWebhookPayload(
   async function resolveChannelId(phoneId: string): Promise<string | null> {
     if (channelCache.has(phoneId)) return channelCache.get(phoneId)!;
     const res = await client.query<{ id: string }>(
-      `SELECT id FROM flowdesk.channels
+      `SELECT id FROM wabrix.channels
        WHERE organization_id = $1 AND phone_number_id = $2 AND status != 'disconnected'
        LIMIT 1`,
       [params.organizationId, phoneId]
@@ -301,7 +301,7 @@ export async function processWebhookPayload(
 
       // 2. Idempotency guard on providerMessageId (wamid)
       const existingMessage = await client.query<{ id: string }>(
-        `SELECT id FROM flowdesk.messages
+        `SELECT id FROM wabrix.messages
          WHERE organization_id = $1 AND provider_message_id = $2
          LIMIT 1`,
         [params.organizationId, item.providerMessageId]
@@ -389,7 +389,7 @@ export async function processWebhookPayload(
               const routingResult = evaluateRoutingRules(rulesToEvaluate, routingContext);
               if (routingResult.matchedRule) {
                 await client.query(
-                  `UPDATE flowdesk.conversations
+                  `UPDATE wabrix.conversations
                    SET queue_id = COALESCE($1, queue_id),
                        team_id = COALESCE($2, team_id),
                        assigned_to_user_id = COALESCE($3, assigned_to_user_id),
@@ -466,7 +466,7 @@ export async function processWebhookPayload(
     } else if (item.type === "status_update") {
       // Find outbound message by providerMessageId
       const targetMessage = await client.query<{ id: string }>(
-        `SELECT id FROM flowdesk.messages
+        `SELECT id FROM wabrix.messages
          WHERE organization_id = $1 AND provider_message_id = $2
          LIMIT 1`,
         [params.organizationId, item.providerMessageId]
@@ -505,7 +505,7 @@ export async function processOutboxWebhookBatch(client: DbClient, batchSize = 10
     attempts: number;
   }>(
     `SELECT id, organization_id, aggregate_id, payload, correlation_id, attempts
-     FROM flowdesk.claim_outbox_events('webhook.received'::text, $1::integer)`,
+     FROM wabrix.claim_outbox_events('webhook.received'::text, $1::integer)`,
     [batchSize]
   );
 
@@ -517,13 +517,13 @@ export async function processOutboxWebhookBatch(client: DbClient, batchSize = 10
 
     await runInTenantTransaction(client, { organizationId: orgId }, async (tenantDb) => {
       const webhookRes = await tenantDb.query<{ raw_payload: string }>(
-        `SELECT raw_payload FROM flowdesk.webhook_events WHERE id = $1`,
+        `SELECT raw_payload FROM wabrix.webhook_events WHERE id = $1`,
         [webhookEventId]
       );
 
       if (webhookRes.rows[0]) {
         await tenantDb.query(
-          `UPDATE flowdesk.webhook_events SET status = 'processing', updated_at = clock_timestamp() WHERE id = $1`,
+          `UPDATE wabrix.webhook_events SET status = 'processing', updated_at = clock_timestamp() WHERE id = $1`,
           [webhookEventId]
         );
 
@@ -535,7 +535,7 @@ export async function processOutboxWebhookBatch(client: DbClient, batchSize = 10
           });
 
           await tenantDb.query(
-            `UPDATE flowdesk.webhook_events
+            `UPDATE wabrix.webhook_events
              SET status = 'processed', processed_at = clock_timestamp(), updated_at = clock_timestamp()
              WHERE id = $1`,
             [webhookEventId]
@@ -544,7 +544,7 @@ export async function processOutboxWebhookBatch(client: DbClient, batchSize = 10
         } catch (err: unknown) {
           const errorMsg = err instanceof Error ? err.message : "Processing error";
           await tenantDb.query(
-            `UPDATE flowdesk.webhook_events
+            `UPDATE wabrix.webhook_events
              SET status = 'failed', processing_error = $2, updated_at = clock_timestamp()
              WHERE id = $1`,
             [webhookEventId, errorMsg]
@@ -564,7 +564,7 @@ export async function processOutboxWebhookBatch(client: DbClient, batchSize = 10
       }
 
       await tenantDb.query(
-        `UPDATE flowdesk.outbox_events
+        `UPDATE wabrix.outbox_events
          SET published_at = clock_timestamp(), claimed_until = NULL, claim_token = NULL
          WHERE id = $1`,
         [ev.id]

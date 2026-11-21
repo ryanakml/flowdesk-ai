@@ -5,7 +5,7 @@ import {
   getVolumeTimeSeries,
   recordAuditEvent,
   runInTenantTransaction
-} from "@flowdesk/db";
+} from "@wabrix/db";
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createRequireOrgPermissionMiddleware } from "./organizations.js";
 
@@ -28,7 +28,7 @@ function sendProblem(
   instance?: string
 ): Response {
   return response.status(status).json({
-    type: `https://flowdesk.dev/errors/${status}`,
+    type: `https://wabrix.dev/errors/${status}`,
     title,
     status,
     detail,
@@ -134,7 +134,7 @@ export function createAnalyticsRouter(options: AnalyticsRouterOptions): Router {
         response.setHeader("Content-Type", "text/csv");
         response.setHeader(
           "Content-Disposition",
-          `attachment; filename="flowdesk-analytics-${orgId}.csv"`
+          `attachment; filename="wabrix-analytics-${orgId}.csv"`
         );
         return response.status(200).send(csvContent);
       } catch (err) {

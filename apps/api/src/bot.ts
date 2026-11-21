@@ -6,7 +6,7 @@ import {
   MessageSchema,
   UpdateBotConfigRequestSchema,
   type Problem
-} from "@flowdesk/contracts";
+} from "@wabrix/contracts";
 import {
   createOutboundMessageWithOutbox,
   enqueueBotDraftRun,
@@ -28,14 +28,14 @@ import {
   type BotTone,
   type DbClient,
   type MessageRecord
-} from "@flowdesk/db";
+} from "@wabrix/db";
 import {
   calculateServiceWindow,
   evaluateAutoReleaseGate,
   type BotEvaluationScores,
   type ReleaseApproval
-} from "@flowdesk/domain";
-import { currentRequestContext } from "@flowdesk/observability";
+} from "@wabrix/domain";
+import { currentRequestContext } from "@wabrix/observability";
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createRequireOrgPermissionMiddleware } from "./organizations.js";
 
@@ -110,7 +110,7 @@ function sendProblem(
   detail: string
 ) {
   const problem: Problem = {
-    type: `https://flowdesk.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
+    type: `https://wabrix.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
     title,
     status,
     code,
@@ -666,7 +666,7 @@ export function createBotRouter(options: BotRouterOptions): Router {
       const organizationId = getParam(request.params, "orgId");
       const gates = await runInTenantTransaction(options.db, { organizationId }, async (db) => {
         return db.query<AutoReleaseGateRow>(
-          `SELECT * FROM flowdesk.auto_release_gates
+          `SELECT * FROM wabrix.auto_release_gates
            WHERE organization_id = $1
            ORDER BY created_at DESC`,
           [organizationId]
@@ -726,7 +726,7 @@ export function createBotRouter(options: BotRouterOptions): Router {
         const evaluation = evaluateAutoReleaseGate(gateConfig);
 
         const res = await db.query<AutoReleaseGateRow>(
-          `INSERT INTO flowdesk.auto_release_gates (
+          `INSERT INTO wabrix.auto_release_gates (
              organization_id, bot_config_id, policy_id, policy_version, cohort, status,
              eval_scores, approvals, sampling_rate, rate_limit_per_hour,
              monthly_cost_ceiling_cents, rollback_owner
@@ -802,7 +802,7 @@ export function createBotRouter(options: BotRouterOptions): Router {
 
         const updated = await runInTenantTransaction(options.db, { organizationId }, async (db) => {
           const existing = await db.query<AutoReleaseGateRow>(
-            `SELECT * FROM flowdesk.auto_release_gates WHERE organization_id = $1 AND id = $2`,
+            `SELECT * FROM wabrix.auto_release_gates WHERE organization_id = $1 AND id = $2`,
             [organizationId, gateId]
           );
           const gate = existing.rows[0];
@@ -844,7 +844,7 @@ export function createBotRouter(options: BotRouterOptions): Router {
           const evaluation = evaluateAutoReleaseGate(gateConfig);
 
           const res = await db.query<AutoReleaseGateRow>(
-            `UPDATE flowdesk.auto_release_gates
+            `UPDATE wabrix.auto_release_gates
            SET approvals = $1, status = $2, updated_at = clock_timestamp()
            WHERE organization_id = $3 AND id = $4
            RETURNING *`,
@@ -892,7 +892,7 @@ export function createBotRouter(options: BotRouterOptions): Router {
 
         const result = await runInTenantTransaction(options.db, { organizationId }, async (db) => {
           const gateRes = await db.query<AutoReleaseGateRow>(
-            `SELECT * FROM flowdesk.auto_release_gates WHERE organization_id = $1 AND id = $2`,
+            `SELECT * FROM wabrix.auto_release_gates WHERE organization_id = $1 AND id = $2`,
             [organizationId, gateId]
           );
           const gate = gateRes.rows[0];
@@ -905,7 +905,7 @@ export function createBotRouter(options: BotRouterOptions): Router {
           }
 
           await db.query(
-            `UPDATE flowdesk.bot_configs
+            `UPDATE wabrix.bot_configs
            SET auto_enabled = TRUE,
                active_release_gate_id = $1,
                rate_limit_per_hour = $2,

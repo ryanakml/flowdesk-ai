@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle
 } from "../../components/ui/card.js";
-import { Badge, Button } from "@flowdesk/ui";
+import { Badge, Button } from "@wabrix/ui";
 import { Building2, ShieldCheck, UserCheck, Users, Inbox } from "lucide-react";
 
 export function WorkspaceView() {
