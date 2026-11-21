@@ -1,0 +1,306 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish_registry_images:
+        description: "Publish to GHCR without deploying (release SHA on main, candidate-<SHA> on other refs)"
+        required: false
+        default: false
+        type: boolean
+      run_failure_probe:
+        description: "Prove a deliberate failure blocks the workflow"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with: { fetch-depth: 0 }
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3 # v6.0.10
+        with: { run_install: false }
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with: { node-version-file: .node-version, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Conventional pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | pnpm commitlint
+      - run: pnpm format:check
+      - run: pnpm openapi:check
+      - name: Changed workspace evidence
+        run: node scripts/changed-workspaces.mjs | tee changed-workspaces.json
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:coverage
+      - run: pnpm build
+      - name: Install Chromium for production UI regression tests
+        run: pnpm --filter @wabrix/web exec playwright install --with-deps chromium
+      - name: Verify production dialog visibility and interactions
+        run: pnpm --filter @wabrix/web test:e2e
+      - name: Security audit
+        run: |
+          for attempt in {1..5}; do
+            pnpm audit --prod --audit-level high && exit 0
+            echo "pnpm audit attempt $attempt failed, retrying in 10s..."
+            sleep 10
+          done
+          exit 1
+      - run: node scripts/scan-secrets.mjs
+      - name: Validate staging deployment health configuration
+        run: |
+          bash -n infra/deploy/single-host/*.sh
+          ./infra/deploy/single-host/test-health-check.sh
+          ./infra/deploy/single-host/test-registry-migration.sh
+          IMAGE_TAG=0000000000000000000000000000000000000000 \
+            docker compose --env-file infra/deploy/single-host/environment.example \
+            -f infra/deploy/single-host/compose.yaml config -q
+      - name: Deliberate failure probe
+        if: ${{ inputs.run_failure_probe == true }}
+        run: exit 42
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        if: always()
+        with:
+          name: quality-evidence
+          path: |
+            changed-workspaces.json
+            **/coverage
+            **/dist
+            apps/web/test-results
+          retention-days: 14
+
+  images:
+    name: images (${{ matrix.app }}, ${{ matrix.port }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: api
+            workspace: api
+            port: 4000
+            smoke: true
+          - app: ingress
+            workspace: ingress
+            port: 4001
+            smoke: true
+          - app: worker
+            workspace: worker
+            port: 4002
+            smoke: true
+          - app: scheduler
+            workspace: scheduler
+            port: 4003
+            smoke: true
+          - app: web
+            workspace: web
+            port: 3000
+            smoke: true
+          - app: migrator
+            workspace: db
+            port: 0
+            smoke: false
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - name: Set up BuildKit
+        run: docker buildx create --driver docker-container --use
+      - name: Build cached non-root image
+        run: |
+          docker buildx build \
+            --file infra/docker/Dockerfile.node \
+            --build-arg APP=${{ matrix.workspace }} \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.title=Wabrix AI ${{ matrix.app }}" \
+            --label "org.opencontainers.image.description=Wabrix AI ${{ matrix.app }} service container" \
+            --tag wabrix/${{ matrix.app }}:${{ github.sha }} \
+            --cache-from type=gha,scope=wabrix-${{ matrix.app }} \
+            --cache-to type=gha,mode=max,scope=wabrix-${{ matrix.app }} \
+            --load \
+            .
+      - name: Smoke test image
+        if: matrix.smoke
+        run: |
+          docker run -d --name app \
+            -e PORT=${{ matrix.port }} \
+            -e ENCRYPTION_KEY=ci-image-smoke-encryption-key \
+            -p ${{ matrix.port }}:${{ matrix.port }} \
+            wabrix/${{ matrix.app }}:${{ github.sha }}
+          for attempt in {1..30}; do curl --fail --silent http://127.0.0.1:${{ matrix.port }}/livez && exit 0; sleep 1; done
+          docker logs app
+          exit 1
+      - name: Publish Wabrix image
+        if: >-
+          github.repository == 'ryanakml/wabrix-ai' &&
+          ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'workflow_dispatch' && inputs.publish_registry_images && !inputs.run_failure_probe))
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          IMAGE_APP: ${{ matrix.app }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+          image_tag=$GITHUB_SHA
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            image_tag="candidate-$GITHUB_SHA"
+          fi
+          image_ref="ghcr.io/ryanakml/wabrix-${IMAGE_APP}:${image_tag}"
+          docker tag "wabrix/${IMAGE_APP}:${GITHUB_SHA}" "$image_ref"
+          docker push "$image_ref"
+          docker buildx imagetools inspect "$image_ref" --format '{{json .Manifest}}'
+
+  database-foundation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      redis:
+        image: redis:7.4.2-bookworm
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      postgres:
+        image: pgvector/pgvector:0.8.0-pg16-bookworm
+        env:
+          POSTGRES_DB: wabrix_test
+          POSTGRES_USER: wabrix_test
+          POSTGRES_PASSWORD: wabrix_test_local
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wabrix_test -d wabrix_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_MIGRATOR_URL: postgresql://wabrix_test:wabrix_test_local@localhost:5432/wabrix_test
+      DATABASE_URL: postgresql://wabrix_test:wabrix_test_local@localhost:5432/wabrix_test
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3 # v6.0.10
+        with: { run_install: false }
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with: { node-version-file: .node-version, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter=@wabrix/worker...
+      - run: pnpm --filter @wabrix/db test:integration
+      - run: pnpm --filter @wabrix/api test:integration
+      - run: pnpm --filter @wabrix/worker test:integration
+      - name: Query embedding cache with real Redis (required)
+        run: pnpm --filter @wabrix/worker exec vitest run src/query-embedding-cache.redis.test.ts
+        env:
+          RUN_REDIS_INTEGRATION: "true"
+          REDIS_TEST_URL: redis://127.0.0.1:6379
+
+  terraform:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with: { terraform_version: 1.13.1 }
+      - run: terraform fmt -check -recursive infra/terraform
+      - run: terraform -chdir=infra/terraform init -backend=false -reconfigure
+      - run: terraform -chdir=infra/terraform validate
+      - run: terraform -chdir=infra/terraform plan -refresh=false -input=false -var-file=environments/local/local.tfvars
+
+  deploy-staging:
+    # Staging deploy disabled: currently not pushing to external servers
+    if: false
+    needs: [quality, images, database-foundation, terraform]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - name: Configure pinned SSH identity
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          SSH_HOST_KEY: ${{ vars.STAGING_SSH_HOST_KEY }}
+        run: |
+          install -m 0700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 0600 ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_HOST_KEY" > ~/.ssh/known_hosts
+          chmod 0644 ~/.ssh/known_hosts
+      - name: Upload immutable release manifest
+        env:
+          DEPLOY_HOST: ${{ vars.STAGING_HOST }}
+          DEPLOY_USER: ${{ vars.STAGING_USER }}
+          DEPLOY_PORT: ${{ vars.STAGING_SSH_PORT || '22' }}
+        run: |
+          release_dir=/opt/wabrix/releases/${GITHUB_SHA}
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${release_dir}'"
+          scp -P "${DEPLOY_PORT}" \
+            infra/deploy/single-host/compose.yaml \
+            infra/deploy/single-host/Caddyfile \
+            infra/deploy/single-host/provision-runtime.sql \
+            infra/deploy/single-host/deploy.sh \
+            infra/deploy/single-host/health-check.sh \
+            infra/deploy/single-host/diagnose.sh \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${release_dir}/"
+      - name: Deploy with migration, health gate, and rollback
+        env:
+          DEPLOY_HOST: ${{ vars.STAGING_HOST }}
+          DEPLOY_USER: ${{ vars.STAGING_USER }}
+          DEPLOY_PORT: ${{ vars.STAGING_SSH_PORT || '22' }}
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          cleanup_registry_login() {
+            ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "docker logout ghcr.io >/dev/null 2>&1 || true"
+          }
+          trap cleanup_registry_login EXIT
+          printf '%s' "$GHCR_TOKEN" | ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "docker login ghcr.io --username '${GITHUB_ACTOR}' --password-stdin"
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "cd '/opt/wabrix/releases/${GITHUB_SHA}' && chmod 0750 deploy.sh && ./deploy.sh '${GITHUB_SHA}'"
+      - name: Public smoke test
+        env:
+          DEPLOY_HOST: ${{ vars.STAGING_HOST }}
+          DEPLOY_USER: ${{ vars.STAGING_USER }}
+          DEPLOY_PORT: ${{ vars.STAGING_SSH_PORT || '22' }}
+        run: |
+          public_base_url=$(ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "sed -n 's/^PUBLIC_BASE_URL=//p' /opt/wabrix/shared/staging.env | head -n 1")
+          if [[ ! ${public_base_url} =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?/?$ ]]; then
+            echo "staging PUBLIC_BASE_URL must be a valid HTTPS origin" >&2
+            exit 1
+          fi
+          public_base_url=${public_base_url%/}
+          curl_args=(--fail --show-error --silent --retry 10 --retry-all-errors --connect-timeout 5 --max-time 20)
+          livez_status=$(curl "${curl_args[@]}" --output /dev/null --write-out '%{http_code}' "${public_base_url}/livez")
+          [[ ${livez_status} == "200" ]]
+          build_status=$(curl "${curl_args[@]}" --output deployment-record.json --write-out '%{http_code}' "${public_base_url}/api/v1/system/build")
+          [[ ${build_status} == "200" ]]
+          grep -q "${GITHUB_SHA}" deployment-record.json
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        if: always()
+        with:
+          name: staging-deployment-${{ github.sha }}
+          path: |
+            deployment-record.json
+          if-no-files-found: warn
+          retention-days: 30

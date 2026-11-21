@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+.turbo
+pnpm-lock.yaml
+docs/WABRIX_ENTERPRISE_PRODUCT_AND_ENGINEERING_SPEC.md
+docs/WABRIX_EXECUTION_BLUEPRINT.md
+docs/WABRIX_EXECUTION_BLUEPRINT_ID.md
+apps/web/src/routeTree.gen.ts
+.reference

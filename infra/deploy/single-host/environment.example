@@ -1,0 +1,47 @@
+# This file documents keys only. Generate unique values on the host; never commit secrets.
+IMAGE_REGISTRY=ghcr.io/ryanakml
+SITE_ADDRESS=staging.example.com
+PUBLIC_BASE_URL=https://staging.example.com
+ENCRYPTION_KEY=replace-with-random-encryption-key
+POSTGRES_DB=wabrix_staging
+POSTGRES_USER=wabrix_bootstrap
+POSTGRES_PASSWORD=replace-with-random-value
+POSTGRES_RUNTIME_PASSWORD=replace-with-different-random-value
+REDIS_PASSWORD=replace-with-random-value
+MINIO_ROOT_USER=wabrix_staging
+MINIO_ROOT_PASSWORD=replace-with-random-value
+WEBHOOK_VERIFY_TOKEN=replace-with-random-value
+WEBHOOK_APP_SECRET=replace-with-real-wabrix-meta-app-secret
+META_APP_ID=replace-with-wabrix-meta-app-id
+META_APP_SECRET=replace-with-wabrix-meta-app-secret
+META_EMBEDDED_SIGNUP_CONFIG_ID=replace-with-meta-embedded-signup-config-id
+META_SYSTEM_USER_ACCESS_TOKEN=replace-with-wabrix-system-user-access-token
+META_SYSTEM_USER_ID=replace-with-wabrix-system-user-id
+META_ADMIN_SYSTEM_USER_ACCESS_TOKEN=replace-with-business-admin-system-user-access-token
+META_GRAPH_API_BASE_URL=https://graph.facebook.com/v25.0
+# Keep disabled until a real credential is installed directly on the host.
+AI_PROVIDER=disabled
+GEMINI_API_KEY=replace-with-gemini-api-key
+GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+GEMINI_CHAT_MODEL=gemini-3.7-flash
+GEMINI_EMBEDDING_MODEL=gemini-embedding-2
+OPENAI_API_KEY=replace-with-openai-api-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_CHAT_MODEL=gpt-4o-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+AI_CHAT_TIMEOUT_MS=15000
+AI_EMBEDDING_TIMEOUT_MS=15000
+AI_MAX_OUTPUT_TOKENS=512
+AUTH_OIDC_ISSUER=https://wabrix.local.auth0.com/
+AUTH_OIDC_CLIENT_ID=wabrix-staging-client
+AUTH_OIDC_CLIENT_SECRET=replace-after-auth0-is-configured
+AUTH_MOCK_ENABLED=true
+AUTH_COOKIE_SECURE=false
+LOG_LEVEL=info
+
+# Optional worker-only exact query embedding cache (rollback: false).
+QUERY_EMBEDDING_CACHE_ENABLED=false
+QUERY_EMBEDDING_CACHE_NAMESPACE=v1
+QUERY_EMBEDDING_CACHE_TTL_SECONDS=86400
+QUERY_EMBEDDING_CACHE_TIMEOUT_MS=100
+QUERY_EMBEDDING_CACHE_MAX_ENTRIES=1000

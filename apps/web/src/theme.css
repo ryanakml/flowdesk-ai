@@ -1,0 +1,42 @@
+@import "tailwindcss";
+@import "@wabrix/ui/styles/tokens.css";
+
+/* Shared UI lives outside the web workspace's automatic source scan. */
+@source "../../../packages/ui/src";
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+}
+
+@layer utilities {
+  .analytics-metric-card[data-tone="success"] {
+    background: linear-gradient(125deg, var(--surface-success), var(--card) 80%);
+    border-color: var(--border-success);
+  }
+  .analytics-metric-card[data-tone="primary"],
+  .analytics-panel {
+    background: linear-gradient(125deg, var(--surface-primary), var(--card) 65%);
+    border-color: var(--border-primary);
+  }
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}

@@ -1,0 +1,742 @@
+import { describe, expect, it, vi } from "vitest";
+import { FakeWhatsAppProvider, MetaWhatsAppProvider, WhatsAppProviderError } from "./whatsapp.js";
+
+describe("WhatsApp Provider Adapter (M2-02)", () => {
+  describe("FakeWhatsAppProvider", () => {
+    it("records sent messages and returns deterministic IDs", async () => {
+      const fake = new FakeWhatsAppProvider();
+      expect(fake.getSentMessages()).toHaveLength(0);
+
+      const res = await fake.sendTextMessage({
+        phoneNumberId: "1234567890",
+        to: "+1 (650) 555-0123",
+        text: "Hello from Wabrix agent!",
+        accessToken: "test_token"
+      });
+
+      expect(res.messageId).toContain("wamid.");
+      expect(res.recipientId).toBe("16505550123");
+      expect(fake.getSentMessages()).toHaveLength(1);
+      expect(fake.getSentMessages()[0]?.text).toBe("Hello from Wabrix agent!");
+
+      fake.clear();
+      expect(fake.getSentMessages()).toHaveLength(0);
+    });
+
+    it("generates realistic inbound text webhook payload", () => {
+      const fake = new FakeWhatsAppProvider();
+      const payload = fake.createInboundTextWebhook({
+        phoneNumberId: "9876543210",
+        from: "+62 812 3456 7890",
+        text: "I need help with my booking",
+        senderName: "Budi"
+      });
+
+      expect(payload.object).toBe("whatsapp_business_account");
+      const entry = payload.entry[0];
+      expect(entry).toBeDefined();
+      const change = entry?.changes[0]?.value;
+      expect(change).toBeDefined();
+      expect(change?.metadata.phone_number_id).toBe("9876543210");
+      expect(change?.contacts?.[0]?.profile.name).toBe("Budi");
+      expect(change?.contacts?.[0]?.wa_id).toBe("6281234567890");
+      expect(change?.messages?.[0]?.text.body).toBe("I need help with my booking");
+    });
+
+    it("generates realistic status webhook payload", () => {
+      const fake = new FakeWhatsAppProvider();
+      const payload = fake.createStatusWebhook({
+        phoneNumberId: "9876543210",
+        messageId: "wamid.test12345==",
+        recipientId: "+16505550123",
+        status: "delivered"
+      });
+
+      const entry = payload.entry[0];
+      expect(entry).toBeDefined();
+      const change = entry?.changes[0]?.value;
+      expect(change).toBeDefined();
+      expect(change?.statuses?.[0]?.id).toBe("wamid.test12345==");
+      expect(change?.statuses?.[0]?.status).toBe("delivered");
+      expect(change?.statuses?.[0]?.recipient_id).toBe("16505550123");
+    });
+
+    it("simulates classified errors when configured", async () => {
+      const fake = new FakeWhatsAppProvider();
+      fake.simulateFailure = () =>
+        new WhatsAppProviderError({
+          message: "Recipient is outside 24h service window",
+          classification: "OUTSIDE_WINDOW",
+          statusCode: 400,
+          providerCode: 131047
+        });
+
+      await expect(
+        fake.sendTextMessage({
+          phoneNumberId: "123",
+          to: "123456789",
+          text: "Hi",
+          accessToken: "token"
+        })
+      ).rejects.toThrow("Recipient is outside 24h service window");
+    });
+  });
+
+  describe("MetaWhatsAppProvider", () => {
+    it("exchanges an Embedded Signup code, assigns the system user, and subscribes the selected WABA", async () => {
+      const fetchFn = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ access_token: "EAAG_embedded_token", expires_in: 3600 }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        )
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true }), { status: 200 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true }), { status: 200 }));
+      const provider = new MetaWhatsAppProvider({ fetchFn: fetchFn as typeof fetch });
+
+      const token = await provider.exchangeEmbeddedSignupCode({
+        code: "one-time-code",
+        appId: "wabrix-app-id",
+        appSecret: "server-only-app-secret"
+      });
+      await provider.assignWhatsAppBusinessAccountSystemUser({
+        wabaId: "waba_456",
+        systemUserId: "wabrix-system-user-id",
+        adminAccessToken: "business-admin-token"
+      });
+      await provider.subscribeWhatsAppBusinessAccount({
+        wabaId: "waba_456",
+        accessToken: token.accessToken
+      });
+
+      expect(token).toEqual({ accessToken: "EAAG_embedded_token", expiresIn: 3600 });
+      expect(fetchFn.mock.calls[0]?.[0]).toContain("/oauth/access_token?");
+      expect(fetchFn.mock.calls[1]?.[0]).toBe(
+        "https://graph.facebook.com/v21.0/waba_456/assigned_users?user=wabrix-system-user-id&tasks=%5B%22MANAGE%22%5D"
+      );
+      const assignmentRequest = fetchFn.mock.calls[1]?.[1] as RequestInit | undefined;
+      expect(new Headers(assignmentRequest?.headers).get("Authorization")).toBe(
+        "Bearer business-admin-token"
+      );
+      expect(fetchFn.mock.calls[2]?.[0]).toBe(
+        "https://graph.facebook.com/v21.0/waba_456/subscribed_apps"
+      );
+      const subscriptionRequest = fetchFn.mock.calls[2]?.[1] as RequestInit | undefined;
+      expect(new Headers(subscriptionRequest?.headers).get("Authorization")).toBe(
+        "Bearer EAAG_embedded_token"
+      );
+    });
+
+    it("fails closed when Meta rejects WABA subscription", async () => {
+      const provider = new MetaWhatsAppProvider({
+        fetchFn: vi.fn().mockResolvedValue(
+          new Response(JSON.stringify({ error: { code: 10 } }), {
+            status: 403,
+            headers: { "Content-Type": "application/json" }
+          })
+        ) as typeof fetch
+      });
+      await expect(
+        provider.subscribeWhatsAppBusinessAccount({
+          wabaId: "waba_456",
+          accessToken: "EAAG_never_log_this"
+        })
+      ).rejects.toMatchObject({ classification: "PERMISSION_DENIED", statusCode: 403 });
+    });
+
+    it("verifies phone metadata with the raw token and enforces the WABA relationship", async () => {
+      const requests: Array<{ url: string; authorization: string | null }> = [];
+      const fetchFn: typeof fetch = (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+        requests.push({
+          url,
+          authorization: new Headers(init?.headers).get("Authorization")
+        });
+        const responseBody = url.includes("/waba_456/phone_numbers")
+          ? { data: [{ id: "phone_123" }] }
+          : {
+              id: "phone_123",
+              display_phone_number: "+62 812 3456 7890",
+              verified_name: "Wabrix"
+            };
+        return Promise.resolve(
+          new Response(JSON.stringify(responseBody), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        );
+      };
+      const provider = new MetaWhatsAppProvider({
+        fetchFn
+      });
+
+      await expect(
+        provider.verifyPhoneNumber({
+          phoneNumberId: "phone_123",
+          wabaId: "waba_456",
+          accessToken: "EAAG_raw_token"
+        })
+      ).resolves.toMatchObject({ phoneNumberId: "phone_123", wabaId: "waba_456" });
+      expect(requests).toHaveLength(2);
+      expect(requests.every((item) => item.authorization === "Bearer EAAG_raw_token")).toBe(true);
+      expect(requests.every((item) => !item.url.includes("EAAG_raw_token"))).toBe(true);
+      expect(requests[1]?.url).toContain("/waba_456/phone_numbers");
+    });
+
+    it("classifies revoked credentials without exposing the token", async () => {
+      const fetchFn: typeof fetch = () =>
+        Promise.resolve(
+          new Response(JSON.stringify({ error: { code: 190, message: "expired" } }), {
+            status: 401,
+            headers: { "Content-Type": "application/json" }
+          })
+        );
+      const provider = new MetaWhatsAppProvider({
+        fetchFn
+      });
+      await expect(
+        provider.verifyPhoneNumber({
+          phoneNumberId: "phone_123",
+          wabaId: "waba_456",
+          accessToken: "EAAG_secret_token"
+        })
+      ).rejects.toMatchObject({ classification: "AUTH_FAILED", providerCode: 190 });
+    });
+
+    it("rejects a phone number that is not listed under the configured WABA", async () => {
+      let requestCount = 0;
+      const fetchFn: typeof fetch = () => {
+        requestCount += 1;
+        const body = requestCount === 1 ? { id: "phone_123" } : { data: [{ id: "another_phone" }] };
+        return Promise.resolve(
+          new Response(JSON.stringify(body), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        );
+      };
+      const provider = new MetaWhatsAppProvider({ fetchFn });
+
+      await expect(
+        provider.verifyPhoneNumber({
+          phoneNumberId: "phone_123",
+          wabaId: "waba_456",
+          accessToken: "EAAG_secret_token"
+        })
+      ).rejects.toMatchObject({ classification: "RESOURCE_MISMATCH", statusCode: 409 });
+    });
+
+    it("uploads private object bytes before sending a provider media id", async () => {
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ id: "media-meta-1" }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        )
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              messages: [{ id: "wamid.media-1" }],
+              contacts: [{ wa_id: "628123456789" }]
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          )
+        );
+      const provider = new MetaWhatsAppProvider({ fetchFn: mockFetch as typeof fetch });
+
+      const upload = await provider.uploadMedia({
+        phoneNumberId: "phone-1",
+        fileName: "invoice.pdf",
+        contentType: "application/pdf",
+        data: Buffer.from("pdf"),
+        accessToken: "token"
+      });
+      const sent = await provider.sendMediaMessage({
+        phoneNumberId: "phone-1",
+        to: "+62 812 3456 789",
+        mediaType: "document",
+        mediaId: upload.mediaId,
+        fileName: "invoice.pdf",
+        accessToken: "token"
+      });
+
+      expect(upload.mediaId).toBe("media-meta-1");
+      expect(sent.messageId).toBe("wamid.media-1");
+      expect(mockFetch.mock.calls[0]?.[0]).toBe("https://graph.facebook.com/v21.0/phone-1/media");
+      const uploadRequest = mockFetch.mock.calls[0]?.[1] as RequestInit | undefined;
+      const sendRequest = mockFetch.mock.calls[1]?.[1] as RequestInit | undefined;
+      expect(uploadRequest?.body).toBeInstanceOf(FormData);
+      expect(sendRequest?.body).toContain('"id":"media-meta-1"');
+    });
+
+    it("rejects malformed media-send success responses so outcome is reconciled", async () => {
+      const provider = new MetaWhatsAppProvider({
+        fetchFn: vi.fn().mockResolvedValue(
+          new Response(JSON.stringify({ messages: [] }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+          })
+        ) as typeof fetch
+      });
+      await expect(
+        provider.sendMediaMessage({
+          phoneNumberId: "phone-1",
+          to: "628123456789",
+          mediaType: "image",
+          mediaId: "media-1",
+          accessToken: "token"
+        })
+      ).rejects.toThrow("missing message ID");
+    });
+
+    it("downloads inbound media only from Meta-owned HTTPS hosts", async () => {
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              url: "https://lookaside.fbsbx.com/whatsapp_business/attachments/1",
+              mime_type: "image/png",
+              file_size: 3
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          )
+        )
+        .mockResolvedValueOnce(new Response(Buffer.from("png"), { status: 200 }));
+      const provider = new MetaWhatsAppProvider({ fetchFn: mockFetch as typeof fetch });
+      const result = await provider.downloadMedia({
+        mediaId: "media-inbound-1",
+        accessToken: "token"
+      });
+      expect(result.data.toString()).toBe("png");
+      expect(result.contentType).toBe("image/png");
+    });
+
+    it("rejects provider media URLs that could target arbitrary infrastructure", async () => {
+      const provider = new MetaWhatsAppProvider({
+        fetchFn: vi.fn().mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              url: "http://169.254.169.254/latest/meta-data",
+              mime_type: "image/png"
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } }
+          )
+        ) as typeof fetch
+      });
+      await expect(
+        provider.downloadMedia({ mediaId: "media-ssrf", accessToken: "token" })
+      ).rejects.toThrow("outside the Meta HTTPS allowlist");
+    });
+
+    it("dispatches successfully to Meta Graph API endpoint", async () => {
+      const mockFetch = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              messages: [{ id: "wamid.realMeta123==" }],
+              contacts: [{ wa_id: "16505550199" }]
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" }
+            }
+          )
+        )
+      );
+
+      const provider = new MetaWhatsAppProvider({
+        fetchFn: mockFetch as typeof fetch
+      });
+
+      const res = await provider.sendTextMessage({
+        phoneNumberId: "phone_12345",
+        to: "+1 650 555-0199",
+        text: "Live message from Wabrix",
+        accessToken: "EAAB_test_access_token"
+      });
+
+      expect(res.messageId).toBe("wamid.realMeta123==");
+      expect(res.recipientId).toBe("16505550199");
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://graph.facebook.com/v21.0/phone_12345/messages",
+        expect.objectContaining({
+          method: "POST",
+          headers: {
+            Authorization: "Bearer EAAB_test_access_token",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messaging_product: "whatsapp",
+            recipient_type: "individual",
+            to: "16505550199",
+            type: "text",
+            text: {
+              preview_url: false,
+              body: "Live message from Wabrix"
+            }
+          })
+        })
+      );
+    });
+
+    it("classifies authentication failures (401 / code 190)", async () => {
+      const mockFetch = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              error: {
+                message: "Invalid OAuth access token",
+                type: "OAuthException",
+                code: 190
+              }
+            }),
+            {
+              status: 401,
+              headers: { "Content-Type": "application/json" }
+            }
+          )
+        )
+      );
+
+      const provider = new MetaWhatsAppProvider({ fetchFn: mockFetch as typeof fetch });
+
+      try {
+        await provider.sendTextMessage({
+          phoneNumberId: "phone_12345",
+          to: "16505550199",
+          text: "Hi",
+          accessToken: "expired_token"
+        });
+        expect.unreachable();
+      } catch (err) {
+        expect(err).toBeInstanceOf(WhatsAppProviderError);
+        const wErr = err as WhatsAppProviderError;
+        expect(wErr.classification).toBe("AUTH_FAILED");
+        expect(wErr.isTransient).toBe(false);
+        expect(wErr.providerCode).toBe(190);
+      }
+    });
+
+    it("classifies rate limit errors as transient (429 / code 130429)", async () => {
+      const mockFetch = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              error: {
+                message: "Rate limit exceeded",
+                code: 130429
+              }
+            }),
+            {
+              status: 429,
+              headers: { "Content-Type": "application/json" }
+            }
+          )
+        )
+      );
+
+      const provider = new MetaWhatsAppProvider({ fetchFn: mockFetch as typeof fetch });
+
+      try {
+        await provider.sendTextMessage({
+          phoneNumberId: "phone_12345",
+          to: "16505550199",
+          text: "Hi",
+          accessToken: "token"
+        });
+        expect.unreachable();
+      } catch (err) {
+        expect(err).toBeInstanceOf(WhatsAppProviderError);
+        const wErr = err as WhatsAppProviderError;
+        expect(wErr.classification).toBe("RATE_LIMIT_EXCEEDED");
+        expect(wErr.isTransient).toBe(true);
+      }
+    });
+
+    it("classifies 5xx errors as transient", async () => {
+      const mockFetch = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({}), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+          })
+        )
+      );
+
+      const provider = new MetaWhatsAppProvider({ fetchFn: mockFetch as typeof fetch });
+
+      try {
+        await provider.sendTextMessage({
+          phoneNumberId: "phone_12345",
+          to: "16505550199",
+          text: "Hi",
+          accessToken: "token"
+        });
+        expect.unreachable();
+      } catch (err) {
+        expect(err).toBeInstanceOf(WhatsAppProviderError);
+        const wErr = err as WhatsAppProviderError;
+        expect(wErr.classification).toBe("TRANSIENT");
+        expect(wErr.isTransient).toBe(true);
+      }
+    });
+
+    it("fetches message templates via MetaWhatsAppProvider and parses payload", async () => {
+      const mockFetch = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              data: [
+                {
+                  id: "tpl_123",
+                  name: "shipping_update",
+                  language: "id",
+                  category: "UTILITY",
+                  status: "APPROVED",
+                  components: [{ type: "BODY", text: "Pesanan {{1}} dikirim." }]
+                }
+              ],
+              paging: {
+                cursors: { after: "cursor_abc" },
+                next: "https://graph.facebook.com/v21.0/waba_123/message_templates?after=cursor_abc"
+              }
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" }
+            }
+          )
+        )
+      );
+
+      const provider = new MetaWhatsAppProvider({ fetchFn: mockFetch as typeof fetch });
+      const result = await provider.fetchMessageTemplates({
+        wabaId: "waba_123",
+        accessToken: "valid_token"
+      });
+
+      expect(result.data.length).toBe(1);
+      expect(result.data[0]?.name).toBe("shipping_update");
+      expect(result.data[0]?.status).toBe("APPROVED");
+      expect(result.paging?.cursors?.after).toBe("cursor_abc");
+    });
+  });
+
+  describe("FakeWhatsAppProvider template sync", () => {
+    it("manages and paginates mock templates", async () => {
+      const fake = new FakeWhatsAppProvider();
+      fake.setTemplates([
+        {
+          id: "tpl-1",
+          name: "welcome",
+          language: "en_US",
+          category: "MARKETING",
+          status: "APPROVED",
+          components: [{ type: "BODY", text: "Welcome!" }]
+        },
+        {
+          id: "tpl-2",
+          name: "alert",
+          language: "id",
+          category: "UTILITY",
+          status: "PENDING",
+          components: [{ type: "BODY", text: "Peringatan!" }]
+        }
+      ]);
+
+      const page1 = await fake.fetchMessageTemplates({
+        wabaId: "fake_waba",
+        accessToken: "tok",
+        limit: 1
+      });
+
+      expect(page1.data.length).toBe(1);
+      expect(page1.data[0]?.id).toBe("tpl-1");
+      expect(page1.paging?.cursors?.after).toBe("tpl-1");
+
+      const page2 = await fake.fetchMessageTemplates({
+        wabaId: "fake_waba",
+        accessToken: "tok",
+        after: "tpl-1"
+      });
+
+      expect(page2.data.length).toBe(1);
+      expect(page2.data[0]?.id).toBe("tpl-2");
+    });
+
+    it("simulates template status update", async () => {
+      const fake = new FakeWhatsAppProvider();
+      fake.addTemplate({
+        id: "tpl-reject",
+        name: "discount",
+        language: "id",
+        category: "MARKETING",
+        status: "PENDING",
+        components: [{ type: "BODY", text: "Diskon 50%!" }]
+      });
+
+      fake.simulateTemplateStatusUpdate(
+        "tpl-reject",
+        "REJECTED",
+        "Content violates commercial policy"
+      );
+
+      const res = await fake.fetchMessageTemplates({
+        wabaId: "fake_waba",
+        accessToken: "tok"
+      });
+
+      expect(res.data[0]?.status).toBe("REJECTED");
+      expect(res.data[0]?.rejected_reason).toBe("Content violates commercial policy");
+    });
+
+    it("sends approved template message and records log", async () => {
+      const fake = new FakeWhatsAppProvider();
+      fake.addTemplate({
+        id: "tpl-welcome",
+        name: "welcome_message",
+        language: "id",
+        category: "UTILITY",
+        status: "APPROVED",
+        components: [{ type: "BODY", text: "Selamat datang!" }]
+      });
+
+      const res = await fake.sendTemplateMessage({
+        phoneNumberId: "phone_12345",
+        to: "+628123456789",
+        templateName: "welcome_message",
+        language: "id",
+        accessToken: "test_token"
+      });
+
+      expect(res.messageId).toContain("wamid.HBgL");
+      expect(res.recipientId).toBe("628123456789");
+      expect(fake.getSentMessages()).toHaveLength(1);
+    });
+
+    it("blocks non-approved template send on FakeWhatsAppProvider", async () => {
+      const fake = new FakeWhatsAppProvider();
+      fake.addTemplate({
+        id: "tpl-pending",
+        name: "pending_tpl",
+        language: "id",
+        category: "MARKETING",
+        status: "PENDING",
+        components: [{ type: "BODY", text: "Promo pending" }]
+      });
+
+      await expect(
+        fake.sendTemplateMessage({
+          phoneNumberId: "phone_12345",
+          to: "+628123456789",
+          templateName: "pending_tpl",
+          language: "id",
+          accessToken: "test_token"
+        })
+      ).rejects.toThrow("Template 'pending_tpl' is PENDING, sending is blocked");
+    });
+  });
+
+  describe("MetaWhatsAppProvider sendTemplateMessage", () => {
+    it("formats template payload for Graph API and returns message ID", async () => {
+      let capturedUrl = "";
+      let capturedPayload: unknown = null;
+
+      const mockFetch = vi.fn().mockImplementation((url: string, opts: RequestInit) => {
+        capturedUrl = url;
+        capturedPayload = JSON.parse(opts.body as string);
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              messages: [{ id: "wamid.HBgLmetaTemplateSend123==" }],
+              contacts: [{ wa_id: "628123456789" }]
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" }
+            }
+          )
+        );
+      });
+
+      const provider = new MetaWhatsAppProvider({ fetchFn: mockFetch as typeof fetch });
+      const res = await provider.sendTemplateMessage({
+        phoneNumberId: "phone_001",
+        to: "+62 812-3456-789",
+        templateName: "order_status",
+        language: "id",
+        components: [
+          {
+            type: "body",
+            parameters: [{ type: "text", text: "ORD-999" }]
+          }
+        ],
+        accessToken: "EAAB_secret"
+      });
+
+      expect(capturedUrl).toBe("https://graph.facebook.com/v21.0/phone_001/messages");
+      expect(capturedPayload).toEqual({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: "628123456789",
+        type: "template",
+        template: {
+          name: "order_status",
+          language: { code: "id" },
+          components: [
+            {
+              type: "body",
+              parameters: [{ type: "text", text: "ORD-999" }]
+            }
+          ]
+        }
+      });
+      expect(res.messageId).toBe("wamid.HBgLmetaTemplateSend123==");
+      expect(res.recipientId).toBe("628123456789");
+    });
+
+    it("classifies outside service window error (code 131047)", async () => {
+      const mockFetch = vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              error: {
+                message:
+                  "Re-engagement message: More than 24 hours have elapsed since the customer last replied to this number.",
+                type: "OAuthException",
+                code: 131047
+              }
+            }),
+            {
+              status: 400,
+              headers: { "Content-Type": "application/json" }
+            }
+          )
+        )
+      );
+
+      const provider = new MetaWhatsAppProvider({ fetchFn: mockFetch as typeof fetch });
+      try {
+        await provider.sendTextMessage({
+          phoneNumberId: "phone_001",
+          to: "628123456789",
+          text: "Free-form follow up after 24h",
+          accessToken: "EAAB_secret"
+        });
+        expect.unreachable();
+      } catch (err) {
+        expect(err).toBeInstanceOf(WhatsAppProviderError);
+        const wErr = err as WhatsAppProviderError;
+        expect(wErr.classification).toBe("OUTSIDE_WINDOW");
+        expect(wErr.providerCode).toBe(131047);
+      }
+    });
+  });
+});

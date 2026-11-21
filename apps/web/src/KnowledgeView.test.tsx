@@ -1,0 +1,293 @@
+// @vitest-environment jsdom
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { KnowledgeView } from "./KnowledgeView.js";
+import { BotConfiguration } from "./features/inbox/components/BotConfiguration.js";
+
+const originalFetch = globalThis.fetch;
+const orgId = "30000000-0000-4000-8000-000000000001";
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" }
+  });
+}
+
+function botConfig(mode: "off" | "draft" | "auto" = "draft") {
+  const now = new Date().toISOString();
+  return {
+    id: "41000000-0000-4000-8000-000000000001",
+    organizationId: orgId,
+    instructions: "Answer from approved knowledge.",
+    tone: "professional",
+    language: "id",
+    model: "gemini-3.7-flash",
+    confidenceThreshold: 0.9,
+    topK: 5,
+    mode,
+    emergencyDisabled: false,
+    createdAt: now,
+    updatedAt: now
+  };
+}
+
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === "string") return input;
+  return input instanceof URL ? input.href : input.url;
+}
+
+afterEach(() => {
+  cleanup();
+  globalThis.fetch = originalFetch;
+  vi.restoreAllMocks();
+});
+
+describe("KnowledgeView", () => {
+  it("shows durable processing and failed states after loading", async () => {
+    globalThis.fetch = vi.fn((input: RequestInfo | URL) =>
+      Promise.resolve(
+        requestUrl(input).includes("/bot/config")
+          ? json(botConfig())
+          : json({
+              sources: [
+                {
+                  id: "40000000-0000-4000-8000-000000000001",
+                  organizationId: orgId,
+                  type: "text",
+                  name: "Policy",
+                  sourceUri: null,
+                  status: "processing",
+                  statusReason: null,
+                  byteSize: 0,
+                  lastIndexedAt: null,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                },
+                {
+                  id: "40000000-0000-4000-8000-000000000002",
+                  organizationId: orgId,
+                  type: "url",
+                  name: "Unsafe source",
+                  sourceUri: "https://example.com/help",
+                  status: "failed",
+                  statusReason: "The public knowledge URL could not be ingested safely.",
+                  byteSize: 0,
+                  lastIndexedAt: null,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                }
+              ]
+            })
+      )
+    );
+
+    render(<KnowledgeView orgId={orgId} canManage={true} showToast={vi.fn()} />);
+
+    expect(await screen.findByText("Policy")).toBeTruthy();
+    expect(screen.getByText("processing")).toBeTruthy();
+    expect(screen.getByText("failed")).toBeTruthy();
+    expect(screen.getByText("The public knowledge URL could not be ingested safely.")).toBeTruthy();
+  });
+
+  it("submits text and refreshes the queued source", async () => {
+    let listCount = 0;
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      if (url.includes("/bot/config")) return Promise.resolve(json(botConfig()));
+      if (init?.method === "POST")
+        return Promise.resolve(
+          json(
+            {
+              source: {
+                id: "40000000-0000-4000-8000-000000000003",
+                organizationId: orgId,
+                type: "text",
+                name: "Refunds",
+                sourceUri: null,
+                status: "queued",
+                statusReason: null,
+                byteSize: 0,
+                lastIndexedAt: null,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              },
+              jobId: "50000000-0000-4000-8000-000000000001"
+            },
+            202
+          )
+        );
+      listCount += 1;
+      return Promise.resolve(
+        json(
+          listCount === 1
+            ? { sources: [] }
+            : {
+                sources: [
+                  {
+                    id: "40000000-0000-4000-8000-000000000003",
+                    organizationId: orgId,
+                    type: "text",
+                    name: "Refunds",
+                    sourceUri: null,
+                    status: "queued",
+                    statusReason: null,
+                    byteSize: 0,
+                    lastIndexedAt: null,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                  }
+                ]
+              }
+        )
+      );
+    });
+    globalThis.fetch = fetchMock;
+
+    render(<KnowledgeView orgId={orgId} canManage={true} showToast={vi.fn()} />);
+    await screen.findByText("No knowledge sources yet.");
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Refunds" } });
+    fireEvent.change(screen.getByLabelText("Knowledge text"), {
+      target: { value: "Refunds are available for seven days." }
+    });
+    fireEvent.click(screen.getByText("Add knowledge"));
+
+    expect(await screen.findByText("queued")).toBeTruthy();
+    const postCall = fetchMock.mock.calls.find((call) => call[1]?.method === "POST");
+    expect(postCall?.[1]).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({
+        type: "text",
+        name: "Refunds",
+        content: "Refunds are available for seven days."
+      })
+    });
+  });
+
+  it("hides the creation form from roles without manage permission", async () => {
+    globalThis.fetch = vi.fn((input: RequestInfo | URL) =>
+      Promise.resolve(
+        requestUrl(input).includes("/bot/config") ? json(botConfig()) : json({ sources: [] })
+      )
+    );
+    render(<KnowledgeView orgId={orgId} canManage={false} showToast={vi.fn()} />);
+
+    await screen.findByText("No knowledge sources yet.");
+    expect(screen.queryByText("Add knowledge")).toBeNull();
+    expect(screen.queryByLabelText("Bot mode")).toBeNull();
+  });
+
+  it("enables AUTO from the Inbox bot controls through the existing API", async () => {
+    const showToast = vi.fn();
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      if (url.includes("/bot/config") && init?.method === "PUT") {
+        return Promise.resolve(json(botConfig("auto")));
+      }
+      if (url.includes("/bot/config")) return Promise.resolve(json(botConfig("draft")));
+      return Promise.resolve(json({ sources: [] }));
+    });
+    globalThis.fetch = fetchMock;
+    render(<BotConfiguration orgId={orgId} canManage={true} showToast={showToast} />);
+
+    const select = await screen.findByLabelText("Bot mode");
+    fireEvent.change(select, { target: { value: "auto" } });
+    fireEvent.click(screen.getByText("Save AUTO mode"));
+
+    await waitFor(() =>
+      expect(
+        fetchMock.mock.calls.some((call) => call[1]?.body === JSON.stringify({ mode: "auto" }))
+      ).toBe(true)
+    );
+    expect(showToast).toHaveBeenCalledWith(expect.stringContaining("AUTO enabled"), "success");
+  });
+
+  it("shows the actual bot mode read-only for agents without automation permission", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(json(botConfig("off")));
+    render(<BotConfiguration orgId={orgId} canManage={false} />);
+    const mode = await screen.findByLabelText<HTMLSelectElement>("Bot mode");
+    expect(mode.value).toBe("off");
+    expect(mode.disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: /Save .* mode/ })).toBeNull();
+    expect(screen.queryByTestId("automation-emergency-stop")).toBeNull();
+  });
+
+  it("recovers from a bot config load error and preserves mode when emergency stop fails", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json({ detail: "Unavailable" }, 503))
+      .mockResolvedValueOnce(json(botConfig("draft")))
+      .mockResolvedValueOnce(json({ detail: "Stop could not be applied" }, 503));
+    globalThis.fetch = fetchMock;
+    render(<BotConfiguration orgId={orgId} canManage={true} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Retry configuration" }));
+    const mode = await screen.findByLabelText<HTMLSelectElement>("Bot mode");
+    fireEvent.click(screen.getByTestId("automation-emergency-stop"));
+    expect(await screen.findByText("Stop could not be applied")).toBeTruthy();
+    expect(mode.value).toBe("draft");
+    expect(mode.disabled).toBe(false);
+    expect(fetchMock.mock.calls[2]?.[1]).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({ enabled: true })
+    });
+  });
+
+  it("renders automation policy section and displays simulator decision trace", async () => {
+    const showToast = vi.fn();
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      if (url.includes("/routing/policies/simulate") && init?.method === "POST") {
+        return Promise.resolve(
+          json({
+            matchedRule: { id: "r1", name: "VIP Route", priority: 10 },
+            action: "route",
+            reason: "Matched VIP Route",
+            targetQueueId: "q1",
+            decisionTrace: [
+              {
+                ruleId: "r1",
+                ruleName: "VIP Route",
+                priority: 10,
+                matched: true,
+                reason: "All satisfied",
+                conditionsEvaluated: {}
+              }
+            ],
+            conflicts: []
+          })
+        );
+      }
+      if (url.includes("/routing/policies")) {
+        return Promise.resolve(
+          json([
+            {
+              id: "p1",
+              organizationId: orgId,
+              version: 1,
+              status: "published",
+              name: "Active Policy",
+              rules: [{ id: "r1", name: "VIP Route", priority: 10 }],
+              metadata: {},
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            }
+          ])
+        );
+      }
+      if (url.includes("/bot/config")) return Promise.resolve(json(botConfig("auto")));
+      return Promise.resolve(json({ sources: [] }));
+    });
+    globalThis.fetch = fetchMock;
+
+    render(<KnowledgeView orgId={orgId} canManage={true} showToast={showToast} />);
+
+    expect(await screen.findByTestId("automation-policy-section")).toBeTruthy();
+    expect(screen.getByText("Active Version:")).toBeTruthy();
+
+    const simBtn = screen.getByTestId("policy-simulator-btn");
+    fireEvent.click(simBtn);
+
+    await waitFor(() => expect(screen.getByTestId("policy-simulator-results")).toBeTruthy());
+    expect(screen.getAllByText(/VIP Route/).length).toBeGreaterThanOrEqual(1);
+  });
+});

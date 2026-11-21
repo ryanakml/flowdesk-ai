@@ -1,0 +1,34 @@
+{
+  "name": "@wabrix/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx watch --env-file-if-exists=../../.env src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:integration": "vitest run src/vertical-slice.integration.test.ts",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist coverage"
+  },
+  "dependencies": {
+    "@wabrix/config": "workspace:*",
+    "@wabrix/contracts": "workspace:*",
+    "@wabrix/db": "workspace:*",
+    "@wabrix/domain": "workspace:*",
+    "@wabrix/observability": "workspace:*",
+    "@wabrix/providers": "workspace:*",
+    "@wabrix/security": "workspace:*",
+    "pg": "8.16.3",
+    "redis": "^5.12.1"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.5",
+    "tsx": "^4.20.5"
+  }
+}

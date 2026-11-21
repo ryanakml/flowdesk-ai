@@ -1,0 +1,1751 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const targetPath = resolve(__dirname, "../../../docs/api/openapi.json");
+
+export function buildOpenApiSpec() {
+  return {
+    openapi: "3.1.0",
+    info: {
+      title: "Wabrix API",
+      version: "1.0.0",
+      description: "Wabrix secure multi-tenant customer engagement API."
+    },
+    servers: [
+      {
+        url: "http://localhost:4000",
+        description: "Local Development API Server"
+      },
+      {
+        url: "https://api.wabrix.dev",
+        description: "Production API Server"
+      }
+    ],
+    paths: {
+      "/livez": {
+        get: {
+          summary: "Liveness probe",
+          operationId: "getLivez",
+          responses: {
+            200: {
+              description: "Process is alive",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { status: { type: "string", example: "ok" } },
+                    required: ["status"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/readyz": {
+        get: {
+          summary: "Readiness probe",
+          operationId: "getReadyz",
+          responses: {
+            200: {
+              description: "Process is ready to serve traffic",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { status: { type: "string", example: "ok" } },
+                    required: ["status"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/system/build": {
+        get: {
+          summary: "Service build metadata",
+          operationId: "getBuildInfo",
+          responses: {
+            200: {
+              description: "Build information",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/BuildInfo" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/auth/authorize": {
+        get: {
+          summary: "Initiate OIDC authorization flow",
+          operationId: "authAuthorize",
+          parameters: [
+            {
+              name: "redirectUri",
+              in: "query",
+              required: false,
+              schema: { type: "string" }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Authorization redirect URL",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { authorizationUrl: { type: "string" } },
+                    required: ["authorizationUrl"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/auth/callback": {
+        get: {
+          summary: "Handle OIDC identity provider callback",
+          operationId: "authCallback",
+          parameters: [
+            { name: "code", in: "query", required: true, schema: { type: "string" } },
+            { name: "state", in: "query", required: true, schema: { type: "string" } }
+          ],
+          responses: {
+            302: {
+              description: "Sets session cookie and redirects user"
+            },
+            400: {
+              description: "Invalid state or code",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/auth/session": {
+        get: {
+          summary: "Inspect authenticated session",
+          operationId: "getSession",
+          responses: {
+            200: {
+              description: "Current session info",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/SessionState" }
+                }
+              }
+            },
+            401: {
+              description: "Missing or expired session",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/auth/logout": {
+        get: {
+          summary: "Revoke session, clear cookies, and redirect to upstream OIDC logout endpoint",
+          operationId: "authLogoutGet",
+          parameters: [
+            {
+              name: "returnTo",
+              in: "query",
+              required: false,
+              description: "Optional safe post-logout return path or URL",
+              schema: { type: "string", example: "/" }
+            }
+          ],
+          responses: {
+            302: {
+              description: "Redirect to provider logout URL"
+            }
+          }
+        },
+        post: {
+          summary: "Revoke session and clear cookies, returning upstream logoutUrl",
+          operationId: "authLogout",
+          parameters: [
+            {
+              name: "returnTo",
+              in: "query",
+              required: false,
+              description: "Optional safe post-logout return path or URL",
+              schema: { type: "string", example: "/" }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Successfully logged out",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      status: { type: "string", example: "ok" },
+                      logoutUrl: { type: "string", format: "uri" }
+                    },
+                    required: ["status"]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations": {
+        get: {
+          summary: "List organizations for authenticated user",
+          operationId: "listUserOrganizations",
+          responses: {
+            200: {
+              description: "List of user organizations and active roles",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ListUserOrganizationsResponse" }
+                }
+              }
+            },
+            401: {
+              description: "Unauthorized",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        },
+        post: {
+          summary: "Bootstrap a new organization",
+          operationId: "bootstrapOrganization",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/BootstrapOrganizationRequest" }
+              }
+            }
+          },
+          responses: {
+            201: {
+              description: "Organization successfully bootstrapped",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/BootstrapOrganizationResponse" }
+                }
+              }
+            },
+            400: {
+              description: "Validation error or invalid slug",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            },
+            401: {
+              description: "Unauthorized",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/invitations/accept": {
+        post: {
+          summary: "Accept an organization invitation token",
+          operationId: "acceptInvitation",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AcceptInvitationRequest" }
+              }
+            }
+          },
+          responses: {
+            200: {
+              description: "Invitation accepted",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/AcceptInvitationResponse" }
+                }
+              }
+            },
+            400: {
+              description: "Invalid, expired, or replayed invitation",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/members": {
+        get: {
+          summary: "List organization members",
+          operationId: "listMembers",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          responses: {
+            200: {
+              description: "List of members",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ListMembersResponse" }
+                }
+              }
+            },
+            403: {
+              description: "Forbidden or not a member",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/members/{memberId}": {
+        patch: {
+          summary: "Update member role",
+          operationId: "updateMemberRole",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "memberId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string" } }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdateMembershipRoleRequest" }
+              }
+            }
+          },
+          responses: {
+            200: {
+              description: "Role updated",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      membershipId: { type: "string", format: "uuid" },
+                      role: { type: "string" }
+                    },
+                    required: ["membershipId", "role"]
+                  }
+                }
+              }
+            },
+            400: {
+              description: "Validation error or last-owner protection violation",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        },
+        delete: {
+          summary: "Revoke organization membership",
+          operationId: "revokeMember",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "memberId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string" } }
+          ],
+          responses: {
+            200: {
+              description: "Member revoked",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { status: { type: "string", example: "ok" } },
+                    required: ["status"]
+                  }
+                }
+              }
+            },
+            400: {
+              description: "Last-owner protection violation",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/invitations": {
+        post: {
+          summary: "Create and issue an organization invitation",
+          operationId: "createInvitation",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string" } }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateInvitationRequest" }
+              }
+            }
+          },
+          responses: {
+            201: {
+              description: "Invitation created",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/CreateInvitationResponse" }
+                }
+              }
+            },
+            403: {
+              description: "Forbidden",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/invitations/{inviteId}": {
+        delete: {
+          summary: "Revoke a pending invitation",
+          operationId: "revokeInvitation",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "inviteId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "Idempotency-Key", in: "header", required: false, schema: { type: "string" } }
+          ],
+          responses: {
+            200: {
+              description: "Invitation revoked",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { status: { type: "string", example: "ok" } },
+                    required: ["status"]
+                  }
+                }
+              }
+            },
+            404: {
+              description: "Invitation not found or not pending",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/audit-logs": {
+        get: {
+          summary: "List organization audit logs with cursor pagination",
+          operationId: "listAuditLogs",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "cursor", in: "query", required: false, schema: { type: "string" } },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: { type: "integer", default: 50, minimum: 1, maximum: 100 }
+            },
+            { name: "action", in: "query", required: false, schema: { type: "string" } },
+            {
+              name: "actorUserId",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Audit logs page",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ListAuditLogsResponse" }
+                }
+              }
+            },
+            403: {
+              description: "Forbidden without audit:view capability",
+              content: {
+                "application/problem+json": {
+                  schema: { $ref: "#/components/schemas/Problem" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/channels": {
+        get: {
+          summary: "List WhatsApp channels",
+          operationId: "listChannels",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Tenant channels without stored credentials",
+              content: {
+                "application/json": {
+                  schema: { type: "array", items: { $ref: "#/components/schemas/Channel" } }
+                }
+              }
+            },
+            403: { description: "Forbidden" }
+          }
+        },
+        post: {
+          summary: "Verify and connect a WhatsApp channel with a customer access token",
+          operationId: "createChannel",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/CreateChannelRequest" } }
+            }
+          },
+          responses: {
+            201: {
+              description:
+                "Phone/WABA ownership verified, WABA subscribed, and channel activated; credentials are never returned",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/VerifiedChannelConnectionResponse" }
+                }
+              }
+            },
+            400: { description: "Invalid channel input" },
+            403: { description: "Forbidden" },
+            409: { description: "WABA ownership or identifier conflict" },
+            422: { description: "Meta verification or WABA subscription failed" }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/channels/{channelId}": {
+        patch: {
+          summary: "Update channel status",
+          operationId: "updateChannelStatus",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "channelId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdateChannelStatusRequest" }
+              }
+            }
+          },
+          responses: { 200: { description: "Updated channel" }, 403: { description: "Forbidden" } }
+        },
+        delete: {
+          summary: "Delete an unused channel",
+          operationId: "deleteChannel",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "channelId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          responses: { 200: { description: "Channel deleted" }, 403: { description: "Forbidden" } }
+        }
+      },
+      "/api/v1/organizations/{orgId}/channels/{channelId}/credentials": {
+        patch: {
+          summary: "Rotate a channel access token in place",
+          operationId: "rotateChannelCredentials",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "channelId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/RotateChannelCredentialsRequest" }
+              }
+            }
+          },
+          responses: {
+            200: {
+              description: "Credentials rotated without replacing the channel",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/RotateChannelCredentialsResponse" }
+                }
+              }
+            },
+            400: { description: "Invalid credential input" },
+            403: { description: "Forbidden" },
+            404: { description: "Channel not found" }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/channels/{channelId}/verify": {
+        post: {
+          summary: "Verify stored channel credentials against Meta",
+          operationId: "verifyChannel",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "channelId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Meta credential verification result",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/VerifyChannelResponse" }
+                }
+              }
+            },
+            403: { description: "Forbidden" },
+            404: { description: "Channel not found" }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/conversations": {
+        get: {
+          summary: "List conversations with filters and pagination",
+          operationId: "listConversations",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "status",
+              in: "query",
+              required: false,
+              schema: { type: "string", enum: ["new", "open", "pending", "resolved", "closed"] }
+            },
+            { name: "assignedTo", in: "query", required: false, schema: { type: "string" } },
+            {
+              name: "queueId",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "cursor", in: "query", required: false, schema: { type: "string" } },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, maximum: 100, default: 20 }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Paginated list of conversations",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ListConversationsResponse" }
+                }
+              }
+            },
+            401: {
+              description: "Unauthorized",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            403: {
+              description: "Forbidden",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/conversations/workspace-resources": {
+        get: {
+          summary: "List the current operator's visible queues, tags, and saved filters",
+          operationId: "getInboxWorkspaceResources",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Tenant and user scoped inbox resources",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/InboxWorkspaceResources" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/conversations/saved-filters": {
+        post: {
+          summary: "Create or replace a personal inbox filter",
+          operationId: "saveInboxFilter",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateSavedFilterRequest" }
+              }
+            }
+          },
+          responses: { 201: { description: "Saved filter" } }
+        }
+      },
+      "/api/v1/organizations/{orgId}/conversations/saved-filters/{filterId}": {
+        delete: {
+          summary: "Delete a personal inbox filter",
+          operationId: "deleteInboxFilter",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            {
+              name: "filterId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          responses: {
+            204: { description: "Saved filter deleted" },
+            404: { description: "Filter not found or not owned by the operator" }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/conversations/events": {
+        get: {
+          summary: "Subscribe to tenant-scoped conversation invalidations",
+          operationId: "subscribeConversationEvents",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            }
+          ],
+          responses: {
+            200: {
+              description: "Server-sent event stream; clients reload authorized REST projections",
+              content: {
+                "text/event-stream": { schema: { type: "string" } }
+              }
+            },
+            401: {
+              description: "Unauthorized",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            403: {
+              description: "Forbidden without conversation:read permission",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/conversations/{id}": {
+        get: {
+          summary: "Get conversation details and chronological message timeline",
+          operationId: "getConversation",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }
+          ],
+          responses: {
+            200: {
+              description: "Conversation detail with messages",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/ConversationDetailResponse" }
+                }
+              }
+            },
+            401: {
+              description: "Unauthorized",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            403: {
+              description: "Forbidden",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            404: {
+              description: "Conversation not found",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            }
+          }
+        },
+        patch: {
+          summary:
+            "Update conversation status or assignee with optimistic concurrency version check",
+          operationId: "updateConversation",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UpdateConversationRequest" }
+              }
+            }
+          },
+          responses: {
+            200: {
+              description: "Updated conversation",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Conversation" }
+                }
+              }
+            },
+            400: {
+              description: "Invalid status transition or validation failure",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            401: {
+              description: "Unauthorized",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            403: {
+              description: "Forbidden",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            404: {
+              description: "Conversation not found",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            409: {
+              description:
+                "Optimistic concurrency conflict - conversation modified by another operator",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/conversations/{id}/messages": {
+        post: {
+          summary: "Send outbound message reply in conversation",
+          operationId: "createOutboundMessage",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+            {
+              name: "Idempotency-Key",
+              in: "header",
+              required: true,
+              schema: { type: "string", minLength: 1, maxLength: 256 }
+            }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateOutboundMessageRequest" }
+              }
+            }
+          },
+          responses: {
+            201: {
+              description: "Created outbound message queued for delivery",
+              content: {
+                "application/json": {
+                  schema: { $ref: "#/components/schemas/Message" }
+                }
+              }
+            },
+            400: {
+              description: "Validation error",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            401: {
+              description: "Unauthorized",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            403: {
+              description: "Forbidden without message:send permission",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            404: {
+              description: "Conversation not found",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/organizations/{orgId}/conversations/{id}/actions": {
+        post: {
+          summary: "Perform a race-safe conversation operation",
+          operationId: "performConversationOperation",
+          parameters: [
+            {
+              name: "orgId",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" }
+            },
+            { name: "id", in: "path", required: true, schema: { type: "string", format: "uuid" } }
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ConversationOperationRequest" }
+              }
+            }
+          },
+          responses: {
+            200: {
+              description: "Updated authoritative conversation projection",
+              content: {
+                "application/json": { schema: { $ref: "#/components/schemas/Conversation" } }
+              }
+            },
+            400: {
+              description: "Invalid operation payload",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            403: {
+              description: "Permission or active queue access denied",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            },
+            409: {
+              description: "Stale version, invalid transition, or action conflict",
+              content: {
+                "application/problem+json": { schema: { $ref: "#/components/schemas/Problem" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    components: {
+      schemas: {
+        Problem: {
+          type: "object",
+          properties: {
+            type: { type: "string", format: "uri" },
+            title: { type: "string" },
+            status: { type: "integer" },
+            code: { type: "string" },
+            detail: { type: "string" },
+            requestId: { type: "string" }
+          },
+          required: ["type", "title", "status", "code", "detail", "requestId"]
+        },
+        BuildInfo: {
+          type: "object",
+          properties: {
+            service: { type: "string" },
+            version: { type: "string" },
+            gitSha: { type: "string" },
+            environment: { type: "string", enum: ["local", "preview", "staging", "production"] }
+          },
+          required: ["service", "version", "gitSha", "environment"]
+        },
+        Channel: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            organizationId: { type: "string", format: "uuid" },
+            type: { type: "string", enum: ["whatsapp"] },
+            name: { type: "string" },
+            phoneNumberId: { type: "string" },
+            wabaId: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["draft", "connecting", "active", "degraded", "disconnected"]
+            },
+            statusReason: { type: ["string", "null"] },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" }
+          },
+          required: [
+            "id",
+            "organizationId",
+            "type",
+            "name",
+            "phoneNumberId",
+            "wabaId",
+            "status",
+            "createdAt",
+            "updatedAt"
+          ]
+        },
+        CreateChannelRequest: {
+          type: "object",
+          properties: {
+            type: { type: "string", enum: ["whatsapp"], default: "whatsapp" },
+            name: { type: "string", minLength: 1, maxLength: 100 },
+            phoneNumberId: { type: "string", minLength: 1 },
+            wabaId: { type: "string", minLength: 1 },
+            accessToken: { type: "string", minLength: 1, maxLength: 8192, writeOnly: true },
+            metadata: { type: "object", additionalProperties: true }
+          },
+          required: ["name", "phoneNumberId", "wabaId", "accessToken"]
+        },
+        VerifiedChannelConnectionResponse: {
+          type: "object",
+          properties: {
+            channel: { $ref: "#/components/schemas/Channel" },
+            displayPhoneNumber: { type: "string", nullable: true },
+            verifiedName: { type: "string", nullable: true }
+          },
+          required: ["channel", "displayPhoneNumber", "verifiedName"]
+        },
+        UpdateChannelStatusRequest: {
+          type: "object",
+          properties: {
+            status: {
+              type: "string",
+              enum: ["draft", "connecting", "active", "degraded", "disconnected"]
+            },
+            statusReason: { type: "string", maxLength: 500 }
+          },
+          required: ["status"]
+        },
+        RotateChannelCredentialsRequest: {
+          type: "object",
+          properties: {
+            accessToken: { type: "string", minLength: 1, maxLength: 8192, writeOnly: true }
+          },
+          required: ["accessToken"]
+        },
+        RotateChannelCredentialsResponse: {
+          type: "object",
+          properties: {
+            channelId: { type: "string", format: "uuid" },
+            organizationId: { type: "string", format: "uuid" },
+            updatedAt: { type: "string", format: "date-time" }
+          },
+          required: ["channelId", "organizationId", "updatedAt"]
+        },
+        VerifyChannelResponse: {
+          type: "object",
+          properties: {
+            channelId: { type: "string", format: "uuid" },
+            verified: { type: "boolean" },
+            state: {
+              type: "string",
+              enum: [
+                "valid",
+                "revoked_or_expired",
+                "permission_failure",
+                "identifier_mismatch",
+                "meta_unavailable",
+                "credential_error"
+              ]
+            },
+            status: {
+              type: "string",
+              enum: ["draft", "connecting", "active", "degraded", "disconnected"]
+            },
+            message: { type: "string" },
+            displayPhoneNumber: { type: ["string", "null"] },
+            verifiedName: { type: ["string", "null"] }
+          },
+          required: ["channelId", "verified", "state", "status", "message"]
+        },
+        SessionUser: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            email: { type: "string", format: "email" },
+            displayName: { type: "string" }
+          },
+          required: ["id", "email", "displayName"]
+        },
+        SessionState: {
+          type: "object",
+          properties: {
+            user: { $ref: "#/components/schemas/SessionUser" },
+            expiresAt: { type: "string", format: "date-time" }
+          },
+          required: ["user", "expiresAt"]
+        },
+        BootstrapOrganizationRequest: {
+          type: "object",
+          properties: {
+            name: { type: "string", minLength: 1, maxLength: 160 },
+            slug: { type: "string", pattern: "^[a-z0-9][a-z0-9-]{1,62}$" }
+          },
+          required: ["name", "slug"]
+        },
+        UserOrganization: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            slug: { type: "string" },
+            name: { type: "string" },
+            role: { type: "string" },
+            membershipId: { type: "string", format: "uuid" }
+          },
+          required: ["id", "slug", "name", "role", "membershipId"]
+        },
+        ListUserOrganizationsResponse: {
+          type: "object",
+          properties: {
+            organizations: {
+              type: "array",
+              items: { $ref: "#/components/schemas/UserOrganization" }
+            }
+          },
+          required: ["organizations"]
+        },
+        BootstrapOrganizationResponse: {
+          type: "object",
+          properties: {
+            organization: {
+              type: "object",
+              properties: {
+                id: { type: "string", format: "uuid" },
+                slug: { type: "string" },
+                displayName: { type: "string" },
+                ownerRoleId: { type: "string", format: "uuid" },
+                membershipId: { type: "string", format: "uuid" }
+              },
+              required: ["id", "slug", "displayName", "ownerRoleId", "membershipId"]
+            }
+          },
+          required: ["organization"]
+        },
+        CreateInvitationRequest: {
+          type: "object",
+          properties: {
+            email: { type: "string", format: "email" },
+            role: {
+              type: "string",
+              enum: ["owner", "admin", "supervisor", "agent", "analyst", "billing_admin"]
+            }
+          },
+          required: ["email", "role"]
+        },
+        CreateInvitationResponse: {
+          type: "object",
+          properties: {
+            invitation: {
+              type: "object",
+              properties: {
+                id: { type: "string", format: "uuid" },
+                organizationId: { type: "string", format: "uuid" },
+                email: { type: "string", format: "email" },
+                role: { type: "string" },
+                status: { type: "string", enum: ["pending", "accepted", "revoked", "expired"] },
+                expiresAt: { type: "string", format: "date-time" },
+                inviteToken: { type: "string" }
+              },
+              required: [
+                "id",
+                "organizationId",
+                "email",
+                "role",
+                "status",
+                "expiresAt",
+                "inviteToken"
+              ]
+            }
+          },
+          required: ["invitation"]
+        },
+        AcceptInvitationRequest: {
+          type: "object",
+          properties: {
+            token: { type: "string", minLength: 1 }
+          },
+          required: ["token"]
+        },
+        AcceptInvitationResponse: {
+          type: "object",
+          properties: {
+            status: { type: "string", enum: ["ok"] },
+            organizationId: { type: "string", format: "uuid" },
+            membershipId: { type: "string", format: "uuid" }
+          },
+          required: ["status", "organizationId", "membershipId"]
+        },
+        MembershipMember: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            userId: { type: "string", format: "uuid" },
+            email: { type: "string", format: "email" },
+            displayName: { type: "string" },
+            roleKey: { type: "string" },
+            roleLabel: { type: "string" },
+            status: { type: "string", enum: ["invited", "active", "suspended", "revoked"] },
+            createdAt: { type: "string", format: "date-time" }
+          },
+          required: [
+            "id",
+            "userId",
+            "email",
+            "displayName",
+            "roleKey",
+            "roleLabel",
+            "status",
+            "createdAt"
+          ]
+        },
+        ListMembersResponse: {
+          type: "object",
+          properties: {
+            members: {
+              type: "array",
+              items: { $ref: "#/components/schemas/MembershipMember" }
+            }
+          },
+          required: ["members"]
+        },
+        UpdateMembershipRoleRequest: {
+          type: "object",
+          properties: {
+            role: {
+              type: "string",
+              enum: ["owner", "admin", "supervisor", "agent", "analyst", "billing_admin"]
+            }
+          },
+          required: ["role"]
+        },
+        PageInfo: {
+          type: "object",
+          properties: {
+            hasNextPage: { type: "boolean" },
+            hasPreviousPage: { type: "boolean" },
+            startCursor: { type: "string", nullable: true },
+            endCursor: { type: "string", nullable: true },
+            totalCount: { type: "integer" }
+          },
+          required: ["hasNextPage", "hasPreviousPage", "startCursor", "endCursor"]
+        },
+        AuditLogEntry: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            organizationId: { type: "string", format: "uuid" },
+            actorUserId: { type: "string", format: "uuid", nullable: true },
+            action: { type: "string" },
+            targetType: { type: "string" },
+            targetId: { type: "string", format: "uuid", nullable: true },
+            result: { type: "string", enum: ["allowed", "denied", "failed"] },
+            correlationId: { type: "string", format: "uuid", nullable: true },
+            metadata: { type: "object", additionalProperties: true },
+            occurredAt: { type: "string", format: "date-time" }
+          },
+          required: [
+            "id",
+            "organizationId",
+            "actorUserId",
+            "action",
+            "targetType",
+            "targetId",
+            "result",
+            "correlationId",
+            "metadata",
+            "occurredAt"
+          ]
+        },
+        ListAuditLogsResponse: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              items: { $ref: "#/components/schemas/AuditLogEntry" }
+            },
+            pageInfo: { $ref: "#/components/schemas/PageInfo" }
+          },
+          required: ["items", "pageInfo"]
+        },
+        Conversation: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            organizationId: { type: "string", format: "uuid" },
+            channelId: { type: "string", format: "uuid" },
+            customerPhone: { type: "string" },
+            customerName: { type: "string", nullable: true },
+            status: {
+              type: "string",
+              enum: ["new", "open", "pending", "resolved", "closed"]
+            },
+            priority: {
+              type: "string",
+              enum: ["low", "medium", "high", "urgent"]
+            },
+            assignedToUserId: { type: "string", format: "uuid", nullable: true },
+            queueId: { type: "string", format: "uuid", nullable: true },
+            teamId: { type: "string", format: "uuid", nullable: true },
+            waitingReason: { type: "string", nullable: true },
+            botPaused: { type: "boolean" },
+            firstResponseDueAt: { type: "string", format: "date-time", nullable: true },
+            resolutionDueAt: { type: "string", format: "date-time", nullable: true },
+            resolvedAt: { type: "string", format: "date-time", nullable: true },
+            firstRespondedAt: { type: "string", format: "date-time", nullable: true },
+            slaPausedAt: { type: "string", format: "date-time", nullable: true },
+            firstResponseRemainingSeconds: { type: "integer", minimum: 0, nullable: true },
+            resolutionRemainingSeconds: { type: "integer", minimum: 0, nullable: true },
+            version: { type: "integer" },
+            lastMessageAt: { type: "string", format: "date-time" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" }
+          },
+          required: [
+            "id",
+            "organizationId",
+            "channelId",
+            "customerPhone",
+            "customerName",
+            "status",
+            "priority",
+            "assignedToUserId",
+            "queueId",
+            "teamId",
+            "waitingReason",
+            "botPaused",
+            "firstResponseDueAt",
+            "resolutionDueAt",
+            "resolvedAt",
+            "firstRespondedAt",
+            "slaPausedAt",
+            "firstResponseRemainingSeconds",
+            "resolutionRemainingSeconds",
+            "version",
+            "lastMessageAt",
+            "createdAt",
+            "updatedAt"
+          ]
+        },
+        Message: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            organizationId: { type: "string", format: "uuid" },
+            conversationId: { type: "string", format: "uuid" },
+            channelId: { type: "string", format: "uuid" },
+            direction: { type: "string", enum: ["inbound", "outbound"] },
+            senderType: { type: "string", enum: ["customer", "agent", "system", "bot"] },
+            senderUserId: { type: "string", format: "uuid", nullable: true },
+            providerMessageId: { type: "string", nullable: true },
+            content: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["queued", "sent", "delivered", "read", "failed"]
+            },
+            errorDetail: { type: "string", nullable: true },
+            sentAt: { type: "string", format: "date-time", nullable: true },
+            deliveredAt: { type: "string", format: "date-time", nullable: true },
+            readAt: { type: "string", format: "date-time", nullable: true },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" }
+          },
+          required: [
+            "id",
+            "organizationId",
+            "conversationId",
+            "channelId",
+            "direction",
+            "senderType",
+            "senderUserId",
+            "providerMessageId",
+            "content",
+            "status",
+            "errorDetail",
+            "sentAt",
+            "deliveredAt",
+            "readAt",
+            "createdAt",
+            "updatedAt"
+          ]
+        },
+        ListConversationsResponse: {
+          type: "object",
+          properties: {
+            items: {
+              type: "array",
+              items: { $ref: "#/components/schemas/Conversation" }
+            },
+            nextCursor: { type: "string", nullable: true }
+          },
+          required: ["items", "nextCursor"]
+        },
+        ConversationDetailResponse: {
+          type: "object",
+          properties: {
+            conversation: { $ref: "#/components/schemas/Conversation" },
+            messages: {
+              type: "array",
+              items: { $ref: "#/components/schemas/Message" }
+            },
+            notes: { type: "array", items: { $ref: "#/components/schemas/ConversationNote" } },
+            tags: { type: "array", items: { $ref: "#/components/schemas/InboxTag" } }
+          },
+          required: ["conversation", "messages", "notes", "tags"]
+        },
+        InboxTag: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            name: { type: "string" },
+            color: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" }
+          },
+          required: ["id", "name", "color"]
+        },
+        ConversationNote: {
+          type: "object",
+          properties: {
+            id: { type: "string", format: "uuid" },
+            authorUserId: { type: "string", format: "uuid" },
+            body: { type: "string" },
+            createdAt: { type: "string", format: "date-time" }
+          },
+          required: ["id", "authorUserId", "body", "createdAt"]
+        },
+        SavedFilterDefinition: {
+          type: "object",
+          properties: {
+            status: { type: "string", enum: ["new", "open", "pending", "resolved", "closed"] },
+            assignedTo: { type: "string" },
+            queueId: { type: "string", format: "uuid" },
+            search: { type: "string", maxLength: 200 }
+          }
+        },
+        CreateSavedFilterRequest: {
+          type: "object",
+          properties: {
+            name: { type: "string", minLength: 1, maxLength: 120 },
+            definition: { $ref: "#/components/schemas/SavedFilterDefinition" },
+            isDefault: { type: "boolean", default: false }
+          },
+          required: ["name", "definition"]
+        },
+        InboxWorkspaceResources: {
+          type: "object",
+          properties: {
+            queues: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  name: { type: "string" },
+                  slug: { type: "string" }
+                },
+                required: ["id", "name", "slug"]
+              }
+            },
+            tags: { type: "array", items: { $ref: "#/components/schemas/InboxTag" } },
+            savedFilters: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "string", format: "uuid" },
+                  name: { type: "string" },
+                  definition: { $ref: "#/components/schemas/SavedFilterDefinition" },
+                  isDefault: { type: "boolean" },
+                  createdAt: { type: "string", format: "date-time" },
+                  updatedAt: { type: "string", format: "date-time" }
+                },
+                required: ["id", "name", "definition", "isDefault", "createdAt", "updatedAt"]
+              }
+            }
+          },
+          required: ["queues", "tags", "savedFilters"]
+        },
+        UpdateConversationRequest: {
+          type: "object",
+          properties: {
+            version: { type: "integer", minimum: 1 },
+            status: {
+              type: "string",
+              enum: ["new", "open", "pending", "resolved", "closed"]
+            },
+            assignedToUserId: { type: "string", format: "uuid", nullable: true }
+          },
+          required: ["version"]
+        },
+        ConversationOperationRequest: {
+          type: "object",
+          properties: {
+            version: { type: "integer", minimum: 1 },
+            action: {
+              type: "string",
+              enum: [
+                "claim",
+                "release",
+                "handoff",
+                "note",
+                "tag.add",
+                "tag.remove",
+                "read",
+                "unread",
+                "wait",
+                "resolve",
+                "reopen",
+                "bot.pause",
+                "bot.resume",
+                "priority"
+              ]
+            },
+            targetUserId: { type: "string", format: "uuid" },
+            body: { type: "string", minLength: 1, maxLength: 10000 },
+            tagId: { type: "string", format: "uuid" },
+            lastReadMessageId: { type: "string", format: "uuid", nullable: true },
+            reason: { type: "string", minLength: 1, maxLength: 500 },
+            priority: { type: "string", enum: ["low", "medium", "high", "urgent"] }
+          },
+          required: ["version", "action"]
+        },
+        CreateOutboundMessageRequest: {
+          oneOf: [
+            {
+              type: "object",
+              properties: {
+                type: { type: "string", enum: ["text"] },
+                content: { type: "string", minLength: 1, maxLength: 4096 }
+              },
+              required: ["content"]
+            },
+            {
+              type: "object",
+              properties: {
+                type: { type: "string", enum: ["template"] },
+                templateName: { type: "string", minLength: 1, maxLength: 512 },
+                language: { type: "string", minLength: 1, maxLength: 32 },
+                variables: { type: "object", additionalProperties: { type: "string" } }
+              },
+              required: ["type", "templateName", "language"]
+            },
+            {
+              type: "object",
+              properties: {
+                type: { type: "string", enum: ["media"] },
+                attachmentId: { type: "string", format: "uuid" },
+                caption: { type: "string", maxLength: 1024 }
+              },
+              required: ["type", "attachmentId"]
+            }
+          ]
+        }
+      }
+    }
+  };
+}
+
+const spec = buildOpenApiSpec();
+const formatted = JSON.stringify(spec, null, 2) + "\n";
+
+if (process.argv.includes("--check")) {
+  try {
+    const existing = readFileSync(targetPath, "utf8");
+    const existingObj = JSON.parse(existing);
+    if (JSON.stringify(existingObj) !== JSON.stringify(spec)) {
+      console.error(
+        `Error: OpenAPI specification drift detected in docs/api/openapi.json. Run 'pnpm --filter @wabrix/contracts generate:openapi' to regenerate.`
+      );
+      process.exit(1);
+    }
+    console.log("OpenAPI specification is up-to-date.");
+  } catch (err) {
+    console.error(`Error reading existing OpenAPI file at ${targetPath}:`, err);
+    process.exit(1);
+  }
+} else {
+  writeFileSync(targetPath, formatted, "utf8");
+  console.log(`Generated OpenAPI specification at ${targetPath}`);
+}

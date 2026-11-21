@@ -1,0 +1,733 @@
+import type { DbClient, ClaimedOutboxEvent } from "@wabrix/db";
+import {
+  getChannelById,
+  getAttachmentById,
+  getMessageById,
+  getTemplateByNameAndLanguage,
+  markOutboxEventPublished,
+  recordOutboxEventFailure,
+  resolveAutomationSafety,
+  runInTenantTransaction,
+  updateMessageStatus
+} from "@wabrix/db";
+import { isTemplateApprovedForSending } from "@wabrix/domain";
+import {
+  type WhatsAppProvider,
+  type ObjectStore,
+  FakeWhatsAppProvider,
+  WhatsAppProviderError
+} from "@wabrix/providers";
+import { recordWhatsAppOutboundDispatch } from "@wabrix/observability";
+import { decryptWhatsAppChannelCredentials, WhatsAppCredentialError } from "@wabrix/security";
+
+export interface OutboundMessagePayload {
+  messageId: string;
+  conversationId: string;
+  channelId: string;
+  customerPhone: string;
+  content: string;
+  senderUserId?: string | undefined;
+  template?:
+    | {
+        name: string;
+        language: string;
+        versionId: string;
+        variables: Record<string, string>;
+        renderedPayloadHash: string;
+      }
+    | undefined;
+  media?:
+    | {
+        attachmentId: string;
+        fileName: string;
+        contentType: string;
+        caption?: string | undefined;
+      }
+    | undefined;
+}
+
+export interface DispatchWorkerOptions {
+  provider?: WhatsAppProvider | undefined;
+  maxRetries?: number | undefined;
+  encryptionKey?: string | undefined;
+  storage?: ObjectStore | undefined;
+}
+
+export interface DispatchResult {
+  messageId: string;
+  status: "sent" | "failed" | "skipped";
+  providerMessageId?: string | undefined;
+  error?: string | undefined;
+}
+
+interface PreparedDispatch {
+  messageId: string;
+  channelId: string;
+  phoneNumberId: string;
+  wabaId: string;
+  encryptedCredentials: string;
+  content: string;
+  customerPhone: string;
+  template?: OutboundMessagePayload["template"];
+  media?:
+    | {
+        attachmentId: string;
+        storageKey: string;
+        fileName: string;
+        contentType: string;
+        caption?: string | undefined;
+      }
+    | undefined;
+}
+
+interface BotDispatchSafetyState {
+  bot_config_id: string | null;
+  bot_paused: boolean;
+  assigned_to_user_id: string | null;
+  emergency_disabled: boolean | null;
+}
+
+function mediaTypeFor(contentType: string): "image" | "video" | "document" | "audio" {
+  if (contentType.startsWith("image/")) return "image";
+  if (contentType.startsWith("video/")) return "video";
+  if (contentType.startsWith("audio/")) return "audio";
+  return "document";
+}
+
+export function resolveAccessToken(
+  rawCredentials: string,
+  encryptionKey: string | undefined,
+  channel: { phoneNumberId: string; wabaId: string }
+): string {
+  if (!encryptionKey) {
+    throw new WhatsAppCredentialError(
+      "DECRYPTION_FAILED",
+      "Channel credentials cannot be decrypted because ENCRYPTION_KEY is not configured."
+    );
+  }
+  return decryptWhatsAppChannelCredentials(rawCredentials, encryptionKey, channel).accessToken;
+}
+
+async function getBotDispatchSafetyState(
+  db: DbClient,
+  organizationId: string,
+  conversationId: string,
+  botRunId: string
+): Promise<BotDispatchSafetyState | null> {
+  const result = await db.query<BotDispatchSafetyState>(
+    `SELECT run.bot_config_id, conversation.bot_paused, conversation.assigned_to_user_id,
+            config.emergency_disabled
+     FROM wabrix.bot_runs AS run
+     JOIN wabrix.conversations AS conversation
+       ON conversation.organization_id = run.organization_id
+      AND conversation.id = run.conversation_id
+     LEFT JOIN wabrix.bot_configs AS config
+       ON config.organization_id = run.organization_id AND config.id = run.bot_config_id
+     WHERE run.organization_id = $1 AND run.id = $2 AND conversation.id = $3
+     FOR SHARE OF run, conversation`,
+    [organizationId, botRunId, conversationId]
+  );
+  return result.rows[0] ?? null;
+}
+
+async function automationDispatchBlockReason(
+  db: DbClient,
+  input: {
+    organizationId: string;
+    conversationId: string;
+    channelId: string;
+    botRunId: string;
+  }
+): Promise<string | null> {
+  const state = await getBotDispatchSafetyState(
+    db,
+    input.organizationId,
+    input.conversationId,
+    input.botRunId
+  );
+  if (!state) return "AUTO dispatch context no longer exists.";
+  if (state.bot_paused) return "Conversation automation is paused.";
+  if (state.assigned_to_user_id) return "Human takeover is active.";
+  if (state.emergency_disabled) return "Tenant emergency stop is active.";
+  const safety = await resolveAutomationSafety(db, {
+    organizationId: input.organizationId,
+    botConfigId: state.bot_config_id,
+    channelId: input.channelId,
+    conversationId: input.conversationId
+  });
+  return safety ? `Automation safety stop is active (${safety.scope}): ${safety.reason}` : null;
+}
+
+/**
+ * Dispatches a single outbound message claimed from outbox.
+ */
+export async function dispatchOutboundMessage(
+  client: DbClient,
+  event: ClaimedOutboxEvent<OutboundMessagePayload>,
+  options: DispatchWorkerOptions = {}
+): Promise<DispatchResult> {
+  const maxRetries = options.maxRetries ?? 5;
+  const provider = options.provider ?? new FakeWhatsAppProvider();
+  const orgId = event.organizationId;
+  const messageId = event.payload.messageId;
+
+  const message = await getMessageById(client, orgId, messageId);
+  if (!message) {
+    await recordOutboxEventFailure(client, event.id, `Message '${messageId}' not found.`, true);
+    return { messageId, status: "failed", error: `Message '${messageId}' not found.` };
+  }
+
+  if (message.status === "sent" || message.status === "delivered" || message.status === "read") {
+    await markOutboxEventPublished(client, event.id);
+    return {
+      messageId,
+      status: "skipped",
+      ...(message.providerMessageId ? { providerMessageId: message.providerMessageId } : {})
+    };
+  }
+
+  if (message.status === "failed") {
+    await markOutboxEventPublished(client, event.id);
+    return {
+      messageId,
+      status: "failed",
+      ...(message.errorDetail ? { error: message.errorDetail } : {})
+    };
+  }
+
+  const channel = await getChannelById(client, message.channelId, orgId);
+  if (!channel || channel.status === "disconnected" || channel.status === "degraded") {
+    const errorMsg = !channel
+      ? `Channel '${message.channelId}' not found.`
+      : `Channel '${channel.id}' is ${channel.status}.`;
+    await updateMessageStatus(client, orgId, message.id, "failed", {
+      errorDetail: errorMsg
+    });
+    await recordOutboxEventFailure(client, event.id, errorMsg, true);
+    return { messageId, status: "failed", error: errorMsg };
+  }
+
+  const botRunId =
+    message.senderType === "bot" && typeof message.metadata["aiBotRunId"] === "string"
+      ? message.metadata["aiBotRunId"]
+      : null;
+  if (botRunId) {
+    const blocked = await automationDispatchBlockReason(client, {
+      organizationId: orgId,
+      conversationId: message.conversationId,
+      channelId: message.channelId,
+      botRunId
+    });
+    if (blocked) {
+      await updateMessageStatus(client, orgId, message.id, "failed", { errorDetail: blocked });
+      await client.query(
+        `UPDATE wabrix.outbound_intents
+         SET state = 'failed', last_error = $2, updated_at = clock_timestamp()
+         WHERE organization_id = $1 AND message_id = $3 AND state = 'queued'`,
+        [orgId, blocked, message.id]
+      );
+      await recordOutboxEventFailure(client, event.id, blocked, true);
+      return { messageId, status: "failed", error: blocked };
+    }
+  }
+
+  let accessToken: string;
+  try {
+    accessToken = resolveAccessToken(channel.encryptedCredentials, options.encryptionKey, {
+      phoneNumberId: channel.phoneNumberId,
+      wabaId: channel.wabaId
+    });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    await updateMessageStatus(client, orgId, message.id, "failed", {
+      errorDetail: `Credential error: ${errorMsg}`
+    });
+    await recordOutboxEventFailure(client, event.id, errorMsg, true);
+    return { messageId, status: "failed", error: errorMsg };
+  }
+
+  try {
+    let sendResult;
+    const templatePayload = event.payload.template;
+    const mediaPayload = event.payload.media;
+
+    if (mediaPayload) {
+      if (!options.storage) throw new Error("Object storage is required for media dispatch.");
+      const attachment = await getAttachmentById(client, orgId, mediaPayload.attachmentId);
+      if (!attachment || attachment.status !== "clean") {
+        const errorMsg = `Attachment '${mediaPayload.attachmentId}' is unavailable or not clean.`;
+        await updateMessageStatus(client, orgId, message.id, "failed", { errorDetail: errorMsg });
+        await recordOutboxEventFailure(client, event.id, errorMsg, true);
+        return { messageId, status: "failed", error: errorMsg };
+      }
+      const object = await options.storage.getObject(attachment.storageKey);
+      const uploaded = await provider.uploadMedia({
+        phoneNumberId: channel.phoneNumberId,
+        fileName: attachment.fileName,
+        contentType: attachment.detectedMimeType ?? attachment.contentType,
+        data: object.data,
+        accessToken
+      });
+      sendResult = await provider.sendMediaMessage({
+        phoneNumberId: channel.phoneNumberId,
+        to: event.payload.customerPhone,
+        mediaType: mediaTypeFor(attachment.detectedMimeType ?? attachment.contentType),
+        mediaId: uploaded.mediaId,
+        ...(mediaPayload.caption ? { caption: mediaPayload.caption } : {}),
+        ...(mediaTypeFor(attachment.contentType) === "document"
+          ? { fileName: attachment.fileName }
+          : {}),
+        accessToken
+      });
+    } else if (templatePayload) {
+      const templateRecord = await getTemplateByNameAndLanguage(client, {
+        channelId: channel.id,
+        name: templatePayload.name,
+        language: templatePayload.language
+      });
+
+      if (templateRecord && !isTemplateApprovedForSending(templateRecord.version.status)) {
+        const errorMsg = `Template '${templatePayload.name}' is ${templateRecord.version.status}, not approved for sending.`;
+        await updateMessageStatus(client, orgId, message.id, "failed", {
+          errorDetail: errorMsg
+        });
+        await recordOutboxEventFailure(client, event.id, errorMsg, true);
+        return { messageId, status: "failed", error: errorMsg };
+      }
+
+      const variableEntries = Object.entries(templatePayload.variables ?? {}).sort(
+        ([a], [b]) => Number(a) - Number(b)
+      );
+
+      const templateComponents: Array<{
+        type: "body";
+        parameters: Array<{ type: "text"; text: string }>;
+      }> = [];
+
+      if (variableEntries.length > 0) {
+        templateComponents.push({
+          type: "body",
+          parameters: variableEntries.map(([, val]) => ({
+            type: "text" as const,
+            text: val
+          }))
+        });
+      }
+
+      sendResult = await provider.sendTemplateMessage({
+        phoneNumberId: channel.phoneNumberId,
+        to: event.payload.customerPhone,
+        templateName: templatePayload.name,
+        language: templatePayload.language,
+        components: templateComponents.length > 0 ? templateComponents : undefined,
+        accessToken
+      });
+    } else {
+      sendResult = await provider.sendTextMessage({
+        phoneNumberId: channel.phoneNumberId,
+        to: event.payload.customerPhone,
+        text: message.content,
+        accessToken
+      });
+    }
+
+    await updateMessageStatus(client, orgId, message.id, "sent", {
+      providerMessageId: sendResult.messageId,
+      sentAt: new Date()
+    });
+    await markOutboxEventPublished(client, event.id);
+
+    return {
+      messageId,
+      status: "sent",
+      providerMessageId: sendResult.messageId
+    };
+  } catch (error: unknown) {
+    const currentAttempt = event.attempts + 1;
+
+    if (error instanceof WhatsAppProviderError) {
+      if (error.isTransient) {
+        if (currentAttempt < maxRetries) {
+          await recordOutboxEventFailure(client, event.id, error.message, false);
+          return { messageId, status: "failed", error: error.message };
+        }
+
+        const dlqError = `Max retries exceeded (${maxRetries}): ${error.message}`;
+        await updateMessageStatus(client, orgId, message.id, "failed", {
+          errorDetail: dlqError
+        });
+        await recordOutboxEventFailure(client, event.id, dlqError, true);
+        return { messageId, status: "failed", error: dlqError };
+      }
+
+      await updateMessageStatus(client, orgId, message.id, "failed", {
+        errorDetail: error.message
+      });
+      await recordOutboxEventFailure(client, event.id, error.message, true);
+      return { messageId, status: "failed", error: error.message };
+    }
+
+    const genericError = error instanceof Error ? error.message : String(error);
+    if (currentAttempt < maxRetries) {
+      await recordOutboxEventFailure(client, event.id, genericError, false);
+      return { messageId, status: "failed", error: genericError };
+    }
+
+    const dlqError = `Max retries exceeded (${maxRetries}): ${genericError}`;
+    await updateMessageStatus(client, orgId, message.id, "failed", {
+      errorDetail: dlqError
+    });
+    await recordOutboxEventFailure(client, event.id, dlqError, true);
+    return { messageId, status: "failed", error: dlqError };
+  }
+}
+
+function isPoolClient(client: DbClient): boolean {
+  return typeof client.connect === "function";
+}
+
+export async function dispatchOutboundMessageCrashSafe(
+  client: DbClient,
+  event: ClaimedOutboxEvent<OutboundMessagePayload>,
+  options: DispatchWorkerOptions
+): Promise<DispatchResult> {
+  const prepared = await runInTenantTransaction(
+    client,
+    { organizationId: event.organizationId },
+    async (tenantDb): Promise<PreparedDispatch | DispatchResult> => {
+      const result = await tenantDb.query<{
+        message_id: string;
+        message_status: string;
+        provider_message_id: string | null;
+        sender_type: string;
+        message_metadata: Record<string, unknown>;
+        conversation_id: string;
+        content: string;
+        channel_id: string;
+        phone_number_id: string;
+        waba_id: string;
+        encrypted_credentials: string;
+        channel_status: string;
+        intent_state: string;
+      }>(
+        `SELECT message.id AS message_id, message.status AS message_status,
+                message.provider_message_id, message.sender_type,
+                message.metadata AS message_metadata, message.conversation_id,
+                message.content,
+                channel.id AS channel_id, channel.phone_number_id, channel.waba_id,
+                channel.encrypted_credentials, channel.status AS channel_status,
+                intent.state AS intent_state
+         FROM wabrix.messages AS message
+         JOIN wabrix.channels AS channel ON channel.id = message.channel_id
+         JOIN wabrix.outbound_intents AS intent ON intent.message_id = message.id
+         WHERE message.organization_id = $1 AND message.id = $2
+         FOR UPDATE OF message, intent`,
+        [event.organizationId, event.payload.messageId]
+      );
+      const row = result.rows[0];
+      if (!row) {
+        await recordOutboxEventFailure(
+          tenantDb,
+          event.id,
+          `Message '${event.payload.messageId}' or outbound intent not found.`,
+          true
+        );
+        return {
+          messageId: event.payload.messageId,
+          status: "failed",
+          error: `Message '${event.payload.messageId}' or outbound intent not found.`
+        };
+      }
+
+      if (["sent", "delivered", "read"].includes(row.message_status)) {
+        await markOutboxEventPublished(tenantDb, event.id);
+        return {
+          messageId: row.message_id,
+          status: "skipped",
+          ...(row.provider_message_id ? { providerMessageId: row.provider_message_id } : {})
+        };
+      }
+      if (row.message_status === "failed" || row.intent_state === "failed") {
+        await markOutboxEventPublished(tenantDb, event.id);
+        return { messageId: row.message_id, status: "failed" };
+      }
+      if (row.intent_state === "dispatching" || row.intent_state === "reconcile_required") {
+        const error =
+          "Provider delivery outcome is uncertain after worker interruption; manual reconciliation required.";
+        await tenantDb.query(
+          `UPDATE wabrix.outbound_intents
+           SET state = 'reconcile_required', last_error = $2, updated_at = clock_timestamp()
+           WHERE organization_id = $1 AND message_id = $3`,
+          [event.organizationId, error, row.message_id]
+        );
+        await markOutboxEventPublished(tenantDb, event.id);
+        return { messageId: row.message_id, status: "failed", error };
+      }
+      if (row.channel_status !== "active") {
+        const error = `Channel '${row.channel_id}' is ${row.channel_status}.`;
+        await updateMessageStatus(tenantDb, event.organizationId, row.message_id, "failed", {
+          errorDetail: error
+        });
+        await recordOutboxEventFailure(tenantDb, event.id, error, true);
+        return { messageId: row.message_id, status: "failed", error };
+      }
+
+      const botRunId =
+        row.sender_type === "bot" && typeof row.message_metadata["aiBotRunId"] === "string"
+          ? row.message_metadata["aiBotRunId"]
+          : null;
+      if (botRunId) {
+        const blocked = await automationDispatchBlockReason(tenantDb, {
+          organizationId: event.organizationId,
+          conversationId: row.conversation_id,
+          channelId: row.channel_id,
+          botRunId
+        });
+        if (blocked) {
+          await updateMessageStatus(tenantDb, event.organizationId, row.message_id, "failed", {
+            errorDetail: blocked
+          });
+          await tenantDb.query(
+            `UPDATE wabrix.outbound_intents
+             SET state = 'failed', last_error = $2, updated_at = clock_timestamp()
+             WHERE organization_id = $1 AND message_id = $3`,
+            [event.organizationId, blocked, row.message_id]
+          );
+          await recordOutboxEventFailure(tenantDb, event.id, blocked, true);
+          return { messageId: row.message_id, status: "failed", error: blocked };
+        }
+      }
+
+      let preparedMedia: PreparedDispatch["media"];
+      if (event.payload.media) {
+        const attachment = await getAttachmentById(
+          tenantDb,
+          event.organizationId,
+          event.payload.media.attachmentId
+        );
+        if (!attachment || attachment.status !== "clean") {
+          const error = `Attachment '${event.payload.media.attachmentId}' is unavailable or not clean.`;
+          await updateMessageStatus(tenantDb, event.organizationId, row.message_id, "failed", {
+            errorDetail: error
+          });
+          await recordOutboxEventFailure(tenantDb, event.id, error, true);
+          return { messageId: row.message_id, status: "failed", error };
+        }
+        preparedMedia = {
+          attachmentId: attachment.id,
+          storageKey: attachment.storageKey,
+          fileName: attachment.fileName,
+          contentType: attachment.detectedMimeType ?? attachment.contentType,
+          ...(event.payload.media.caption ? { caption: event.payload.media.caption } : {})
+        };
+      }
+
+      if (event.payload.template) {
+        const templateRecord = await getTemplateByNameAndLanguage(tenantDb, {
+          channelId: row.channel_id,
+          name: event.payload.template.name,
+          language: event.payload.template.language
+        });
+        if (!templateRecord || !isTemplateApprovedForSending(templateRecord.version.status)) {
+          const error = `Template '${event.payload.template.name}' is unavailable or not approved.`;
+          await updateMessageStatus(tenantDb, event.organizationId, row.message_id, "failed", {
+            errorDetail: error
+          });
+          await recordOutboxEventFailure(tenantDb, event.id, error, true);
+          return { messageId: row.message_id, status: "failed", error };
+        }
+      }
+
+      await tenantDb.query(
+        `UPDATE wabrix.outbound_intents
+         SET state = 'dispatching', attempt_count = attempt_count + 1,
+             claimed_at = clock_timestamp(), last_error = NULL,
+             updated_at = clock_timestamp()
+         WHERE organization_id = $1 AND message_id = $2 AND state = 'queued'`,
+        [event.organizationId, row.message_id]
+      );
+      return {
+        messageId: row.message_id,
+        channelId: row.channel_id,
+        phoneNumberId: row.phone_number_id,
+        wabaId: row.waba_id,
+        encryptedCredentials: row.encrypted_credentials,
+        content: row.content,
+        customerPhone: event.payload.customerPhone,
+        ...(event.payload.template ? { template: event.payload.template } : {}),
+        ...(preparedMedia ? { media: preparedMedia } : {})
+      };
+    }
+  );
+
+  if ("status" in prepared) return prepared;
+
+  const provider = options.provider ?? new FakeWhatsAppProvider();
+  let accessToken: string;
+  try {
+    accessToken = resolveAccessToken(prepared.encryptedCredentials, options.encryptionKey, {
+      phoneNumberId: prepared.phoneNumberId,
+      wabaId: prepared.wabaId
+    });
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return runInTenantTransaction(client, { organizationId: event.organizationId }, async (db) => {
+      await updateMessageStatus(db, event.organizationId, prepared.messageId, "failed", {
+        errorDetail: `Credential error: ${detail}`
+      });
+      await recordOutboxEventFailure(db, event.id, detail, true);
+      return { messageId: prepared.messageId, status: "failed", error: detail };
+    });
+  }
+
+  try {
+    let sent;
+    if (prepared.media) {
+      if (!options.storage) throw new Error("Object storage is required for media dispatch.");
+      const object = await options.storage.getObject(prepared.media.storageKey);
+      const uploaded = await provider.uploadMedia({
+        phoneNumberId: prepared.phoneNumberId,
+        fileName: prepared.media.fileName,
+        contentType: prepared.media.contentType,
+        data: object.data,
+        accessToken
+      });
+      sent = await provider.sendMediaMessage({
+        phoneNumberId: prepared.phoneNumberId,
+        to: prepared.customerPhone,
+        mediaType: mediaTypeFor(prepared.media.contentType),
+        mediaId: uploaded.mediaId,
+        ...(prepared.media.caption ? { caption: prepared.media.caption } : {}),
+        ...(mediaTypeFor(prepared.media.contentType) === "document"
+          ? { fileName: prepared.media.fileName }
+          : {}),
+        accessToken
+      });
+    } else if (prepared.template) {
+      const variableEntries = Object.entries(prepared.template.variables).sort(
+        ([left], [right]) => Number(left) - Number(right)
+      );
+      sent = await provider.sendTemplateMessage({
+        phoneNumberId: prepared.phoneNumberId,
+        to: prepared.customerPhone,
+        templateName: prepared.template.name,
+        language: prepared.template.language,
+        ...(variableEntries.length > 0
+          ? {
+              components: [
+                {
+                  type: "body" as const,
+                  parameters: variableEntries.map(([, text]) => ({ type: "text" as const, text }))
+                }
+              ]
+            }
+          : {}),
+        accessToken
+      });
+    } else {
+      sent = await provider.sendTextMessage({
+        phoneNumberId: prepared.phoneNumberId,
+        to: prepared.customerPhone,
+        text: prepared.content,
+        accessToken
+      });
+    }
+    return runInTenantTransaction(client, { organizationId: event.organizationId }, async (db) => {
+      await updateMessageStatus(db, event.organizationId, prepared.messageId, "sent", {
+        providerMessageId: sent.messageId,
+        sentAt: new Date()
+      });
+      await markOutboxEventPublished(db, event.id);
+      return { messageId: prepared.messageId, status: "sent", providerMessageId: sent.messageId };
+    });
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : String(error);
+    const uncertain =
+      error instanceof WhatsAppProviderError &&
+      (detail.startsWith("Network error") ||
+        detail.startsWith("Malformed response") ||
+        error.statusCode >= 500);
+    const retryable =
+      error instanceof WhatsAppProviderError &&
+      error.isTransient &&
+      !uncertain &&
+      event.attempts + 1 < (options.maxRetries ?? 5);
+
+    return runInTenantTransaction(client, { organizationId: event.organizationId }, async (db) => {
+      if (uncertain) {
+        await db.query(
+          `UPDATE wabrix.outbound_intents
+           SET state = 'reconcile_required', last_error = $2, updated_at = clock_timestamp()
+           WHERE organization_id = $1 AND message_id = $3`,
+          [event.organizationId, detail, prepared.messageId]
+        );
+        await markOutboxEventPublished(db, event.id);
+      } else if (retryable) {
+        await db.query(
+          `UPDATE wabrix.outbound_intents
+           SET state = 'queued', last_error = $2, updated_at = clock_timestamp()
+           WHERE organization_id = $1 AND message_id = $3`,
+          [event.organizationId, detail, prepared.messageId]
+        );
+        await recordOutboxEventFailure(db, event.id, detail, false);
+      } else {
+        await updateMessageStatus(db, event.organizationId, prepared.messageId, "failed", {
+          errorDetail: detail
+        });
+        await recordOutboxEventFailure(db, event.id, detail, true);
+      }
+      return { messageId: prepared.messageId, status: "failed", error: detail };
+    });
+  }
+}
+
+/**
+ * Worker outbox consumer: claims and dispatches a batch of unpublished outbound messages.
+ */
+export async function processOutboxOutboundBatch(
+  client: DbClient,
+  options: DispatchWorkerOptions = {},
+  batchSize = 10
+): Promise<number> {
+  const events = await client.query<{
+    id: string;
+    organization_id: string;
+    aggregate_type: string;
+    aggregate_id: string;
+    event_type: string;
+    payload: OutboundMessagePayload;
+    correlation_id: string | null;
+    causation_id: string | null;
+    occurred_at: Date;
+    attempts: number;
+  }>(`SELECT * FROM wabrix.claim_outbox_events('message.outbound.created'::text, $1::integer)`, [
+    batchSize
+  ]);
+
+  let processedCount = 0;
+
+  for (const ev of events.rows) {
+    const event: ClaimedOutboxEvent<OutboundMessagePayload> = {
+      id: ev.id,
+      organizationId: ev.organization_id,
+      aggregateType: ev.aggregate_type,
+      aggregateId: ev.aggregate_id,
+      eventType: ev.event_type,
+      payload: ev.payload,
+      correlationId: ev.correlation_id,
+      causationId: ev.causation_id,
+      occurredAt: ev.occurred_at,
+      attempts: ev.attempts
+    };
+
+    const result = isPoolClient(client)
+      ? await dispatchOutboundMessageCrashSafe(client, event, options)
+      : await runInTenantTransaction(client, { organizationId: event.organizationId }, (tenantDb) =>
+          dispatchOutboundMessage(tenantDb, event, options)
+        );
+    recordWhatsAppOutboundDispatch(result.status);
+    processedCount += 1;
+  }
+
+  return processedCount;
+}

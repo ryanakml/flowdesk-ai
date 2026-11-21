@@ -1,0 +1,1075 @@
+import request from "supertest";
+import { describe, expect, it } from "vitest";
+import { loadAuthConfig } from "@wabrix/config";
+import type { DbClient } from "@wabrix/db";
+import { MockIdentityProvider } from "@wabrix/providers";
+import { hashSessionToken, serializeSessionCookie } from "@wabrix/security";
+import { createApiApp } from "./app.js";
+
+const orgId = "00000000-0000-7000-8000-000000000001";
+const channelId = "00000000-0000-7000-8000-000000000002";
+const aliceId = "00000000-0000-7000-8000-000000000003"; // Supervisor
+const bobId = "00000000-0000-7000-8000-000000000004"; // Agent
+const charlieId = "00000000-0000-7000-8000-000000000005"; // Analyst
+
+interface MockConversation {
+  id: string;
+  organizationId: string;
+  channelId: string;
+  customerPhone: string;
+  customerName: string | null;
+  status: string;
+  priority: string;
+  assignedToUserId: string | null;
+  version: number;
+  lastMessageAt: Date;
+  lastInboundAt: Date | null;
+  metadata: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface MockMessage {
+  id: string;
+  organizationId: string;
+  conversationId: string;
+  channelId: string;
+  direction: string;
+  senderType: string;
+  senderUserId: string | null;
+  providerMessageId: string | null;
+  content: string;
+  status: string;
+  errorDetail: string | null;
+  metadata: Record<string, unknown>;
+  sentAt: Date | null;
+  deliveredAt: Date | null;
+  readAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+function createConversationsMockDb() {
+  const cleanAttachmentId = "00000000-0000-7000-8000-000000000030";
+  const users = new Map<
+    string,
+    { id: string; email: string; displayName: string; status: string }
+  >();
+  const sessions = new Map<
+    string,
+    { id: string; userId: string; tokenHash: string; expiresAt: Date; revokedAt: Date | null }
+  >();
+  const memberRoles = new Map<string, { membershipId: string; roleKey: string }>();
+  const conversations = new Map<string, MockConversation>();
+  const messages = new Map<string, MockMessage>();
+  const templates = new Map<
+    string,
+    {
+      channelId: string;
+      name: string;
+      language: string;
+      status: string;
+      category: string;
+      components: unknown[];
+      variableCount?: number;
+    }
+  >();
+  const outboxEvents: Array<{
+    id: string;
+    eventType: string;
+    aggregateId: string;
+    payload: Record<string, unknown>;
+  }> = [];
+
+  users.set(aliceId, {
+    id: aliceId,
+    email: "alice@wabrix.dev",
+    displayName: "Alice Supervisor",
+    status: "active"
+  });
+  users.set(bobId, {
+    id: bobId,
+    email: "bob@wabrix.dev",
+    displayName: "Bob Agent",
+    status: "active"
+  });
+  users.set(charlieId, {
+    id: charlieId,
+    email: "charlie@wabrix.dev",
+    displayName: "Charlie Analyst",
+    status: "active"
+  });
+
+  sessions.set(hashSessionToken("alice-token"), {
+    id: "s1",
+    userId: aliceId,
+    tokenHash: hashSessionToken("alice-token"),
+    expiresAt: new Date(Date.now() + 86400000),
+    revokedAt: null
+  });
+  sessions.set(hashSessionToken("bob-token"), {
+    id: "s2",
+    userId: bobId,
+    tokenHash: hashSessionToken("bob-token"),
+    expiresAt: new Date(Date.now() + 86400000),
+    revokedAt: null
+  });
+  sessions.set(hashSessionToken("charlie-token"), {
+    id: "s3",
+    userId: charlieId,
+    tokenHash: hashSessionToken("charlie-token"),
+    expiresAt: new Date(Date.now() + 86400000),
+    revokedAt: null
+  });
+
+  memberRoles.set(`${orgId}:${aliceId}`, { membershipId: "m1", roleKey: "supervisor" });
+  memberRoles.set(`${orgId}:${bobId}`, { membershipId: "m2", roleKey: "agent" });
+  memberRoles.set(`${orgId}:${charlieId}`, { membershipId: "m3", roleKey: "analyst" });
+
+  // Initial mock conversation
+  const convId = "00000000-0000-7000-8000-000000000010";
+  conversations.set(convId, {
+    id: convId,
+    organizationId: orgId,
+    channelId,
+    customerPhone: "628123456789",
+    customerName: "Budi Santoso",
+    status: "open",
+    priority: "medium",
+    assignedToUserId: null,
+    version: 1,
+    lastMessageAt: new Date(),
+    lastInboundAt: new Date(),
+    metadata: {},
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+  const actionConvId = "00000000-0000-7000-8000-000000000011";
+  conversations.set(actionConvId, {
+    id: actionConvId,
+    organizationId: orgId,
+    channelId,
+    customerPhone: "628123456780",
+    customerName: "Action Customer",
+    status: "open",
+    priority: "medium",
+    assignedToUserId: null,
+    version: 1,
+    lastMessageAt: new Date(),
+    lastInboundAt: new Date(),
+    metadata: {},
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+
+  // Initial mock message
+  const msgId = "00000000-0000-7000-8000-000000000020";
+  messages.set(msgId, {
+    id: msgId,
+    organizationId: orgId,
+    conversationId: convId,
+    channelId,
+    direction: "inbound",
+    senderType: "customer",
+    senderUserId: null,
+    providerMessageId: "wamid.test.1",
+    content: "Halo admin, butuh bantuan.",
+    status: "delivered",
+    errorDetail: null,
+    metadata: {},
+    sentAt: new Date(),
+    deliveredAt: new Date(),
+    readAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
+
+  const db = {
+    async query(queryText: string, values: unknown[] = []) {
+      await Promise.resolve();
+      const sql = queryText.replace(/\s+/g, " ").trim();
+
+      if (sql.includes("FOR UPDATE OF conversation, membership")) {
+        const [targetOrg, targetConversation, actorUserId] = values as [string, string, string];
+        const c = conversations.get(targetConversation);
+        const member = memberRoles.get(`${targetOrg}:${actorUserId}`);
+        if (!c || c.organizationId !== targetOrg || !member) return { rows: [] };
+        return {
+          rows: [
+            {
+              status: c.status,
+              assignedToUserId: c.assignedToUserId,
+              queueId: null,
+              version: c.version,
+              roleKey: member.roleKey,
+              canAccess: true,
+              firstResponseSeconds: null,
+              resolutionSeconds: null,
+              businessTimezone: null,
+              weeklySchedule: null,
+              holidayDates: null,
+              pauseWhileWaiting: false,
+              firstResponseRemainingSeconds: null,
+              resolutionRemainingSeconds: null
+            }
+          ]
+        };
+      }
+
+      if (sql.includes("INSERT INTO wabrix.audit_logs")) {
+        return { rows: [{ id: "audit-operation", occurred_at: new Date() }], rowCount: 1 };
+      }
+
+      if (
+        sql.startsWith("UPDATE wabrix.conversations") &&
+        sql.includes("WHERE organization_id = $")
+      ) {
+        const targetOrg = values[values.length - 3] as string;
+        const targetId = values[values.length - 2] as string;
+        const expectedVersion = values[values.length - 1] as number;
+        const c = conversations.get(targetId);
+        if (!c || c.organizationId !== targetOrg || c.version !== expectedVersion) {
+          return { rows: [], rowCount: 0 };
+        }
+        if (sql.includes("assigned_to_user_id = $1")) c.assignedToUserId = values[0] as string;
+        if (sql.includes("status = CASE WHEN status = 'new'")) {
+          c.status = c.status === "new" ? "open" : c.status;
+        }
+        c.version += 1;
+        c.updatedAt = new Date();
+        return { rows: [], rowCount: 1 };
+      }
+
+      // Auth Session lookup
+      if (sql.includes("FROM wabrix.auth_sessions s JOIN wabrix.users u")) {
+        const [tokenHash] = values as [string];
+        const session = sessions.get(tokenHash);
+        if (!session || session.revokedAt !== null || session.expiresAt.getTime() <= Date.now()) {
+          return { rows: [] };
+        }
+        const user = users.get(session.userId);
+        if (!user || user.status !== "active") {
+          return { rows: [] };
+        }
+        return {
+          rows: [
+            {
+              id: session.id,
+              user_id: session.userId,
+              email: user.email,
+              display_name: user.displayName,
+              expires_at: session.expiresAt,
+              created_at: new Date()
+            }
+          ]
+        };
+      }
+
+      // Member role lookup
+      if (sql.includes("FROM wabrix.memberships m") && sql.includes("JOIN wabrix.roles r")) {
+        const [targetOrgId, targetUserId] = values as [string, string];
+        const member = memberRoles.get(`${targetOrgId}:${targetUserId}`);
+        if (!member) return { rows: [] };
+        return {
+          rows: [{ id: member.membershipId, role_key: member.roleKey, status: "active" }]
+        };
+      }
+
+      // List conversations
+      if (
+        sql.includes("FROM wabrix.conversations WHERE") &&
+        sql.includes("ORDER BY last_message_at DESC, id DESC")
+      ) {
+        let matching = Array.from(conversations.values()).filter(
+          (c) => c.organizationId === values[0]
+        );
+
+        if (sql.includes("status = $2")) {
+          const targetStatus = values[1] as string;
+          matching = matching.filter((c) => c.status === targetStatus);
+        }
+
+        if (sql.includes("assigned_to_user_id IS NULL")) {
+          matching = matching.filter((c) => c.assignedToUserId === null);
+        } else if (sql.includes("assigned_to_user_id = $")) {
+          const targetUser = values.find(
+            (v) => typeof v === "string" && v.startsWith("00000000-0000-7000-8000-")
+          );
+          matching = matching.filter((c) => c.assignedToUserId === targetUser);
+        }
+
+        const limitVal = values[values.length - 1] as number;
+        const rows = matching.slice(0, limitVal).map((c) => ({
+          id: c.id,
+          organizationId: c.organizationId,
+          channelId: c.channelId,
+          customerPhone: c.customerPhone,
+          customerName: c.customerName,
+          status: c.status,
+          priority: c.priority,
+          assignedToUserId: c.assignedToUserId,
+          version: c.version,
+          lastMessageAt: c.lastMessageAt,
+          lastInboundAt: c.lastInboundAt,
+          metadata: c.metadata,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt
+        }));
+
+        return { rows, rowCount: rows.length, command: "SELECT", oid: 0, fields: [] };
+      }
+
+      // Get conversation by ID
+      if (
+        sql.includes("SELECT") &&
+        sql.includes("FROM wabrix.conversations WHERE organization_id = $1 AND id = $2")
+      ) {
+        const [targetOrg, targetId] = values as [string, string];
+        const c = conversations.get(targetId);
+        if (c && c.organizationId === targetOrg) {
+          return {
+            rows: [
+              {
+                id: c.id,
+                organizationId: c.organizationId,
+                channelId: c.channelId,
+                customerPhone: c.customerPhone,
+                customerName: c.customerName,
+                status: c.status,
+                priority: c.priority,
+                assignedToUserId: c.assignedToUserId,
+                version: c.version,
+                lastMessageAt: c.lastMessageAt,
+                lastInboundAt: c.lastInboundAt,
+                metadata: c.metadata,
+                createdAt: c.createdAt,
+                updatedAt: c.updatedAt
+              }
+            ],
+            rowCount: 1,
+            command: "SELECT",
+            oid: 0,
+            fields: []
+          };
+        }
+        return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
+      }
+
+      // List messages by conversation
+      if (
+        sql.includes("FROM wabrix.messages WHERE organization_id = $1 AND conversation_id = $2")
+      ) {
+        const [targetOrg, targetConv] = values as [string, string];
+        const matching = Array.from(messages.values())
+          .filter((m) => m.organizationId === targetOrg && m.conversationId === targetConv)
+          .map((m) => ({
+            id: m.id,
+            organizationId: m.organizationId,
+            conversationId: m.conversationId,
+            channelId: m.channelId,
+            direction: m.direction,
+            senderType: m.senderType,
+            senderUserId: m.senderUserId,
+            providerMessageId: m.providerMessageId,
+            content: m.content,
+            status: m.status,
+            errorDetail: m.errorDetail,
+            metadata: m.metadata,
+            sentAt: m.sentAt,
+            deliveredAt: m.deliveredAt,
+            readAt: m.readAt,
+            createdAt: m.createdAt,
+            updatedAt: m.updatedAt
+          }));
+
+        return { rows: matching, rowCount: matching.length, command: "SELECT", oid: 0, fields: [] };
+      }
+
+      // Update conversation
+      if (sql.includes("UPDATE wabrix.conversations")) {
+        const id = values[values.length - 3] as string;
+        const targetOrg = values[values.length - 2] as string;
+        const expectedVer = values[values.length - 1] as number;
+
+        const c = conversations.get(id);
+        if (c && c.organizationId === targetOrg && c.version === expectedVer) {
+          if (sql.includes("status = $1")) {
+            c.status = values[0] as string;
+          }
+          if (sql.includes("assigned_to_user_id = $")) {
+            const assignIdx = sql.includes("status = $1") ? 1 : 0;
+            c.assignedToUserId = (values[assignIdx] as string | null) ?? null;
+          }
+          c.version += 1;
+          c.updatedAt = new Date();
+
+          return {
+            rows: [
+              {
+                id: c.id,
+                organizationId: c.organizationId,
+                channelId: c.channelId,
+                customerPhone: c.customerPhone,
+                customerName: c.customerName,
+                status: c.status,
+                priority: c.priority,
+                assignedToUserId: c.assignedToUserId,
+                version: c.version,
+                lastMessageAt: c.lastMessageAt,
+                metadata: c.metadata,
+                createdAt: c.createdAt,
+                updatedAt: c.updatedAt
+              }
+            ],
+            rowCount: 1,
+            command: "UPDATE",
+            oid: 0,
+            fields: []
+          };
+        }
+        return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
+      }
+
+      // Insert message
+      if (
+        sql.includes("FROM wabrix.attachments") &&
+        sql.includes("organization_id = $1 AND id = $2")
+      ) {
+        const [targetOrg, attachmentId] = values as [string, string];
+        if (targetOrg !== orgId || attachmentId !== cleanAttachmentId) {
+          return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
+        }
+        return {
+          rows: [
+            {
+              id: cleanAttachmentId,
+              organizationId: orgId,
+              uploaderUserId: bobId,
+              fileName: "invoice.pdf",
+              contentType: "application/pdf",
+              detectedMimeType: "application/pdf",
+              byteSize: "1024",
+              sha256Checksum: "a".repeat(64),
+              storageKey: `org-${orgId}/clean/${cleanAttachmentId}`,
+              status: "clean",
+              quarantineReason: null,
+              scannedAt: new Date(),
+              scannerName: "test-scanner",
+              scanMetadata: {},
+              metadata: {},
+              deletedAt: null,
+              deletionReason: null,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          ],
+          rowCount: 1,
+          command: "SELECT",
+          oid: 0,
+          fields: []
+        };
+      }
+
+      if (sql.includes("INSERT INTO wabrix.messages")) {
+        const newMsgId = `00000000-0000-7000-8000-${String(messages.size + 21).padStart(12, "0")}`;
+        const newMsg: MockMessage = {
+          id: newMsgId,
+          organizationId: values[0] as string,
+          conversationId: values[1] as string,
+          channelId: values[2] as string,
+          direction: values[3] as string,
+          senderType: values[4] as string,
+          senderUserId: (values[5] as string | null) ?? null,
+          providerMessageId: (values[6] as string | null) ?? null,
+          content: values[7] as string,
+          status: values[8] as string,
+          errorDetail: null,
+          metadata: JSON.parse(values[9] as string) as Record<string, unknown>,
+          sentAt: (values[10] as Date | null) ?? new Date(),
+          deliveredAt: null,
+          readAt: null,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        messages.set(newMsgId, newMsg);
+
+        return {
+          rows: [
+            {
+              id: newMsg.id,
+              organizationId: newMsg.organizationId,
+              conversationId: newMsg.conversationId,
+              channelId: newMsg.channelId,
+              direction: newMsg.direction,
+              senderType: newMsg.senderType,
+              senderUserId: newMsg.senderUserId,
+              providerMessageId: newMsg.providerMessageId,
+              content: newMsg.content,
+              status: newMsg.status,
+              errorDetail: newMsg.errorDetail,
+              metadata: newMsg.metadata,
+              sentAt: newMsg.sentAt,
+              deliveredAt: newMsg.deliveredAt,
+              readAt: newMsg.readAt,
+              createdAt: newMsg.createdAt,
+              updatedAt: newMsg.updatedAt
+            }
+          ],
+          rowCount: 1,
+          command: "INSERT",
+          oid: 0,
+          fields: []
+        };
+      }
+
+      // Insert outbox event
+      if (sql.includes("INSERT INTO wabrix.outbox_events")) {
+        outboxEvents.push({
+          id: `outbox-${outboxEvents.length + 1}`,
+          eventType: "message.outbound.created",
+          aggregateId: values[1] as string,
+          payload: JSON.parse(values[2] as string) as Record<string, unknown>
+        });
+        return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
+      }
+
+      // WhatsApp Template lookups
+      if (sql.includes("FROM wabrix.whatsapp_templates t")) {
+        if (sql.includes("WHERE t.channel_id = $1 AND t.name = $2 AND v.language = $3")) {
+          const [chId, tName, tLang] = values as [string, string, string];
+          const key = `${chId}:${tName}:${tLang}`;
+          const match = templates.get(key);
+          if (match) {
+            return {
+              rows: [
+                {
+                  t_id: "tpl-id-001",
+                  t_org_id: orgId,
+                  t_channel_id: match.channelId,
+                  t_name: match.name,
+                  t_category: match.category,
+                  t_created_at: new Date(),
+                  t_updated_at: new Date(),
+                  v_id: "ver-id-001",
+                  v_provider_template_id: "meta-tpl-123",
+                  v_language: match.language,
+                  v_status: match.status,
+                  v_rejected_reason: null,
+                  v_components: match.components,
+                  v_variable_count: match.variableCount ?? 0,
+                  v_payload_hash: "hash123",
+                  v_version: 1,
+                  v_created_at: new Date(),
+                  v_updated_at: new Date()
+                }
+              ],
+              rowCount: 1,
+              command: "SELECT",
+              oid: 0,
+              fields: []
+            };
+          }
+          return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
+        }
+
+        if (sql.includes("WHERE t.organization_id = $1 AND t.channel_id = $2")) {
+          const [, targetCh] = values as [string, string];
+          const matching = Array.from(templates.values())
+            .filter((t) => t.channelId === targetCh)
+            .map((t) => ({
+              templateId: "tpl-id-001",
+              name: t.name,
+              category: t.category,
+              versionId: "ver-id-001",
+              language: t.language,
+              status: t.status,
+              components: t.components,
+              variableCount: t.variableCount ?? 0
+            }));
+          return {
+            rows: matching,
+            rowCount: matching.length,
+            command: "SELECT",
+            oid: 0,
+            fields: []
+          };
+        }
+      }
+
+      return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
+    }
+  } as unknown as DbClient;
+
+  return { db, conversations, messages, outboxEvents, templates, cleanAttachmentId };
+}
+
+describe("Conversations & Messages API (M2-07)", () => {
+  const { db, conversations, outboxEvents, templates, cleanAttachmentId } =
+    createConversationsMockDb();
+  const config = loadAuthConfig();
+  const idp = new MockIdentityProvider();
+  const app = createApiApp({
+    service: "api",
+    version: "1.0.0",
+    gitSha: "test",
+    environment: "local",
+    auth: { db, config, identityProvider: idp }
+  });
+
+  const aliceCookie = serializeSessionCookie("alice-token", false);
+  const bobCookie = serializeSessionCookie("bob-token", false);
+  const charlieCookie = serializeSessionCookie("charlie-token", false);
+
+  const convId = "00000000-0000-7000-8000-000000000010";
+  const actionConvId = "00000000-0000-7000-8000-000000000011";
+
+  describe("POST /api/v1/organizations/:orgId/conversations/:id/actions", () => {
+    it("rejects malformed operations before persistence", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/actions`)
+        .set("Cookie", bobCookie)
+        .send({ version: 1, action: "note", body: " " });
+      expect(response.status).toBe(400);
+      expect((response.body as { code: string }).code).toBe("VALIDATION_ERROR");
+    });
+
+    it("requires assignment permission for handoff", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/actions`)
+        .set("Cookie", charlieCookie)
+        .send({
+          version: 1,
+          action: "handoff",
+          targetUserId: bobId
+        });
+      expect(response.status).toBe(403);
+      expect((response.body as { code: string }).code).toBe("FORBIDDEN");
+    });
+
+    it("allows one claim winner and returns 409 to the stale contender", async () => {
+      const winner = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${actionConvId}/actions`)
+        .set("Cookie", bobCookie)
+        .send({ version: 1, action: "claim" });
+      expect(winner.status).toBe(200);
+      expect(winner.body as { assignedToUserId: string; version: number }).toMatchObject({
+        assignedToUserId: bobId,
+        version: 2
+      });
+
+      const stale = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${actionConvId}/actions`)
+        .set("Cookie", aliceCookie)
+        .send({ version: 1, action: "claim" });
+      expect(stale.status).toBe(409);
+      expect((stale.body as { code: string }).code).toBe("OPTIMISTIC_CONCURRENCY_CONFLICT");
+    });
+  });
+
+  describe("GET /api/v1/organizations/:orgId/conversations", () => {
+    it("returns 401 when no session cookie is provided", async () => {
+      const response = await request(app).get(`/api/v1/organizations/${orgId}/conversations`);
+      expect(response.status).toBe(401);
+      const body = response.body as { code: string };
+      expect(body.code).toBe("UNAUTHORIZED");
+    });
+
+    it("returns 403 when user is not a member of the organization", async () => {
+      const otherOrg = "00000000-0000-7000-8000-999999999999";
+      const response = await request(app)
+        .get(`/api/v1/organizations/${otherOrg}/conversations`)
+        .set("Cookie", aliceCookie);
+      expect(response.status).toBe(403);
+      const body = response.body as { code: string };
+      expect(body.code).toBe("NOT_A_MEMBER");
+    });
+
+    it("returns 200 with list of conversations and nextCursor", async () => {
+      const response = await request(app)
+        .get(`/api/v1/organizations/${orgId}/conversations`)
+        .set("Cookie", aliceCookie);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { items: Array<{ id: string; customerPhone: string }> };
+      expect(body.items).toBeInstanceOf(Array);
+      expect(body.items.length).toBeGreaterThanOrEqual(1);
+      expect(body.items[0]?.id).toBe(convId);
+      expect(body.items[0]?.customerPhone).toBe("628123456789");
+    });
+
+    it("filters conversations by status and assignee", async () => {
+      const response = await request(app)
+        .get(`/api/v1/organizations/${orgId}/conversations?status=open&assignedTo=unassigned`)
+        .set("Cookie", bobCookie);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { items: Array<{ id: string }> };
+      expect(body.items.length).toBe(1);
+    });
+  });
+
+  describe("GET /api/v1/organizations/:orgId/conversations/:id", () => {
+    it("returns 404 when conversation does not exist", async () => {
+      const nonExistent = "00000000-0000-7000-8000-000000000099";
+      const response = await request(app)
+        .get(`/api/v1/organizations/${orgId}/conversations/${nonExistent}`)
+        .set("Cookie", aliceCookie);
+
+      expect(response.status).toBe(404);
+      const body = response.body as { code: string };
+      expect(body.code).toBe("CONVERSATION_NOT_FOUND");
+    });
+
+    it("returns 200 with conversation details and full message timeline", async () => {
+      const response = await request(app)
+        .get(`/api/v1/organizations/${orgId}/conversations/${convId}`)
+        .set("Cookie", bobCookie);
+
+      expect(response.status).toBe(200);
+      const body = response.body as {
+        conversation: { id: string };
+        messages: Array<{ content: string; direction: string }>;
+      };
+      expect(body.conversation.id).toBe(convId);
+      expect(body.messages).toBeInstanceOf(Array);
+      expect(body.messages.length).toBe(1);
+      expect(body.messages[0]?.content).toBe("Halo admin, butuh bantuan.");
+      expect(body.messages[0]?.direction).toBe("inbound");
+      expect((response.body as { notes: unknown[] }).notes).toEqual([]);
+      expect((response.body as { tags: unknown[] }).tags).toEqual([]);
+    });
+  });
+
+  describe("M3-08 workspace resources", () => {
+    it("keeps the static workspace route ahead of the conversation id route", async () => {
+      const response = await request(app)
+        .get(`/api/v1/organizations/${orgId}/conversations/workspace-resources`)
+        .set("Cookie", bobCookie);
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ queues: [], tags: [], savedFilters: [] });
+    });
+
+    it("validates saved-filter definitions and scopes deletion to the active user", async () => {
+      const invalid = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/saved-filters`)
+        .set("Cookie", bobCookie)
+        .send({ name: "", definition: { search: "x".repeat(201) } });
+      expect(invalid.status).toBe(400);
+
+      const missing = await request(app)
+        .delete(
+          `/api/v1/organizations/${orgId}/conversations/saved-filters/00000000-0000-7000-8000-000000000099`
+        )
+        .set("Cookie", bobCookie);
+      expect(missing.status).toBe(404);
+    });
+  });
+
+  describe("PATCH /api/v1/organizations/:orgId/conversations/:id", () => {
+    it("returns 400 on invalid status progression", async () => {
+      // open cannot jump directly to 'new'
+      const response = await request(app)
+        .patch(`/api/v1/organizations/${orgId}/conversations/${convId}`)
+        .set("Cookie", aliceCookie)
+        .send({
+          version: 1,
+          status: "new"
+        });
+
+      expect(response.status).toBe(400);
+      const body = response.body as { code: string };
+      expect(body.code).toBe("INVALID_STATUS_TRANSITION");
+    });
+
+    it("returns 409 Conflict when optimistic concurrency version does not match", async () => {
+      const response = await request(app)
+        .patch(`/api/v1/organizations/${orgId}/conversations/${convId}`)
+        .set("Cookie", aliceCookie)
+        .send({
+          version: 999, // Stale version
+          status: "resolved"
+        });
+
+      expect(response.status).toBe(409);
+      const body = response.body as { code: string };
+      expect(body.code).toBe("OPTIMISTIC_CONCURRENCY_CONFLICT");
+    });
+
+    it("returns 403 when agent without conversation:resolve tries to resolve", async () => {
+      const response = await request(app)
+        .patch(`/api/v1/organizations/${orgId}/conversations/${convId}`)
+        .set("Cookie", bobCookie) // Bob is agent
+        .send({
+          version: 1,
+          status: "resolved"
+        });
+
+      expect(response.status).toBe(403);
+      const body = response.body as { code: string };
+      expect(body.code).toBe("FORBIDDEN");
+    });
+
+    it("returns 200 when supervisor resolves conversation and increments version", async () => {
+      const response = await request(app)
+        .patch(`/api/v1/organizations/${orgId}/conversations/${convId}`)
+        .set("Cookie", aliceCookie) // Alice is supervisor
+        .send({
+          version: 1,
+          status: "resolved"
+        });
+
+      expect(response.status).toBe(200);
+      const body = response.body as { status: string; version: number };
+      expect(body.status).toBe("resolved");
+      expect(body.version).toBe(2);
+    });
+  });
+
+  describe("POST /api/v1/organizations/:orgId/conversations/:id/messages", () => {
+    it("requires an Idempotency-Key for outbound sends", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/messages`)
+        .set("Cookie", bobCookie)
+        .send({ content: "This must not be queued twice" });
+
+      expect(response.status).toBe(400);
+      expect((response.body as { code: string }).code).toBe("IDEMPOTENCY_KEY_REQUIRED");
+    });
+
+    it("returns 400 on empty message content", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/messages`)
+        .set("Cookie", bobCookie)
+        .send({ content: "   " });
+
+      expect(response.status).toBe(400);
+      const body = response.body as { code: string };
+      expect(body.code).toBe("VALIDATION_ERROR");
+    });
+
+    it("returns 403 when analyst tries to send message (no message:send)", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/messages`)
+        .set("Cookie", charlieCookie) // Charlie is analyst
+        .send({ content: "Unauthorized message" });
+
+      expect(response.status).toBe(403);
+      const body = response.body as { code: string };
+      expect(body.code).toBe("FORBIDDEN");
+    });
+
+    it("returns 201 when agent posts outbound reply, creating outbox event", async () => {
+      const initialOutboxCount = outboxEvents.length;
+
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/messages`)
+        .set("Cookie", bobCookie)
+        .set("Idempotency-Key", "reply-001")
+        .send({ content: "Selamat siang! Ada yang bisa kami bantu?" });
+
+      expect(response.status).toBe(201);
+      const body = response.body as {
+        id: string;
+        direction: string;
+        senderType: string;
+        senderUserId: string | null;
+        status: string;
+        content: string;
+      };
+      expect(body.direction).toBe("outbound");
+      expect(body.senderType).toBe("agent");
+      expect(body.senderUserId).toBe(bobId);
+      expect(body.status).toBe("queued");
+      expect(body.content).toBe("Selamat siang! Ada yang bisa kami bantu?");
+
+      // Verify transactional outbox event was created
+      expect(outboxEvents.length).toBe(initialOutboxCount + 1);
+      const createdEvent = outboxEvents[outboxEvents.length - 1]!;
+      expect(createdEvent.eventType).toBe("message.outbound.created");
+      expect(createdEvent.aggregateId).toBe(body.id);
+    });
+
+    it("creates a media outbound intent only for a clean tenant attachment", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/messages`)
+        .set("Cookie", bobCookie)
+        .set("Idempotency-Key", "media-send-001")
+        .send({ type: "media", attachmentId: cleanAttachmentId, caption: "Invoice Anda" });
+
+      expect(response.status).toBe(201);
+      const lastOutbox = outboxEvents[outboxEvents.length - 1]!;
+      expect(lastOutbox.payload["media"]).toMatchObject({
+        attachmentId: cleanAttachmentId,
+        fileName: "invoice.pdf",
+        contentType: "application/pdf",
+        caption: "Invoice Anda"
+      });
+    });
+
+    it("fails closed when a media attachment is absent from the tenant", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/messages`)
+        .set("Cookie", bobCookie)
+        .set("Idempotency-Key", "media-send-missing")
+        .send({ type: "media", attachmentId: "00000000-0000-7000-8000-999999999999" });
+      expect(response.status).toBe(404);
+      expect((response.body as { code: string }).code).toBe("ATTACHMENT_NOT_FOUND");
+    });
+
+    it("rejects free-form text message with 422 OUTSIDE_SERVICE_WINDOW when outside 24h window", async () => {
+      // Create expired conversation (lastInboundAt was 25 hours ago)
+      const expiredConvId = "00000000-0000-7000-8000-000000000099";
+      conversations.set(expiredConvId, {
+        id: expiredConvId,
+        organizationId: orgId,
+        channelId,
+        customerPhone: "628123456999",
+        customerName: "Expired Customer",
+        status: "open",
+        priority: "medium",
+        assignedToUserId: null,
+        version: 1,
+        lastMessageAt: new Date(Date.now() - 25 * 3600 * 1000),
+        lastInboundAt: new Date(Date.now() - 25 * 3600 * 1000),
+        metadata: {},
+        createdAt: new Date(Date.now() - 30 * 3600 * 1000),
+        updatedAt: new Date()
+      });
+
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${expiredConvId}/messages`)
+        .set("Cookie", bobCookie)
+        .set("Idempotency-Key", "expired-freeform-1")
+        .send({ content: "Halo, ini pesan follow up." });
+
+      expect(response.status).toBe(422);
+      expect((response.body as { code: string }).code).toBe("OUTSIDE_SERVICE_WINDOW");
+    });
+
+    it("allows approved template message with variables when outside service window", async () => {
+      // Register approved template in mock DB
+      templates.set(`${channelId}:reengage_customer:id`, {
+        channelId,
+        name: "reengage_customer",
+        language: "id",
+        status: "APPROVED",
+        category: "UTILITY",
+        components: [
+          {
+            type: "BODY",
+            text: "Halo {{1}}, pesanan {{2}} Anda sedang menunggu pembayaran."
+          }
+        ],
+        variableCount: 2
+      });
+
+      const expiredConvId = "00000000-0000-7000-8000-000000000099";
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${expiredConvId}/messages`)
+        .set("Cookie", bobCookie)
+        .set("Idempotency-Key", "template-send-001")
+        .send({
+          type: "template",
+          templateName: "reengage_customer",
+          language: "id",
+          variables: {
+            "1": "Budi",
+            "2": "ORD-9999"
+          }
+        });
+
+      expect(response.status).toBe(201);
+      const body = response.body as { content: string; direction: string };
+      expect(body.content).toBe("Halo Budi, pesanan ORD-9999 Anda sedang menunggu pembayaran.");
+
+      const lastOutbox = outboxEvents[outboxEvents.length - 1]!;
+      expect(lastOutbox.eventType).toBe("message.outbound.created");
+      expect(lastOutbox.payload["template"]).toMatchObject({
+        name: "reengage_customer",
+        language: "id",
+        variables: { "1": "Budi", "2": "ORD-9999" }
+      });
+    });
+
+    it("rejects non-approved template with 422 TEMPLATE_NOT_APPROVED", async () => {
+      templates.set(`${channelId}:pending_offer:id`, {
+        channelId,
+        name: "pending_offer",
+        language: "id",
+        status: "PENDING",
+        category: "MARKETING",
+        components: [{ type: "BODY", text: "Diskon hari ini!" }],
+        variableCount: 0
+      });
+
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/messages`)
+        .set("Cookie", bobCookie)
+        .set("Idempotency-Key", "template-pending-001")
+        .send({
+          type: "template",
+          templateName: "pending_offer",
+          language: "id"
+        });
+
+      expect(response.status).toBe(422);
+      expect((response.body as { code: string }).code).toBe("TEMPLATE_NOT_APPROVED");
+    });
+
+    it("rejects template with missing variables (422 INVALID_TEMPLATE_VARIABLES)", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/messages`)
+        .set("Cookie", bobCookie)
+        .set("Idempotency-Key", "template-missing-vars")
+        .send({
+          type: "template",
+          templateName: "reengage_customer",
+          language: "id",
+          variables: { "1": "Budi" } // missing variable 2
+        });
+
+      expect(response.status).toBe(422);
+      expect((response.body as { code: string }).code).toBe("INVALID_TEMPLATE_VARIABLES");
+    });
+  });
+
+  describe("POST /api/v1/organizations/:orgId/conversations/:id/template-preview", () => {
+    it("renders preview with variable substitutions and determinism", async () => {
+      const response = await request(app)
+        .post(`/api/v1/organizations/${orgId}/conversations/${convId}/template-preview`)
+        .set("Cookie", bobCookie)
+        .send({
+          templateName: "reengage_customer",
+          language: "id",
+          variables: { "1": "Dewi", "2": "ORD-1234" }
+        });
+
+      expect(response.status).toBe(200);
+      const body = response.body as {
+        templateName: string;
+        isEligible: boolean;
+        renderedBody: string;
+        renderedPayloadHash: string;
+      };
+      expect(body.templateName).toBe("reengage_customer");
+      expect(body.isEligible).toBe(true);
+      expect(body.renderedBody).toBe(
+        "Halo Dewi, pesanan ORD-1234 Anda sedang menunggu pembayaran."
+      );
+      expect(body.renderedPayloadHash).toMatch(/^[a-f0-9]{64}$/);
+    });
+  });
+
+  describe("GET /api/v1/organizations/:orgId/conversations/:id/templates", () => {
+    it("lists channel templates for selection in composer", async () => {
+      const response = await request(app)
+        .get(`/api/v1/organizations/${orgId}/conversations/${convId}/templates`)
+        .set("Cookie", bobCookie);
+
+      expect(response.status).toBe(200);
+      const body = response.body as { items: Array<{ name: string; status: string }> };
+      expect(Array.isArray(body.items)).toBe(true);
+      expect(body.items.some((t) => t.name === "reengage_customer")).toBe(true);
+    });
+  });
+});

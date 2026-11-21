@@ -1,0 +1,167 @@
+import { describe, expect, it, beforeEach } from "vitest";
+import {
+  recordHttpRequest,
+  recordAuthDenial,
+  recordPermissionDenial,
+  recordRateLimitExceeded,
+  recordWhatsAppWebhookProcessed,
+  recordWhatsAppOutboundDispatch,
+  recordWorkerBatchFailure,
+  recordOutboxSnapshot,
+  recordRealtimeConnection,
+  recordRealtimeAuthorizationDenial,
+  recordRealtimeReconnectGap,
+  recordRealtimeDroppedHint,
+  recordMediaLifecycle,
+  recordAiDraftRun,
+  recordAutoSendOutcome,
+  setEmergencyKillswitchActive,
+  getPrometheusMetrics,
+  resetMetrics
+} from "./metrics.js";
+
+describe("Prometheus Metrics (M1-08)", () => {
+  beforeEach(() => {
+    resetMetrics();
+  });
+
+  it("records HTTP requests and latency", () => {
+    recordHttpRequest({
+      method: "POST",
+      route: "/api/v1/organizations",
+      statusCode: 201,
+      durationSeconds: 0.045
+    });
+
+    const output = getPrometheusMetrics();
+    expect(output).toContain(
+      'http_requests_total{method="POST",route="/api/v1/organizations",status_code="201"} 1'
+    );
+    expect(output).toContain(
+      'http_request_duration_seconds_count{method="POST",route="/api/v1/organizations"} 1'
+    );
+    expect(output).toContain(
+      'http_request_duration_seconds_sum{method="POST",route="/api/v1/organizations"} 0.045000'
+    );
+  });
+
+  it("records auth denials", () => {
+    recordAuthDenial("SESSION_EXPIRED");
+    const output = getPrometheusMetrics();
+    expect(output).toContain('auth_denials_total{reason="SESSION_EXPIRED"} 1');
+  });
+
+  it("records permission denials", () => {
+    recordPermissionDenial("membership:modify", "agent");
+    const output = getPrometheusMetrics();
+    expect(output).toContain(
+      'permission_denials_total{permission="membership:modify",role="agent"} 1'
+    );
+  });
+
+  it("records rate limit exceeded events", () => {
+    recordRateLimitExceeded("/api/v1/auth/callback");
+    const output = getPrometheusMetrics();
+    expect(output).toContain('rate_limit_exceeded_total{route="/api/v1/auth/callback"} 1');
+  });
+
+  it("exports M2 messaging outcome counters and queue gauges", () => {
+    recordWhatsAppWebhookProcessed("processed");
+    recordWhatsAppWebhookProcessed("failed");
+    recordWhatsAppOutboundDispatch("sent");
+    recordWorkerBatchFailure("outbound");
+    recordOutboxSnapshot({
+      pendingEvents: 12,
+      oldestEventAgeSeconds: 4.5,
+      deadLetterEvents: 2
+    });
+
+    const output = getPrometheusMetrics();
+    expect(output).toContain('whatsapp_webhook_processed_total{result="processed"} 1');
+    expect(output).toContain('whatsapp_webhook_processed_total{result="failed"} 1');
+    expect(output).toContain('whatsapp_outbound_dispatch_total{result="sent"} 1');
+    expect(output).toContain('worker_batch_failures_total{pipeline="outbound"} 1');
+    expect(output).toContain("outbox_pending_events 12");
+    expect(output).toContain("outbox_oldest_event_age_seconds 4.5");
+    expect(output).toContain("outbox_dead_letter_events 2");
+  });
+
+  it("exports realtime connection, denial, gap, and backpressure signals", () => {
+    recordRealtimeConnection(1);
+    recordRealtimeAuthorizationDenial("conversation");
+    recordRealtimeReconnectGap();
+    recordRealtimeDroppedHint("backpressure");
+    const output = getPrometheusMetrics();
+    expect(output).toContain("realtime_active_connections 1");
+    expect(output).toContain('realtime_authorization_denials_total{room_type="conversation"} 1');
+    expect(output).toContain('realtime_reconnect_gaps_total{result="reconcile_required"} 1');
+    expect(output).toContain('realtime_dropped_hints_total{reason="backpressure"} 1');
+    recordRealtimeConnection(-1);
+  });
+
+  it("exports media scan and retention outcomes without tenant or content labels", () => {
+    recordMediaLifecycle("scan", "clean");
+    recordMediaLifecycle("retention", "deleted");
+    const output = getPrometheusMetrics();
+    expect(output).toContain('media_lifecycle_total{operation="scan",outcome="clean"} 1');
+    expect(output).toContain('media_lifecycle_total{operation="retention",outcome="deleted"} 1');
+  });
+
+  it("exports AI outcome, latency, token, and cost metrics without tenant labels", () => {
+    recordAiDraftRun({
+      provider: "openai",
+      status: "completed",
+      durationSeconds: 1.25,
+      promptTokens: 120,
+      completionTokens: 30,
+      costMicrocents: 225
+    });
+    const output = getPrometheusMetrics();
+    expect(output).toContain('ai_draft_runs_total{provider="openai",status="completed"} 1');
+    expect(output).toContain(
+      'ai_draft_duration_seconds_sum{provider="openai",status="completed"} 1.250000'
+    );
+    expect(output).toContain('ai_draft_prompt_tokens_total{provider="openai"} 120');
+    expect(output).toContain('ai_draft_completion_tokens_total{provider="openai"} 30');
+    expect(output).toContain('ai_draft_cost_microcents_total{provider="openai"} 225');
+    expect(output).not.toContain("organization_id");
+  });
+
+  it("exports M5 auto-send outcomes and emergency killswitch gauge", () => {
+    recordAutoSendOutcome({ status: "sent" });
+    recordAutoSendOutcome({ status: "denied", reason: "below_confidence" });
+    recordAutoSendOutcome({ status: "failed", reason: "provider_error" });
+    setEmergencyKillswitchActive(true);
+
+    const output = getPrometheusMetrics();
+    expect(output).toContain('auto_send_total{reason="none",status="sent"} 1');
+    expect(output).toContain('auto_send_total{reason="below_confidence",status="denied"} 1');
+    expect(output).toContain('auto_send_total{reason="provider_error",status="failed"} 1');
+    expect(output).toContain('auto_send_failures_total{reason="provider_error"} 1');
+    expect(output).toContain("emergency_killswitch_active 1");
+
+    setEmergencyKillswitchActive(false);
+    const outputAfterReset = getPrometheusMetrics();
+    expect(outputAfterReset).toContain("emergency_killswitch_active 0");
+  });
+
+  it("exports histogram buckets for HTTP request duration", () => {
+    recordHttpRequest({
+      method: "POST",
+      route: "/api/v1/webhooks/whatsapp",
+      statusCode: 200,
+      durationSeconds: 0.15
+    });
+
+    const output = getPrometheusMetrics();
+    expect(output).toContain(
+      'http_request_duration_seconds_bucket{le="0.1",method="POST",route="/api/v1/webhooks/whatsapp"} 0'
+    );
+    expect(output).toContain(
+      'http_request_duration_seconds_bucket{le="0.25",method="POST",route="/api/v1/webhooks/whatsapp"} 1'
+    );
+    expect(output).toContain(
+      'http_request_duration_seconds_bucket{le="+Inf",method="POST",route="/api/v1/webhooks/whatsapp"} 1'
+    );
+  });
+});

@@ -1,0 +1,64 @@
+{
+  "name": "wabrix",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.22.0",
+  "engines": {
+    "node": ">=22.0.0 <23",
+    "pnpm": ">=10.0.0 <11"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "commitlint": "commitlint",
+    "dev": "turbo run dev --parallel",
+    "db:migrate": "pnpm --filter @wabrix/db db:migrate",
+    "db:break-glass": "pnpm --filter @wabrix/db db:break-glass",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "openapi:generate": "pnpm --filter @wabrix/contracts generate:openapi",
+    "openapi:check": "pnpm --filter @wabrix/contracts check:openapi",
+    "lint": "eslint \"{apps,packages}/**/*.{ts,tsx}\"",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage -- --coverage.include '{src,scripts}/**/*.{ts,tsx,js,mjs}'",
+    "typecheck": "turbo run typecheck",
+    "verify": "pnpm format:check && pnpm openapi:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "clean": "turbo run clean && rm -rf .turbo coverage",
+    "prepare": "node scripts/check-toolchain.mjs"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
+    "@eslint/js": "^9.34.0",
+    "@types/node": "^22.18.0",
+    "@vitest/coverage-v8": "4.1.12",
+    "eslint": "^9.34.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.41.0",
+    "vitest": "4.1.12"
+  },
+  "pnpm": {
+    "overrides": {
+      "@opentelemetry/otlp-grpc-exporter-base>@grpc/grpc-js": "1.14.5",
+      "@tanstack/router-core>seroval": "1.6.11",
+      "@tanstack/router-plugin>zod": "4.6.7",
+      "ajv>fast-uri": "3.1.9",
+      "brace-expansion@1": "1.1.21",
+      "brace-expansion@5": "5.0.12",
+      "deepmerge-ts": "8.0.0",
+      "effect": "3.22.1",
+      "express@5>body-parser": "2.4.0",
+      "express@5>proxy-addr": "2.0.8",
+      "js-yaml@4": "4.3.2",
+      "qs@6": "6.16.1",
+      "socket.io@4>engine.io": "6.6.10",
+      "source-map-js@1": "1.2.2"
+    },
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

@@ -1,0 +1,242 @@
+name: wabrix-staging
+
+x-app-environment: &app-environment
+  NODE_ENV: production
+  APP_ENV: staging
+  SERVICE_VERSION: ${IMAGE_TAG:?IMAGE_TAG is required}
+  GIT_SHA: ${IMAGE_TAG:?IMAGE_TAG is required}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  DATABASE_URL: "postgresql://wabrix_app:${POSTGRES_RUNTIME_PASSWORD:-wabrix_runtime_password}@postgres:5432/${POSTGRES_DB:-wabrix_staging}"
+  REDIS_URL: "redis://:${REDIS_PASSWORD:-wabrix_redis_password}@redis:6379"
+  S3_BUCKET: wabrix-staging
+  S3_REGION: sgp1
+  S3_ENDPOINT: "http://minio:9000"
+  S3_FORCE_PATH_STYLE: "true"
+  S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-wabrix_staging}
+  S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-wabrix_minio_password}
+  CLAMAV_HOST: clamav
+  CLAMAV_PORT: "3310"
+  AUTH_OIDC_ISSUER: ${AUTH_OIDC_ISSUER:-https://wabrix.local.auth0.com/}
+  AUTH_OIDC_CLIENT_ID: ${AUTH_OIDC_CLIENT_ID:-wabrix-staging-client}
+  AUTH_OIDC_CLIENT_SECRET: ${AUTH_OIDC_CLIENT_SECRET:-wabrix-staging-secret}
+  AUTH_OIDC_REDIRECT_URI: "${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}/api/v1/auth/callback"
+  AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+  AUTH_MOCK_ENABLED: ${AUTH_MOCK_ENABLED:-true}
+  APP_BASE_URL: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+  META_GRAPH_API_BASE_URL: ${META_GRAPH_API_BASE_URL:-https://graph.facebook.com/v25.0}
+
+x-api-meta-environment: &api-meta-environment
+  META_APP_ID: ${META_APP_ID:-replace-with-wabrix-meta-app-id}
+  META_APP_SECRET: ${META_APP_SECRET:-replace-with-wabrix-meta-app-secret}
+  META_EMBEDDED_SIGNUP_CONFIG_ID: ${META_EMBEDDED_SIGNUP_CONFIG_ID:-replace-with-meta-embedded-signup-config-id}
+  META_SYSTEM_USER_ACCESS_TOKEN: ${META_SYSTEM_USER_ACCESS_TOKEN:-replace-with-wabrix-system-user-access-token}
+  META_SYSTEM_USER_ID: ${META_SYSTEM_USER_ID:-replace-with-wabrix-system-user-id}
+  META_ADMIN_SYSTEM_USER_ACCESS_TOKEN: ${META_ADMIN_SYSTEM_USER_ACCESS_TOKEN:-replace-with-business-admin-system-user-access-token}
+
+x-worker-ai-environment: &worker-ai-environment
+  AI_PROVIDER: ${AI_PROVIDER:-disabled}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMINI_BASE_URL: ${GEMINI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta}
+  GEMINI_CHAT_MODEL: ${GEMINI_CHAT_MODEL:-gemini-3.7-flash}
+  GEMINI_EMBEDDING_MODEL: ${GEMINI_EMBEDDING_MODEL:-gemini-embedding-2}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+  OPENAI_CHAT_MODEL: ${OPENAI_CHAT_MODEL:-gpt-4o-mini}
+  OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+  AI_CHAT_TIMEOUT_MS: ${AI_CHAT_TIMEOUT_MS:-15000}
+  AI_EMBEDDING_TIMEOUT_MS: ${AI_EMBEDDING_TIMEOUT_MS:-15000}
+  AI_MAX_OUTPUT_TOKENS: ${AI_MAX_OUTPUT_TOKENS:-512}
+  QUERY_EMBEDDING_CACHE_ENABLED: ${QUERY_EMBEDDING_CACHE_ENABLED:-false}
+  QUERY_EMBEDDING_CACHE_NAMESPACE: ${QUERY_EMBEDDING_CACHE_NAMESPACE:-v1}
+  QUERY_EMBEDDING_CACHE_TTL_SECONDS: ${QUERY_EMBEDDING_CACHE_TTL_SECONDS:-86400}
+  QUERY_EMBEDDING_CACHE_TIMEOUT_MS: ${QUERY_EMBEDDING_CACHE_TIMEOUT_MS:-100}
+  QUERY_EMBEDDING_CACHE_MAX_ENTRIES: ${QUERY_EMBEDDING_CACHE_MAX_ENTRIES:-1000}
+
+x-ingress-webhook-environment: &ingress-webhook-environment
+  WEBHOOK_VERIFY_TOKEN: ${WEBHOOK_VERIFY_TOKEN:?WEBHOOK_VERIFY_TOKEN is required}
+  WEBHOOK_APP_SECRET: ${WEBHOOK_APP_SECRET:?WEBHOOK_APP_SECRET is required}
+
+x-app-defaults: &app-defaults
+  restart: unless-stopped
+  networks: [application]
+  security_opt: ["no-new-privileges:true"]
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+    minio: { condition: service_healthy }
+    clamav: { condition: service_healthy }
+  healthcheck:
+    test:
+      [
+        "CMD",
+        "node",
+        "-e",
+        "fetch('http://127.0.0.1:'+(process.env.PORT||4000)+'/livez').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
+      ]
+    interval: 5s
+    timeout: 3s
+    start_period: 10s
+    retries: 5
+
+services:
+  caddy:
+    image: caddy:2.10.0-alpine
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: "${SITE_ADDRESS:-staging.example.com}"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [edge, application]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      web: { condition: service_healthy }
+      api: { condition: service_healthy }
+      ingress: { condition: service_healthy }
+
+  web:
+    <<: *app-defaults
+    image: ${IMAGE_REGISTRY:-ghcr.io/ryanakml}/wabrix-web:${IMAGE_TAG}
+    environment:
+      <<: *app-environment
+      PORT: "3000"
+
+  api:
+    <<: *app-defaults
+    image: ${IMAGE_REGISTRY:-ghcr.io/ryanakml}/wabrix-api:${IMAGE_TAG}
+    environment:
+      <<: [*app-environment, *api-meta-environment]
+      PORT: "4000"
+
+  ingress:
+    <<: *app-defaults
+    image: ${IMAGE_REGISTRY:-ghcr.io/ryanakml}/wabrix-ingress:${IMAGE_TAG}
+    environment:
+      <<: [*app-environment, *ingress-webhook-environment]
+      PORT: "4001"
+
+  worker:
+    <<: *app-defaults
+    image: ${IMAGE_REGISTRY:-ghcr.io/ryanakml}/wabrix-worker:${IMAGE_TAG}
+    environment:
+      <<: [*app-environment, *worker-ai-environment]
+      PORT: "4002"
+
+  scheduler:
+    <<: *app-defaults
+    image: ${IMAGE_REGISTRY:-ghcr.io/ryanakml}/wabrix-scheduler:${IMAGE_TAG}
+    environment:
+      <<: *app-environment
+      PORT: "4003"
+
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wabrix_staging}
+      POSTGRES_USER: ${POSTGRES_USER:-wabrix_bootstrap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    networks: [application]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7.4.2-bookworm
+    restart: unless-stopped
+    command:
+      [
+        redis-server,
+        --appendonly,
+        "yes",
+        --maxmemory-policy,
+        noeviction,
+        --requirepass,
+        "${REDIS_PASSWORD}"
+      ]
+    volumes: ["redis-data:/data"]
+    networks: [application]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: [CMD-SHELL, "redis-cli --no-auth-warning -a '${REDIS_PASSWORD}' ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    restart: unless-stopped
+    command: [server, /data]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-wabrix_staging}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-wabrix_minio_password}
+    volumes: ["minio-data:/data"]
+    networks: [application]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: [CMD, curl, -f, "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-03-12T17-29-24Z
+    restart: "no"
+    depends_on:
+      minio: { condition: service_healthy }
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-wabrix_staging}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-wabrix_minio_password}
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - >-
+        mc alias set staging http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+        mc mb --ignore-existing staging/wabrix-staging
+    networks: [application]
+    security_opt: ["no-new-privileges:true"]
+
+  clamav:
+    image: clamav/clamav:1.4.3
+    restart: unless-stopped
+    volumes: ["clamav-data:/var/lib/clamav"]
+    networks: [application]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: [CMD, /usr/local/bin/clamdcheck.sh]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+
+  migrate:
+    image: ${IMAGE_REGISTRY:-ghcr.io/ryanakml}/wabrix-migrator:${IMAGE_TAG}
+    restart: "no"
+    environment:
+      DATABASE_MIGRATOR_URL: "postgresql://${POSTGRES_USER:-wabrix_bootstrap}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-wabrix_staging}"
+    command: [node, scripts/migrate.mjs]
+    depends_on:
+      postgres: { condition: service_healthy }
+    networks: [application]
+    security_opt: ["no-new-privileges:true"]
+    profiles: [release]
+
+networks:
+  edge:
+  application:
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
+  clamav-data:
+  caddy-data:
+  caddy-config:
