@@ -131,9 +131,9 @@ jobs:
             --build-arg APP=${{ matrix.workspace }} \
             --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            --label "org.opencontainers.image.title=Wabrix AI ${{ matrix.app }}" \
-            --label "org.opencontainers.image.description=Wabrix AI ${{ matrix.app }} service container" \
-            --tag wabrix/${{ matrix.app }}:${{ github.sha }} \
+            --label "org.opencontainers.image.title=FlowDesk ${{ matrix.app }}" \
+            --label "org.opencontainers.image.description=FlowDesk ${{ matrix.app }} service container" \
+            --tag flowdesk/${{ matrix.app }}:${{ github.sha }} \
             --cache-from type=gha,scope=flowdesk-${{ matrix.app }} \
             --cache-to type=gha,mode=max,scope=flowdesk-${{ matrix.app }} \
             --load \
@@ -145,13 +145,13 @@ jobs:
             -e PORT=${{ matrix.port }} \
             -e ENCRYPTION_KEY=ci-image-smoke-encryption-key \
             -p ${{ matrix.port }}:${{ matrix.port }} \
-            wabrix/${{ matrix.app }}:${{ github.sha }}
+            flowdesk/${{ matrix.app }}:${{ github.sha }}
           for attempt in {1..30}; do curl --fail --silent http://127.0.0.1:${{ matrix.port }}/livez && exit 0; sleep 1; done
           docker logs app
           exit 1
-      - name: Publish Wabrix image
+      - name: Publish FlowDesk image
         if: >-
-          github.repository == 'ryanakml/wabrix-ai' &&
+          github.repository == 'ryanakml/flowdesk-ai' &&
           ((github.event_name == 'push' && github.ref == 'refs/heads/main') ||
           (github.event_name == 'workflow_dispatch' && inputs.publish_registry_images && !inputs.run_failure_probe))
         env:
@@ -163,8 +163,8 @@ jobs:
           if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
             image_tag="candidate-$GITHUB_SHA"
           fi
-          image_ref="ghcr.io/ryanakml/wabrix-${IMAGE_APP}:${image_tag}"
-          docker tag "wabrix/${IMAGE_APP}:${GITHUB_SHA}" "$image_ref"
+          image_ref="ghcr.io/ryanakml/flowdesk-${IMAGE_APP}:${image_tag}"
+          docker tag "flowdesk/${IMAGE_APP}:${GITHUB_SHA}" "$image_ref"
           docker push "$image_ref"
           docker buildx imagetools inspect "$image_ref" --format '{{json .Manifest}}'
 

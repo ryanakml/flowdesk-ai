@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 source_sha=${1:-}
 output_file=${2:-artifacts/provenance/image-digests.json}
-image_family=${3:-wabrix}
+image_family=${3:-flowdesk}
 
 if [[ -z ${source_sha} ]]; then
   echo "::error::Source SHA argument is required." >&2

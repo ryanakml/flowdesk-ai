@@ -83,8 +83,8 @@ The repository retains internal package, schema, and integration identifiers for
 Requires **Node.js 22** (see `.nvmrc`), **pnpm 10**, **Docker with Compose v2**, and **Make**.
 
 ```bash
-git clone https://github.com/ryanakml/wabrix-ai.git
-cd wabrix-ai
+git clone https://github.com/ryanakml/flowdesk-ai.git
+cd flowdesk-ai
 nvm use
 make bootstrap
 make compose-up

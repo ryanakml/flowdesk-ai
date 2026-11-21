@@ -160,7 +160,7 @@ Named volumes are deliberately retained across application rollback and `docker 
 
 ## GHCR cutover
 
-New releases use `ghcr.io/ryanakml/wabrix-<service>:<40-character SHA>` for web, API, ingress, worker, scheduler, and migrator. The `flowdesk-staging` Compose project, named volumes, credentials, and paths under `/opt/flowdesk` stay in place. Keep the current and previous release directories: a legacy Compose manifest still uses the original image names.
+New releases use `ghcr.io/ryanakml/flowdesk-<service>:<40-character SHA>` for web, API, ingress, worker, scheduler, and migrator. The `flowdesk-staging` Compose project, named volumes, credentials, and paths under `/opt/flowdesk` stay in place. Keep the current and previous release directories: a legacy Compose manifest still uses the original image names.
 
 The CI workflow's **Publish to GHCR without deploying** dispatch is opt-in. A non-main ref publishes `candidate-<SHA>` tags for inspection; staging and production release inputs require bare commit SHAs. An approved dispatch on `main` can publish bare SHA tags without staging. A normal push to `main` still publishes images and can deploy to staging.
 

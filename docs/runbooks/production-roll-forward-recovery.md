@@ -4,7 +4,7 @@ This runbook documents the operational procedure for automated traffic rollback 
 
 ---
 
-The production workflow resolves all six images in one family. Use `wabrix` for new releases and select `flowdesk` only when promoting a previously verified legacy SHA. Existing ECS task definitions and deployment records keep their original digest references; retain those images until the rollback targets have moved.
+The production workflow resolves all six images in one family. Use `flowdesk` for new releases and select `wabrix` only when promoting a previously verified legacy SHA. Existing ECS task definitions and deployment records keep their original digest references; retain those images until the rollback targets have moved.
 
 ## 1. Automated Application & Compute Rollback Principle
 

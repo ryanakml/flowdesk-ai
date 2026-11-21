@@ -9,9 +9,9 @@ mkdir -p "${OUTPUT_DIR}"
 
 SOURCE_SHA="${1:-$(git rev-parse HEAD)}"
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-OUTPUT_FILE="${OUTPUT_DIR}/wabrix-production-${SOURCE_SHA}.spdx.json"
+OUTPUT_FILE="${OUTPUT_DIR}/flowdesk-production-${SOURCE_SHA}.spdx.json"
 
-echo "Generating SPDX-2.3 SBOM for Wabrix AI production release ${SOURCE_SHA}..."
+echo "Generating SPDX-2.3 SBOM for FlowDesk production release ${SOURCE_SHA}..."
 
 node -e "
 const fs = require('fs');
@@ -40,11 +40,11 @@ packages.push({
   SPDXID: 'SPDXRef-Package-flowdesk-root',
   name: rootPkg.name || 'flowdesk',
   versionInfo: '${SOURCE_SHA}',
-  downloadLocation: 'git+https://github.com/ryanakml/wabrix-ai.git@${SOURCE_SHA}',
+  downloadLocation: 'git+https://github.com/ryanakml/flowdesk-ai.git@${SOURCE_SHA}',
   filesAnalyzed: false,
   licenseConcluded: 'NOASSERTION',
   licenseDeclared: 'Apache-2.0',
-  copyrightText: 'Copyright 2026 Wabrix AI Contributors'
+  copyrightText: 'Copyright 2026 FlowDesk Contributors'
 });
 
 for (const ws of workspaces) {
@@ -59,7 +59,7 @@ for (const ws of workspaces) {
       filesAnalyzed: false,
       licenseConcluded: 'NOASSERTION',
       licenseDeclared: 'Apache-2.0',
-      description: 'Wabrix AI workspace ' + ws
+      description: 'FlowDesk workspace ' + ws
     });
   }
 }
@@ -68,10 +68,10 @@ const spdxDoc = {
   spdxVersion: 'SPDX-2.3',
   dataLicense: 'CC0-1.0',
   SPDXID: 'SPDXRef-DOCUMENT',
-  name: 'Wabrix-AI-Production-Release-${SOURCE_SHA}',
-  documentNamespace: 'https://github.com/ryanakml/wabrix-ai/spdx/release/${SOURCE_SHA}',
+  name: 'FlowDesk-Production-Release-${SOURCE_SHA}',
+  documentNamespace: 'https://github.com/ryanakml/flowdesk-ai/spdx/release/${SOURCE_SHA}',
   creationInfo: {
-    creators: ['Tool: Wabrix-SBOM-Generator-1.0', 'Organization: Wabrix AI'],
+    creators: ['Tool: FlowDesk-SBOM-Generator-1.0', 'Organization: FlowDesk'],
     created: '${TIMESTAMP}'
   },
   packages: packages
@@ -82,4 +82,4 @@ console.log('SPDX-2.3 SBOM generated successfully: ${OUTPUT_FILE} (' + packages.
 "
 
 # Also symlink or copy to standard path
-cp "${OUTPUT_FILE}" "${OUTPUT_DIR}/wabrix-sbom.spdx.json"
+cp "${OUTPUT_FILE}" "${OUTPUT_DIR}/flowdesk-sbom.spdx.json"
