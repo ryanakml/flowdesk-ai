@@ -20,8 +20,8 @@ Support teams can connect WhatsApp Business numbers, route incoming conversation
 
 ## Product preview
 
-| Inbox                                                                                                                             | Analytics                                                                                                                      |
-| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Inbox                                                                                                                            | Analytics                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | ![FlowDesk inbox with a conversation list, an open thread, and automation controls](apps/web/public/landing-dashboard-dark.webp) | ![FlowDesk analytics dashboard with conversation, automation, and SLA metrics](apps/web/public/landing-dashboard-dark-1.webp) |
 
 Screenshots use illustrative sample data.

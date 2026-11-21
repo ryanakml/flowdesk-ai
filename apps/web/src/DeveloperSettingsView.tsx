@@ -385,8 +385,8 @@ export function DeveloperSettingsView({
               </button>
             </div>
             <CardDescription className="text-xs text-warning-foreground">
-              Signing secret for {generatedWebhookSecret.name}. Copy it now; FlowDesk will only
-              show the masked value later.
+              Signing secret for {generatedWebhookSecret.name}. Copy it now; FlowDesk will only show
+              the masked value later.
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
