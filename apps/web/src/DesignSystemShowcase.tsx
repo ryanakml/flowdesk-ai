@@ -98,11 +98,11 @@ export function DesignSystemShowcase() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="#">Wabrix AI M6.5</BreadcrumbLink>
+                  <BreadcrumbLink href="#">FlowDesk</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>UI-01 Design System Showcase</BreadcrumbPage>
+                  <BreadcrumbPage>UI Design System Showcase</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -110,7 +110,7 @@ export function DesignSystemShowcase() {
               Shared Design System Foundation
             </h1>
             <p className="text-sm text-muted-foreground">
-              Universal presentation primitives with zero Wabrix AI domain/business dependencies.
+              Universal presentation primitives with zero FlowDesk domain/business dependencies.
             </p>
           </div>
           <div className="flex items-center gap-3">

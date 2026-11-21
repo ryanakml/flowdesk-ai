@@ -20,7 +20,7 @@ describe("App UI Shell (M1-07)", () => {
     globalThis.fetch = vi.fn<typeof fetch>().mockImplementation(() => new Promise(() => {}));
 
     render(<App />);
-    expect(await screen.findByText("Loading Wabrix AI…")).toBeTruthy();
+    expect(await screen.findByText("Loading FlowDesk…")).toBeTruthy();
     expect(screen.getByText("Verifying secure tenant session")).toBeTruthy();
   });
 
@@ -29,7 +29,7 @@ describe("App UI Shell (M1-07)", () => {
     globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
         JSON.stringify({
-          type: "https://wabrix.dev/problems/unauthorized",
+          type: "https://flowdesk.dev/problems/unauthorized",
           title: "Unauthorized",
           status: 401,
           code: "UNAUTHORIZED",
@@ -44,6 +44,6 @@ describe("App UI Shell (M1-07)", () => {
     expect(
       (await screen.findAllByRole("heading", { name: /Turn every customer message/i })).length
     ).toBeGreaterThan(0);
-    expect(screen.getAllByRole("link", { name: /Open Wabrix AI/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: /Open FlowDesk/i }).length).toBeGreaterThan(0);
   });
 });

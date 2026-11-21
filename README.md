@@ -1,14 +1,12 @@
-# Wabrix AI
+# FlowDesk
 
-![Wabrix AI landing page with the "Scale your WhatsApp with AI" headline](apps/web/public/landing-hero.webp)
+![FlowDesk landing page with the "Scale your WhatsApp with AI" headline](apps/web/public/landing-hero.webp)
 
-**A shared WhatsApp inbox with AI-assisted replies, backed by a durable PostgreSQL message pipeline.**
+**An enterprise-grade shared WhatsApp inbox with AI-assisted replies, backed by a durable PostgreSQL message pipeline.**
 
-Wabrix AI is a re-architecture of an earlier version of Wabrix (Next.js, Convex, Clerk, Cloudflare Workers; hosted demo at wabrix.nylo.me, source at github.com/ryanakml/wabrix). This repository rebuilds the same product on Express and PostgreSQL with a transactional outbox. The hosted demo runs the earlier stack, not this codebase. This version runs locally with `make compose-up`.
+[Live Hosted Demo](https://flowdesk.nylo.me) · [Product preview](#product-preview) · [Architecture](#architecture) · [Stack](#stack-and-repository-layout) · [Run locally](#run-locally) · [Testing](#testing) · [Documentation](#documentation) · [Contributing](#contributing)
 
 Support teams can connect WhatsApp Business numbers, route incoming conversations to queues and agents, and draft replies from their workspace knowledge base. The backend verifies and stores incoming webhooks before acknowledging them, then lets workers handle normalization, routing, AI, and delivery.
-
-[Product preview](#product-preview) · [Architecture](#architecture) · [Stack](#stack-and-repository-layout) · [Run locally](#run-locally) · [Testing](#testing) · [Documentation](#documentation) · [Contributing](#contributing)
 
 ## Product workflows
 
@@ -22,15 +20,15 @@ Support teams can connect WhatsApp Business numbers, route incoming conversation
 
 ## Product preview
 
-| Inbox                                                                                                                             | Analytics                                                                                                                      |
-| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| ![Wabrix AI inbox with a conversation list, an open thread, and automation controls](apps/web/public/landing-dashboard-dark.webp) | ![Wabrix AI analytics dashboard with conversation, automation, and SLA metrics](apps/web/public/landing-dashboard-dark-1.webp) |
+| Inbox                                                                                                                            | Analytics                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| ![FlowDesk inbox with a conversation list, an open thread, and automation controls](apps/web/public/landing-dashboard-dark.webp) | ![FlowDesk analytics dashboard with conversation, automation, and SLA metrics](apps/web/public/landing-dashboard-dark-1.webp) |
 
 Screenshots use illustrative sample data.
 
 ## Architecture
 
-Wabrix AI is a [modular monolith with separate process roles](docs/adr/001-modular-monolith-process-roles.md). The web app, REST API, webhook ingress, worker, and scheduler live in a pnpm/Turborepo workspace. PostgreSQL stores application state and durable work.
+FlowDesk is a [modular monolith with separate process roles](docs/adr/001-modular-monolith-process-roles.md). The web app, REST API, webhook ingress, worker, and scheduler live in a pnpm/Turborepo workspace. PostgreSQL stores application state and durable work.
 
 ```mermaid
 sequenceDiagram
