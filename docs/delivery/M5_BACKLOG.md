@@ -17,9 +17,9 @@
 - **Depends on:** M4-07.
 - **Scope:** database tables for `routing_rules` (priority, condition_json, target_queue_id, target_team_id, target_user_id) and `routing_logs`; domain routing policy evaluator matching inbound messages by channel, contact tag, language, customer priority, and operational hours; REST endpoints `GET/PUT/POST /api/v1/organizations/:orgId/routing/rules`; worker integration in message normalization pipeline.
 - **Acceptance:** incoming messages are deterministically routed to matching queues/teams; unmatched messages fall back to default queue; foreign tenant rules are isolated via RLS; rule priority ordering is strictly respected.
-- **Design:** ordered rule evaluation engine in `@wabrix/domain` with database-backed transaction RLS policies.
+- **Design:** ordered rule evaluation engine in `@flowdesk/domain` with database-backed transaction RLS policies.
 - **Cross-cutting:** data/domain/api/worker/tests/docs `new`.
-- **Delivery:** database migration `0019_m5_routing_rules.sql`, domain evaluator in `@wabrix/domain/src/routing.ts`, API router `apps/api/src/routing.ts`, and worker stage in `apps/worker`.
+- **Delivery:** database migration `0019_m5_routing_rules.sql`, domain evaluator in `@flowdesk/domain/src/routing.ts`, API router `apps/api/src/routing.ts`, and worker stage in `apps/worker`.
 - **Evidence:** routing evaluator unit tests, RLS tenant isolation negative matrix, API supertest suite.
 - **Owners:** engineering `@Ryanakml`.
 
@@ -31,11 +31,11 @@
 
 - **Outcome:** bot `auto` mode enables autonomous replies only under strict multi-layer policy checks with zero unauthorized auto-sending.
 - **Depends on:** M5-01.
-- **Scope:** update bot config to allow `mode: auto`; pre-send policy gate checking: confidence $\ge$ threshold (default 0.9), active business hours, valid 24h WhatsApp service window, non-escalated intent, rate limits ($\le 3$ auto-replies per conversation per hour), mandatory AI disclosure footer ("_Balasan otomatis oleh AI Wabrix_"); atomic transaction outbox dispatch.
+- **Scope:** update bot config to allow `mode: auto`; pre-send policy gate checking: confidence $\ge$ threshold (default 0.9), active business hours, valid 24h WhatsApp service window, non-escalated intent, rate limits ($\le 3$ auto-replies per conversation per hour), mandatory AI disclosure footer ("_Balasan otomatis oleh AI FlowDesk_"); atomic transaction outbox dispatch.
 - **Acceptance:** bot auto-sends only when all safety policy criteria pass; insufficient confidence or policy violation downgrades run to `escalated` / `draft` status; duplicate auto-sends on conversation races are prevented.
-- **Design:** pre-send guardrail engine in `@wabrix/domain` executing immediately before `outbound_intents` creation.
+- **Design:** pre-send guardrail engine in `@flowdesk/domain` executing immediately before `outbound_intents` creation.
 - **Cross-cutting:** domain/api/worker/contracts/tests `update`.
-- **Delivery:** pre-send policy validator in `@wabrix/domain/src/auto-send.ts`, worker auto-send stage in `apps/worker/src/auto-send.ts`.
+- **Delivery:** pre-send policy validator in `@flowdesk/domain/src/auto-send.ts`, worker auto-send stage in `apps/worker/src/auto-send.ts`.
 - **Evidence:** auto-send policy unit tests, race condition concurrency tests, outbox integration tests.
 - **Owners:** engineering `@Ryanakml`; security review required.
 
@@ -47,7 +47,7 @@
 - **Acceptance:** tripping a killswitch immediately halts in-flight and queued auto-send jobs; killswitch status is audited with actor ID and timestamp; normal manual agent operations remain active during auto-send killswitch activation.
 - **Design:** fail-closed circuit breaker and pub-sub signal propagation across all worker nodes.
 - **Cross-cutting:** security/worker/api/tests `update`.
-- **Delivery:** emergency killswitch service in `@wabrix/security`, API emergency endpoints, worker signal listener.
+- **Delivery:** emergency killswitch service in `@flowdesk/security`, API emergency endpoints, worker signal listener.
 - **Evidence:** killswitch unit tests, pub-sub propagation tests, API emergency stop supertest suite.
 - **Owners:** engineering `@Ryanakml`.
 

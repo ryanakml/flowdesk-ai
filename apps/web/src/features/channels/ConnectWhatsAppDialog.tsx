@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
   Input
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 
 export type ConnectionFields = {
   name: string;

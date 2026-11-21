@@ -3,7 +3,7 @@ import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Breadcrumbs } from "./Breadcrumbs.js";
 import { CommandMenu } from "./CommandMenu.js";
 import { ThemeToggle } from "../theme-toggle.js";
-import { Button } from "@wabrix/ui";
+import { Button } from "@flowdesk/ui";
 
 interface HeaderProps {
   onOpenMobileNav: () => void;

@@ -99,7 +99,7 @@ afterAll(async () => admin.end());
 describe("database foundation", () => {
   it("records a stable migration and required extensions", async () => {
     const migrations = await admin.query<{ version: string }>(
-      "SELECT version FROM wabrix_meta.schema_migrations ORDER BY version"
+      "SELECT version FROM flowdesk_meta.schema_migrations ORDER BY version"
     );
     const extensions = await admin.query<{ extname: string }>(
       "SELECT extname FROM pg_extension WHERE extname IN ('pgcrypto', 'vector') ORDER BY extname"
@@ -146,15 +146,15 @@ describe("database foundation", () => {
   });
 
   it("denies schema, role, RLS, and data privileges to the runtime role", async () => {
-    await admin.query("SET ROLE wabrix_runtime");
+    await admin.query("SET ROLE flowdesk_runtime");
     try {
       await expect(admin.query("CREATE SCHEMA runtime_must_not_create")).rejects.toThrow();
       await expect(admin.query("CREATE ROLE runtime_must_not_create LOGIN")).rejects.toThrow();
       await expect(
-        admin.query("ALTER TABLE wabrix_meta.schema_migrations DISABLE ROW LEVEL SECURITY")
+        admin.query("ALTER TABLE flowdesk_meta.schema_migrations DISABLE ROW LEVEL SECURITY")
       ).rejects.toThrow();
       await expect(
-        admin.query("SELECT * FROM wabrix_meta.break_glass_access_log")
+        admin.query("SELECT * FROM flowdesk_meta.break_glass_access_log")
       ).rejects.toThrow();
     } finally {
       await admin.query("RESET ROLE");
@@ -165,14 +165,14 @@ describe("database foundation", () => {
     const result = await admin.query<{ rolname: string; rolbypassrls: boolean }>(
       `SELECT rolname, rolbypassrls
        FROM pg_roles
-       WHERE rolname IN ('wabrix_migrator', 'wabrix_runtime', 'wabrix_reporting', 'wabrix_break_glass')
+       WHERE rolname IN ('flowdesk_migrator', 'flowdesk_runtime', 'flowdesk_reporting', 'flowdesk_break_glass')
        ORDER BY rolname`
     );
     expect(result.rows).toEqual([
-      { rolname: "wabrix_break_glass", rolbypassrls: true },
-      { rolname: "wabrix_migrator", rolbypassrls: false },
-      { rolname: "wabrix_reporting", rolbypassrls: false },
-      { rolname: "wabrix_runtime", rolbypassrls: false }
+      { rolname: "flowdesk_break_glass", rolbypassrls: true },
+      { rolname: "flowdesk_migrator", rolbypassrls: false },
+      { rolname: "flowdesk_reporting", rolbypassrls: false },
+      { rolname: "flowdesk_runtime", rolbypassrls: false }
     ]);
   });
 
@@ -180,31 +180,31 @@ describe("database foundation", () => {
     const organizationA = "00000000-0000-7000-8000-0000000006a1";
     const organizationB = "00000000-0000-7000-8000-0000000006b1";
 
-    await admin.query("DELETE FROM wabrix.api_keys WHERE organization_id = ANY($1::uuid[])", [
+    await admin.query("DELETE FROM flowdesk.api_keys WHERE organization_id = ANY($1::uuid[])", [
       [organizationA, organizationB]
     ]);
     await admin.query(
-      "DELETE FROM wabrix.webhook_subscriptions WHERE organization_id = ANY($1::uuid[])",
+      "DELETE FROM flowdesk.webhook_subscriptions WHERE organization_id = ANY($1::uuid[])",
       [[organizationA, organizationB]]
     );
-    await admin.query("DELETE FROM wabrix.organizations WHERE id = ANY($1::uuid[])", [
+    await admin.query("DELETE FROM flowdesk.organizations WHERE id = ANY($1::uuid[])", [
       [organizationA, organizationB]
     ]);
     await admin.query(
-      `INSERT INTO wabrix.organizations (id, slug, display_name) VALUES
+      `INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES
        ($1, 'm6-runtime-a', 'M6 Runtime A'),
        ($2, 'm6-runtime-b', 'M6 Runtime B')`,
       [organizationA, organizationB]
     );
     await admin.query(
-      `INSERT INTO wabrix.api_keys
+      `INSERT INTO flowdesk.api_keys
          (id, organization_id, name, key_prefix, key_hash, scopes) VALUES
        ('00000000-0000-7000-8000-0000000006a2', $1, 'Tenant A', 'fd_a', repeat('a', 64), '[]'),
        ('00000000-0000-7000-8000-0000000006b2', $2, 'Tenant B', 'fd_b', repeat('b', 64), '[]')`,
       [organizationA, organizationB]
     );
     await admin.query(
-      `INSERT INTO wabrix.webhook_subscriptions
+      `INSERT INTO flowdesk.webhook_subscriptions
          (id, organization_id, name, url, secret, events) VALUES
        ('00000000-0000-7000-8000-0000000006a3', $1, 'Tenant A', 'https://a.example.test', 'tenant-a-secret-1234', '[]'),
        ('00000000-0000-7000-8000-0000000006b3', $2, 'Tenant B', 'https://b.example.test', 'tenant-b-secret-1234', '[]')`,
@@ -213,7 +213,7 @@ describe("database foundation", () => {
 
     const privileges = await admin.query<{ table_name: string; can_write: boolean }>(
       `SELECT table_name,
-              has_table_privilege('wabrix_runtime', 'wabrix.' || table_name,
+              has_table_privilege('flowdesk_runtime', 'flowdesk.' || table_name,
                                   'SELECT,INSERT,UPDATE,DELETE') AS can_write
        FROM (VALUES ('api_keys'), ('webhook_subscriptions')) AS tables(table_name)
        ORDER BY table_name`
@@ -225,14 +225,14 @@ describe("database foundation", () => {
 
     await admin.query("BEGIN");
     try {
-      await admin.query("SET LOCAL ROLE wabrix_runtime");
+      await admin.query("SET LOCAL ROLE flowdesk_runtime");
       await admin.query("SELECT set_config('app.organization_id', $1, true)", [organizationA]);
 
-      expect((await admin.query("SELECT id FROM wabrix.api_keys ORDER BY id")).rows).toEqual([
+      expect((await admin.query("SELECT id FROM flowdesk.api_keys ORDER BY id")).rows).toEqual([
         { id: "00000000-0000-7000-8000-0000000006a2" }
       ]);
       expect(
-        (await admin.query("SELECT id FROM wabrix.webhook_subscriptions ORDER BY id")).rows
+        (await admin.query("SELECT id FROM flowdesk.webhook_subscriptions ORDER BY id")).rows
       ).toEqual([{ id: "00000000-0000-7000-8000-0000000006a3" }]);
 
       const analytics = await getAnalyticsOverview(admin as unknown as DbClient, organizationA, 30);
@@ -240,14 +240,14 @@ describe("database foundation", () => {
 
       expect(
         (
-          await admin.query("UPDATE wabrix.api_keys SET revoked_at = now() WHERE id = $1", [
+          await admin.query("UPDATE flowdesk.api_keys SET revoked_at = now() WHERE id = $1", [
             "00000000-0000-7000-8000-0000000006b2"
           ])
         ).rowCount
       ).toBe(0);
       expect(
         (
-          await admin.query("DELETE FROM wabrix.webhook_subscriptions WHERE id = $1", [
+          await admin.query("DELETE FROM flowdesk.webhook_subscriptions WHERE id = $1", [
             "00000000-0000-7000-8000-0000000006b3"
           ])
         ).rowCount
@@ -256,14 +256,14 @@ describe("database foundation", () => {
       await admin.query("ROLLBACK");
     }
 
-    await admin.query("DELETE FROM wabrix.api_keys WHERE organization_id = ANY($1::uuid[])", [
+    await admin.query("DELETE FROM flowdesk.api_keys WHERE organization_id = ANY($1::uuid[])", [
       [organizationA, organizationB]
     ]);
     await admin.query(
-      "DELETE FROM wabrix.webhook_subscriptions WHERE organization_id = ANY($1::uuid[])",
+      "DELETE FROM flowdesk.webhook_subscriptions WHERE organization_id = ANY($1::uuid[])",
       [[organizationA, organizationB]]
     );
-    await admin.query("DELETE FROM wabrix.organizations WHERE id = ANY($1::uuid[])", [
+    await admin.query("DELETE FROM flowdesk.organizations WHERE id = ANY($1::uuid[])", [
       [organizationA, organizationB]
     ]);
   });
@@ -271,52 +271,52 @@ describe("database foundation", () => {
   it("discovers only a user's active organizations before tenant context is selected", async () => {
     const userA = "00000000-0000-7000-8000-0000000000e1";
     const userB = "00000000-0000-7000-8000-0000000000e2";
-    const fixtureOrganizationIds = `SELECT id FROM wabrix.organizations
+    const fixtureOrganizationIds = `SELECT id FROM flowdesk.organizations
       WHERE slug IN ('bootstrap-discovery-a', 'bootstrap-discovery-b')`;
     await admin.query(
-      `DELETE FROM wabrix.audit_logs WHERE organization_id IN (${fixtureOrganizationIds})`
+      `DELETE FROM flowdesk.audit_logs WHERE organization_id IN (${fixtureOrganizationIds})`
     );
     await admin.query(
-      `DELETE FROM wabrix.organization_settings
+      `DELETE FROM flowdesk.organization_settings
        WHERE organization_id IN (${fixtureOrganizationIds})`
     );
-    await admin.query("DELETE FROM wabrix.memberships WHERE user_id IN ($1, $2)", [userA, userB]);
+    await admin.query("DELETE FROM flowdesk.memberships WHERE user_id IN ($1, $2)", [userA, userB]);
     await admin.query(
-      `DELETE FROM wabrix.roles WHERE organization_id IN (${fixtureOrganizationIds})`
+      `DELETE FROM flowdesk.roles WHERE organization_id IN (${fixtureOrganizationIds})`
     );
     await admin.query(
-      "DELETE FROM wabrix.organizations WHERE slug IN ('bootstrap-discovery-a', 'bootstrap-discovery-b')"
+      "DELETE FROM flowdesk.organizations WHERE slug IN ('bootstrap-discovery-a', 'bootstrap-discovery-b')"
     );
     await admin.query(
-      `INSERT INTO wabrix.users (id, email, display_name) VALUES
+      `INSERT INTO flowdesk.users (id, email, display_name) VALUES
        ($1, 'bootstrap-a@example.com', 'Bootstrap A'),
        ($2, 'bootstrap-b@example.com', 'Bootstrap B')
        ON CONFLICT (id) DO NOTHING`,
       [userA, userB]
     );
     const organizationA = await admin.query<{ organization_id: string }>(
-      "SELECT organization_id FROM wabrix.bootstrap_organization('bootstrap-discovery-a', 'Bootstrap Discovery A', $1)",
+      "SELECT organization_id FROM flowdesk.bootstrap_organization('bootstrap-discovery-a', 'Bootstrap Discovery A', $1)",
       [userA]
     );
     const organizationB = await admin.query<{ organization_id: string }>(
-      "SELECT organization_id FROM wabrix.bootstrap_organization('bootstrap-discovery-b', 'Bootstrap Discovery B', $1)",
+      "SELECT organization_id FROM flowdesk.bootstrap_organization('bootstrap-discovery-b', 'Bootstrap Discovery B', $1)",
       [userB]
     );
 
     await admin.query("BEGIN");
     try {
-      await admin.query("SET LOCAL ROLE wabrix_runtime");
+      await admin.query("SET LOCAL ROLE flowdesk_runtime");
       expect(
         (
           await admin.query(
-            "SELECT id FROM wabrix.organizations WHERE id = ANY($1::uuid[]) ORDER BY id",
+            "SELECT id FROM flowdesk.organizations WHERE id = ANY($1::uuid[]) ORDER BY id",
             [[organizationA.rows[0]!.organization_id, organizationB.rows[0]!.organization_id]]
           )
         ).rows
       ).toEqual([]);
 
       const visibleToA = await admin.query<{ id: string; role_key: string }>(
-        "SELECT id, role_key FROM wabrix.list_user_organizations($1)",
+        "SELECT id, role_key FROM flowdesk.list_user_organizations($1)",
         [userA]
       );
       expect(visibleToA.rows).toEqual([
@@ -324,7 +324,7 @@ describe("database foundation", () => {
       ]);
 
       const visibleToB = await admin.query<{ id: string; role_key: string }>(
-        "SELECT id, role_key FROM wabrix.list_user_organizations($1)",
+        "SELECT id, role_key FROM flowdesk.list_user_organizations($1)",
         [userB]
       );
       expect(visibleToB.rows).toEqual([
@@ -342,7 +342,7 @@ describe("database foundation", () => {
       rolsuper: boolean;
     }>(
       `SELECT rolcanlogin, rolbypassrls, rolsuper
-       FROM pg_roles WHERE rolname = 'wabrix_system'`
+       FROM pg_roles WHERE rolname = 'flowdesk_system'`
     );
     expect(systemRole.rows).toEqual([{ rolcanlogin: false, rolbypassrls: true, rolsuper: false }]);
 
@@ -351,7 +351,7 @@ describe("database foundation", () => {
        FROM pg_proc AS procedure
        JOIN pg_namespace AS namespace ON namespace.oid = procedure.pronamespace
        JOIN pg_roles AS owner ON owner.oid = procedure.proowner
-        WHERE namespace.nspname = 'wabrix'
+        WHERE namespace.nspname = 'flowdesk'
           AND procedure.proname IN (
             'authenticate_api_key', 'claim_attachment_scan_events', 'claim_bot_draft_runs', 'claim_knowledge_ingestion_jobs', 'claim_outbox_events', 'list_active_organization_ids', 'list_attachment_retention_candidates',
             'list_user_organizations', 'messaging_operational_snapshot', 'record_whatsapp_webhook'
@@ -359,27 +359,27 @@ describe("database foundation", () => {
         ORDER BY procedure.proname`
     );
     expect(functions.rows).toEqual([
-      { proname: "authenticate_api_key", owner: "wabrix_system" },
-      { proname: "claim_attachment_scan_events", owner: "wabrix_system" },
-      { proname: "claim_bot_draft_runs", owner: "wabrix_system" },
-      { proname: "claim_knowledge_ingestion_jobs", owner: "wabrix_system" },
-      { proname: "claim_outbox_events", owner: "wabrix_system" },
-      { proname: "list_active_organization_ids", owner: "wabrix_system" },
-      { proname: "list_attachment_retention_candidates", owner: "wabrix_system" },
-      { proname: "list_user_organizations", owner: "wabrix_system" },
-      { proname: "messaging_operational_snapshot", owner: "wabrix_system" },
-      { proname: "record_whatsapp_webhook", owner: "wabrix_system" }
+      { proname: "authenticate_api_key", owner: "flowdesk_system" },
+      { proname: "claim_attachment_scan_events", owner: "flowdesk_system" },
+      { proname: "claim_bot_draft_runs", owner: "flowdesk_system" },
+      { proname: "claim_knowledge_ingestion_jobs", owner: "flowdesk_system" },
+      { proname: "claim_outbox_events", owner: "flowdesk_system" },
+      { proname: "list_active_organization_ids", owner: "flowdesk_system" },
+      { proname: "list_attachment_retention_candidates", owner: "flowdesk_system" },
+      { proname: "list_user_organizations", owner: "flowdesk_system" },
+      { proname: "messaging_operational_snapshot", owner: "flowdesk_system" },
+      { proname: "record_whatsapp_webhook", owner: "flowdesk_system" }
     ]);
   });
 
   it("creates the core tables with tenant keys and required indexes", async () => {
     const tables = await admin.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables
-       WHERE table_schema = 'wabrix' ORDER BY table_name`
+       WHERE table_schema = 'flowdesk' ORDER BY table_name`
     );
     const tenantColumns = await admin.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.columns
-       WHERE table_schema = 'wabrix' AND column_name = 'organization_id' AND is_nullable = 'NO'`
+       WHERE table_schema = 'flowdesk' AND column_name = 'organization_id' AND is_nullable = 'NO'`
     );
     expect(tables.rows.map((row) => row.table_name)).toEqual([
       "analytics_aggregates_hourly",
@@ -522,7 +522,7 @@ describe("database foundation", () => {
     }>(
       `SELECT relname, relrowsecurity, relforcerowsecurity
        FROM pg_class
-       WHERE relnamespace = 'wabrix'::regnamespace AND relname = ANY($1::text[])
+       WHERE relnamespace = 'flowdesk'::regnamespace AND relname = ANY($1::text[])
        ORDER BY relname`,
       [m3Tables]
     );
@@ -531,7 +531,7 @@ describe("database foundation", () => {
 
     const indexes = await admin.query<{ indexname: string }>(
       `SELECT indexname FROM pg_indexes
-       WHERE schemaname = 'wabrix' AND indexname = ANY($1::text[])
+       WHERE schemaname = 'flowdesk' AND indexname = ANY($1::text[])
        ORDER BY indexname`,
       [
         [
@@ -553,7 +553,7 @@ describe("database foundation", () => {
     try {
       const plan = await admin.query<{ "QUERY PLAN": unknown }>(
         `EXPLAIN (FORMAT JSON)
-         SELECT id FROM wabrix.conversations
+         SELECT id FROM flowdesk.conversations
          WHERE organization_id = $1 AND queue_id = $2
            AND status = 'open' AND priority = 'medium'
          ORDER BY last_message_at DESC, id DESC LIMIT 20`,
@@ -569,13 +569,13 @@ describe("database foundation", () => {
     const organizationA = "00000000-0000-7000-8000-0000000000a1";
     const organizationB = "00000000-0000-7000-8000-0000000000b2";
     await admin.query(
-      `INSERT INTO wabrix.organizations (id, slug, display_name) VALUES
+      `INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES
        ($1, 'tenant-a', 'Tenant A'), ($2, 'tenant-b', 'Tenant B')
        ON CONFLICT (id) DO NOTHING`,
       [organizationA, organizationB]
     );
     await admin.query(
-      `INSERT INTO wabrix.teams (organization_id, name, slug) VALUES
+      `INSERT INTO flowdesk.teams (organization_id, name, slug) VALUES
        ($1, 'Tenant A Support', 'tenant-a-support'),
        ($2, 'Tenant B Support', 'tenant-b-support')
        ON CONFLICT (organization_id, slug) DO NOTHING`,
@@ -584,15 +584,15 @@ describe("database foundation", () => {
 
     await admin.query("BEGIN");
     try {
-      await admin.query("SET LOCAL ROLE wabrix_runtime");
-      expect((await admin.query("SELECT id FROM wabrix.teams")).rows).toEqual([]);
+      await admin.query("SET LOCAL ROLE flowdesk_runtime");
+      expect((await admin.query("SELECT id FROM flowdesk.teams")).rows).toEqual([]);
       await admin.query("SELECT set_config('app.organization_id', $1, true)", [organizationA]);
-      expect((await admin.query("SELECT name FROM wabrix.teams ORDER BY name")).rows).toEqual([
+      expect((await admin.query("SELECT name FROM flowdesk.teams ORDER BY name")).rows).toEqual([
         { name: "Tenant A Support" }
       ]);
       await expect(
         admin.query(
-          "INSERT INTO wabrix.tags (organization_id, name, color) VALUES ($1, 'denied', '#FF0000')",
+          "INSERT INTO flowdesk.tags (organization_id, name, color) VALUES ($1, 'denied', '#FF0000')",
           [organizationB]
         )
       ).rejects.toThrow();
@@ -604,50 +604,50 @@ describe("database foundation", () => {
   it("removes queue visibility immediately when routing membership is removed", async () => {
     const organizationId = "00000000-0000-7000-8000-0000000000a1";
     const userId = "00000000-0000-7000-8000-0000000000c1";
-    await admin.query(`DELETE FROM wabrix.conversation_events WHERE organization_id = $1`, [
+    await admin.query(`DELETE FROM flowdesk.conversation_events WHERE organization_id = $1`, [
       organizationId
     ]);
-    await admin.query(`DELETE FROM wabrix.messages WHERE organization_id = $1`, [organizationId]);
-    await admin.query(`DELETE FROM wabrix.conversations WHERE organization_id = $1`, [
+    await admin.query(`DELETE FROM flowdesk.messages WHERE organization_id = $1`, [organizationId]);
+    await admin.query(`DELETE FROM flowdesk.conversations WHERE organization_id = $1`, [
       organizationId
     ]);
-    await admin.query(`DELETE FROM wabrix.queue_memberships WHERE organization_id = $1`, [
+    await admin.query(`DELETE FROM flowdesk.queue_memberships WHERE organization_id = $1`, [
       organizationId
     ]);
-    await admin.query(`DELETE FROM wabrix.queues WHERE organization_id = $1`, [organizationId]);
+    await admin.query(`DELETE FROM flowdesk.queues WHERE organization_id = $1`, [organizationId]);
     await admin.query(
-      `INSERT INTO wabrix.organizations (id, slug, display_name)
+      `INSERT INTO flowdesk.organizations (id, slug, display_name)
        VALUES ($1, 'tenant-a', 'Tenant A') ON CONFLICT (id) DO NOTHING`,
       [organizationId]
     );
     await admin.query(
-      `INSERT INTO wabrix.users (id, email, display_name)
+      `INSERT INTO flowdesk.users (id, email, display_name)
        VALUES ($1, 'm3-agent@example.com', 'M3 Agent') ON CONFLICT (id) DO NOTHING`,
       [userId]
     );
     const role = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.roles (organization_id, key, label)
+      `INSERT INTO flowdesk.roles (organization_id, key, label)
        VALUES ($1, 'm3_agent', 'M3 Agent')
        ON CONFLICT (organization_id, key) DO UPDATE SET label = EXCLUDED.label
        RETURNING id`,
       [organizationId]
     );
     await admin.query(
-      `INSERT INTO wabrix.memberships (organization_id, user_id, role_id, status)
+      `INSERT INTO flowdesk.memberships (organization_id, user_id, role_id, status)
        VALUES ($1, $2, $3, 'active')
        ON CONFLICT (organization_id, user_id)
        DO UPDATE SET role_id = EXCLUDED.role_id, status = 'active'`,
       [organizationId, userId, role.rows[0]!.id]
     );
     const queue = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.queues (organization_id, name, slug)
+      `INSERT INTO flowdesk.queues (organization_id, name, slug)
        VALUES ($1, 'M3 Support', 'm3-support')
        ON CONFLICT (organization_id, slug) DO UPDATE SET status = 'active'
        RETURNING id`,
       [organizationId]
     );
     await admin.query(
-      `INSERT INTO wabrix.queue_memberships (organization_id, queue_id, user_id)
+      `INSERT INTO flowdesk.queue_memberships (organization_id, queue_id, user_id)
        VALUES ($1, $2, $3)
        ON CONFLICT (organization_id, queue_id, user_id)
        DO UPDATE SET status = 'active', removed_at = NULL`,
@@ -657,13 +657,13 @@ describe("database foundation", () => {
     const pool = new Pool({ connectionString });
     const visibleQueues = async () =>
       withTenantTransaction(pool, { organizationId }, async (client) => {
-        await client.query("SET LOCAL ROLE wabrix_runtime");
+        await client.query("SET LOCAL ROLE flowdesk_runtime");
         return listVisibleQueues(client, { organizationId, userId });
       });
     try {
       expect((await visibleQueues()).map((item) => item.id)).toContain(queue.rows[0]!.id);
       await admin.query(
-        `UPDATE wabrix.queue_memberships
+        `UPDATE flowdesk.queue_memberships
          SET status = 'removed', removed_at = clock_timestamp()
          WHERE organization_id = $1 AND queue_id = $2 AND user_id = $3`,
         [organizationId, queue.rows[0]!.id, userId]
@@ -677,40 +677,42 @@ describe("database foundation", () => {
   it("keeps private notes out of the outbound message pipeline while recording history", async () => {
     const organizationId = "00000000-0000-7000-8000-0000000000a1";
     const userId = "00000000-0000-7000-8000-0000000000c1";
-    await admin.query(`DELETE FROM wabrix.audit_logs WHERE organization_id = $1`, [organizationId]);
-    await admin.query(`DELETE FROM wabrix.conversation_events WHERE organization_id = $1`, [
+    await admin.query(`DELETE FROM flowdesk.audit_logs WHERE organization_id = $1`, [
       organizationId
     ]);
-    await admin.query(`DELETE FROM wabrix.messages WHERE organization_id = $1`, [organizationId]);
-    await admin.query(`DELETE FROM wabrix.conversations WHERE organization_id = $1`, [
+    await admin.query(`DELETE FROM flowdesk.conversation_events WHERE organization_id = $1`, [
+      organizationId
+    ]);
+    await admin.query(`DELETE FROM flowdesk.messages WHERE organization_id = $1`, [organizationId]);
+    await admin.query(`DELETE FROM flowdesk.conversations WHERE organization_id = $1`, [
       organizationId
     ]);
     await admin.query(
-      `INSERT INTO wabrix.organizations (id, slug, display_name)
+      `INSERT INTO flowdesk.organizations (id, slug, display_name)
        VALUES ($1, 'tenant-a', 'Tenant A') ON CONFLICT (id) DO NOTHING`,
       [organizationId]
     );
     await admin.query(
-      `INSERT INTO wabrix.users (id, email, display_name)
+      `INSERT INTO flowdesk.users (id, email, display_name)
        VALUES ($1, 'm3-agent@example.com', 'M3 Agent') ON CONFLICT (id) DO NOTHING`,
       [userId]
     );
     const role = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.roles (organization_id, key, label)
+      `INSERT INTO flowdesk.roles (organization_id, key, label)
        VALUES ($1, 'm3_agent', 'M3 Agent')
        ON CONFLICT (organization_id, key) DO UPDATE SET label = EXCLUDED.label
        RETURNING id`,
       [organizationId]
     );
     await admin.query(
-      `INSERT INTO wabrix.memberships (organization_id, user_id, role_id, status)
+      `INSERT INTO flowdesk.memberships (organization_id, user_id, role_id, status)
        VALUES ($1, $2, $3, 'active')
        ON CONFLICT (organization_id, user_id)
        DO UPDATE SET role_id = EXCLUDED.role_id, status = 'active'`,
       [organizationId, userId, role.rows[0]!.id]
     );
     const channel = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.channels
+      `INSERT INTO flowdesk.channels
          (organization_id, type, name, phone_number_id, waba_id, encrypted_credentials)
        VALUES ($1, 'whatsapp', 'M3 Test', 'm3-phone', 'm3-waba', 'encrypted-test-value')
        ON CONFLICT (organization_id, phone_number_id) DO UPDATE SET name = EXCLUDED.name
@@ -718,7 +720,7 @@ describe("database foundation", () => {
       [organizationId]
     );
     const conversation = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.conversations
+      `INSERT INTO flowdesk.conversations
          (organization_id, channel_id, customer_phone, customer_name)
        VALUES ($1, $2, '+628111111111', 'M3 Customer')
        ON CONFLICT (organization_id, channel_id, customer_phone)
@@ -728,7 +730,7 @@ describe("database foundation", () => {
     );
 
     await admin.query(
-      `INSERT INTO wabrix.conversation_notes
+      `INSERT INTO flowdesk.conversation_notes
          (organization_id, conversation_id, author_user_id, body)
        VALUES ($1, $2, $3, 'Internal note: do not send to customer')`,
       [organizationId, conversation.rows[0]!.id, userId]
@@ -737,7 +739,7 @@ describe("database foundation", () => {
     expect(
       (
         await admin.query<{ count: string }>(
-          `SELECT count(*) FROM wabrix.messages
+          `SELECT count(*) FROM flowdesk.messages
            WHERE organization_id = $1 AND conversation_id = $2 AND direction = 'outbound'`,
           [organizationId, conversation.rows[0]!.id]
         )
@@ -746,7 +748,7 @@ describe("database foundation", () => {
     expect(
       (
         await admin.query<{ event_type: string }>(
-          `SELECT event_type FROM wabrix.conversation_events
+          `SELECT event_type FROM flowdesk.conversation_events
            WHERE organization_id = $1 AND conversation_id = $2
              AND event_type = 'conversation.note_added'`,
           [organizationId, conversation.rows[0]!.id]
@@ -755,7 +757,7 @@ describe("database foundation", () => {
     ).toEqual([{ event_type: "conversation.note_added" }]);
 
     await admin.query(
-      `INSERT INTO wabrix.messages
+      `INSERT INTO flowdesk.messages
          (organization_id, conversation_id, channel_id, direction, sender_type,
           sender_user_id, content, status)
        VALUES ($1, $2, $3, 'outbound', 'agent', $4, 'First response', 'queued')`,
@@ -764,7 +766,7 @@ describe("database foundation", () => {
     expect(
       (
         await admin.query<{ first_responded_at: Date | null }>(
-          `SELECT first_responded_at FROM wabrix.conversations
+          `SELECT first_responded_at FROM flowdesk.conversations
            WHERE organization_id = $1 AND id = $2`,
           [organizationId, conversation.rows[0]!.id]
         )
@@ -776,51 +778,53 @@ describe("database foundation", () => {
     const organizationId = "00000000-0000-7000-8000-0000000000a1";
     const agentA = "00000000-0000-7000-8000-0000000000c1";
     const agentB = "00000000-0000-7000-8000-0000000000c2";
-    await admin.query(`DELETE FROM wabrix.audit_logs WHERE organization_id = $1`, [organizationId]);
-    await admin.query(`DELETE FROM wabrix.conversation_events WHERE organization_id = $1`, [
+    await admin.query(`DELETE FROM flowdesk.audit_logs WHERE organization_id = $1`, [
       organizationId
     ]);
-    await admin.query(`DELETE FROM wabrix.messages WHERE organization_id = $1`, [organizationId]);
-    await admin.query(`DELETE FROM wabrix.conversations WHERE organization_id = $1`, [
+    await admin.query(`DELETE FROM flowdesk.conversation_events WHERE organization_id = $1`, [
+      organizationId
+    ]);
+    await admin.query(`DELETE FROM flowdesk.messages WHERE organization_id = $1`, [organizationId]);
+    await admin.query(`DELETE FROM flowdesk.conversations WHERE organization_id = $1`, [
       organizationId
     ]);
     await admin.query(
-      `INSERT INTO wabrix.users (id, email, display_name) VALUES
+      `INSERT INTO flowdesk.users (id, email, display_name) VALUES
        ($1, 'm3-agent@example.com', 'M3 Agent A'),
        ($2, 'm3-agent-b@example.com', 'M3 Agent B')
        ON CONFLICT (id) DO NOTHING`,
       [agentA, agentB]
     );
     const role = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.roles (organization_id, key, label)
+      `INSERT INTO flowdesk.roles (organization_id, key, label)
        VALUES ($1, 'm3_agent', 'M3 Agent')
        ON CONFLICT (organization_id, key) DO UPDATE SET label = EXCLUDED.label
        RETURNING id`,
       [organizationId]
     );
     await admin.query(
-      `INSERT INTO wabrix.memberships (organization_id, user_id, role_id, status) VALUES
+      `INSERT INTO flowdesk.memberships (organization_id, user_id, role_id, status) VALUES
        ($1, $2, $4, 'active'), ($1, $3, $4, 'active')
        ON CONFLICT (organization_id, user_id)
        DO UPDATE SET role_id = EXCLUDED.role_id, status = 'active'`,
       [organizationId, agentA, agentB, role.rows[0]!.id]
     );
     const queue = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.queues (organization_id, name, slug)
+      `INSERT INTO flowdesk.queues (organization_id, name, slug)
        VALUES ($1, 'M3 Race Queue', 'm3-race')
        ON CONFLICT (organization_id, slug) DO UPDATE SET status = 'active'
        RETURNING id`,
       [organizationId]
     );
     await admin.query(
-      `INSERT INTO wabrix.queue_memberships (organization_id, queue_id, user_id, status) VALUES
+      `INSERT INTO flowdesk.queue_memberships (organization_id, queue_id, user_id, status) VALUES
        ($1, $2, $3, 'active'), ($1, $2, $4, 'active')
        ON CONFLICT (organization_id, queue_id, user_id)
        DO UPDATE SET status = 'active', removed_at = NULL`,
       [organizationId, queue.rows[0]!.id, agentA, agentB]
     );
     const channel = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.channels
+      `INSERT INTO flowdesk.channels
          (organization_id, type, name, phone_number_id, waba_id, encrypted_credentials)
        VALUES ($1, 'whatsapp', 'M3 Race', 'm3-race-phone', 'm3-waba', 'encrypted')
        ON CONFLICT (organization_id, phone_number_id) DO UPDATE SET name = EXCLUDED.name
@@ -828,7 +832,7 @@ describe("database foundation", () => {
       [organizationId]
     );
     const conversation = await admin.query<{ id: string }>(
-      `INSERT INTO wabrix.conversations
+      `INSERT INTO flowdesk.conversations
          (organization_id, channel_id, customer_phone, status, queue_id, version)
        VALUES ($1, $2, '+628222222222', 'open', $3, 1)
        ON CONFLICT (organization_id, channel_id, customer_phone)
@@ -840,7 +844,7 @@ describe("database foundation", () => {
     const pool = new Pool({ connectionString, max: 4 });
     const claim = (actorUserId: string) =>
       withTenantTransaction(pool, { organizationId }, async (client) => {
-        await client.query("SET LOCAL ROLE wabrix_runtime");
+        await client.query("SET LOCAL ROLE flowdesk_runtime");
         return performConversationOperation(client, {
           organizationId,
           conversationId: conversation.rows[0]!.id,
@@ -863,21 +867,21 @@ describe("database foundation", () => {
       expect(
         (
           await admin.query<{ count: string }>(
-            `SELECT count(*) FROM wabrix.audit_logs
+            `SELECT count(*) FROM flowdesk.audit_logs
              WHERE organization_id = $1 AND target_id = $2 AND action = 'conversation.claim'`,
             [organizationId, conversation.rows[0]!.id]
           )
         ).rows[0]!.count
       ).toBe("1");
       await admin.query(
-        `UPDATE wabrix.queue_memberships
+        `UPDATE flowdesk.queue_memberships
          SET status = 'removed', removed_at = clock_timestamp()
          WHERE organization_id = $1 AND queue_id = $2 AND user_id = $3`,
         [organizationId, queue.rows[0]!.id, winner]
       );
       await expect(
         withTenantTransaction(pool, { organizationId }, async (client) => {
-          await client.query("SET LOCAL ROLE wabrix_runtime");
+          await client.query("SET LOCAL ROLE flowdesk_runtime");
           return performConversationOperation(client, {
             organizationId,
             conversationId: conversation.rows[0]!.id,
@@ -896,21 +900,21 @@ describe("database foundation", () => {
     const organizationA = "00000000-0000-7000-8000-0000000000a1";
     const organizationB = "00000000-0000-7000-8000-0000000000b2";
     await admin.query(
-      `INSERT INTO wabrix.organizations (id, slug, display_name) VALUES
+      `INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES
         ($1, 'tenant-a', 'Tenant A'), ($2, 'tenant-b', 'Tenant B') ON CONFLICT (id) DO NOTHING`,
       [organizationA, organizationB]
     );
     await admin.query("BEGIN");
     try {
-      await admin.query("SET ROLE wabrix_runtime");
-      expect((await admin.query("SELECT id FROM wabrix.organizations")).rows).toEqual([]);
+      await admin.query("SET ROLE flowdesk_runtime");
+      expect((await admin.query("SELECT id FROM flowdesk.organizations")).rows).toEqual([]);
       await admin.query("SELECT set_config('app.organization_id', $1, true)", [organizationA]);
-      expect((await admin.query("SELECT id FROM wabrix.organizations ORDER BY id")).rows).toEqual([
-        { id: organizationA }
-      ]);
+      expect((await admin.query("SELECT id FROM flowdesk.organizations ORDER BY id")).rows).toEqual(
+        [{ id: organizationA }]
+      );
       await expect(
         admin.query(
-          "INSERT INTO wabrix.organizations (id, slug, display_name) VALUES ($1, 'tenant-b-write', 'Denied')",
+          "INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES ($1, 'tenant-b-write', 'Denied')",
           [organizationB]
         )
       ).rejects.toThrow();
@@ -927,8 +931,8 @@ describe("database foundation", () => {
         pool,
         { organizationId: "00000000-0000-7000-8000-0000000000a1" },
         async (client) => {
-          await client.query("SET LOCAL ROLE wabrix_runtime");
-          return client.query<{ id: string }>("SELECT id FROM wabrix.organizations ORDER BY id");
+          await client.query("SET LOCAL ROLE flowdesk_runtime");
+          return client.query<{ id: string }>("SELECT id FROM flowdesk.organizations ORDER BY id");
         }
       );
       expect(rows.rows).toEqual([{ id: "00000000-0000-7000-8000-0000000000a1" }]);
@@ -958,7 +962,7 @@ describe("database foundation", () => {
         pool,
         { organizationId: orgId },
         async (client) => {
-          await client.query("SET LOCAL ROLE wabrix_runtime");
+          await client.query("SET LOCAL ROLE flowdesk_runtime");
           return createAttachmentUploadSession(client, {
             organizationId: orgId,
             uploaderUserId: null,
@@ -978,7 +982,7 @@ describe("database foundation", () => {
         pool,
         { organizationId: orgId },
         async (client) => {
-          await client.query("SET LOCAL ROLE wabrix_runtime");
+          await client.query("SET LOCAL ROLE flowdesk_runtime");
           return getAttachmentById(client, orgId, attachmentId);
         }
       );
@@ -990,7 +994,7 @@ describe("database foundation", () => {
         pool,
         { organizationId: orgId },
         async (client) => {
-          await client.query("SET LOCAL ROLE wabrix_runtime");
+          await client.query("SET LOCAL ROLE flowdesk_runtime");
           return softDeleteAttachment(client, {
             organizationId: orgId,
             attachmentId,
@@ -1004,7 +1008,7 @@ describe("database foundation", () => {
 
       // Now invisible via getAttachmentById
       const after = await withTenantTransaction(pool, { organizationId: orgId }, async (client) => {
-        await client.query("SET LOCAL ROLE wabrix_runtime");
+        await client.query("SET LOCAL ROLE flowdesk_runtime");
         return getAttachmentById(client, orgId, attachmentId);
       });
       expect(after).toBeNull();
@@ -1023,7 +1027,7 @@ describe("database foundation", () => {
         pool,
         { organizationId: orgId },
         async (client) => {
-          await client.query("SET LOCAL ROLE wabrix_runtime");
+          await client.query("SET LOCAL ROLE flowdesk_runtime");
           return listExpiredAttachments(client, orgId, futureCutoff);
         }
       );
@@ -1052,58 +1056,59 @@ describe("database foundation", () => {
     const organizations = [organizationA, organizationB];
 
     try {
-      await admin.query("DELETE FROM wabrix.bot_runs WHERE organization_id = ANY($1::uuid[])", [
-        organizations
-      ]);
-      await admin.query("DELETE FROM wabrix.bot_configs WHERE organization_id = ANY($1::uuid[])", [
-        organizations
-      ]);
-      await admin.query("DELETE FROM wabrix.messages WHERE organization_id = ANY($1::uuid[])", [
+      await admin.query("DELETE FROM flowdesk.bot_runs WHERE organization_id = ANY($1::uuid[])", [
         organizations
       ]);
       await admin.query(
-        "DELETE FROM wabrix.conversations WHERE organization_id = ANY($1::uuid[])",
+        "DELETE FROM flowdesk.bot_configs WHERE organization_id = ANY($1::uuid[])",
         [organizations]
       );
-      await admin.query("DELETE FROM wabrix.contacts WHERE organization_id = ANY($1::uuid[])", [
-        organizations
-      ]);
-      await admin.query("DELETE FROM wabrix.channels WHERE organization_id = ANY($1::uuid[])", [
+      await admin.query("DELETE FROM flowdesk.messages WHERE organization_id = ANY($1::uuid[])", [
         organizations
       ]);
       await admin.query(
-        "DELETE FROM wabrix.realtime_versions WHERE organization_id = ANY($1::uuid[])",
+        "DELETE FROM flowdesk.conversations WHERE organization_id = ANY($1::uuid[])",
         [organizations]
       );
-      await admin.query("DELETE FROM wabrix.organizations WHERE id = ANY($1::uuid[])", [
+      await admin.query("DELETE FROM flowdesk.contacts WHERE organization_id = ANY($1::uuid[])", [
+        organizations
+      ]);
+      await admin.query("DELETE FROM flowdesk.channels WHERE organization_id = ANY($1::uuid[])", [
+        organizations
+      ]);
+      await admin.query(
+        "DELETE FROM flowdesk.realtime_versions WHERE organization_id = ANY($1::uuid[])",
+        [organizations]
+      );
+      await admin.query("DELETE FROM flowdesk.organizations WHERE id = ANY($1::uuid[])", [
         organizations
       ]);
 
       await admin.query(
-        `INSERT INTO wabrix.organizations (id, slug, display_name) VALUES
+        `INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES
          ($1, 'm4-draft-a', 'M4 Draft A'), ($2, 'm4-draft-b', 'M4 Draft B')`,
         organizations
       );
       await admin.query(
-        `INSERT INTO wabrix.channels
+        `INSERT INTO flowdesk.channels
            (id, organization_id, type, name, phone_number_id, waba_id, encrypted_credentials, status)
          VALUES ($1, $2, 'whatsapp', 'M4 test', 'm4-phone-a', 'm4-waba-a', 'fixture', 'active')`,
         [channelA, organizationA]
       );
       await admin.query(
-        `INSERT INTO wabrix.conversations
+        `INSERT INTO flowdesk.conversations
            (id, organization_id, channel_id, customer_phone, status)
          VALUES ($1, $2, $3, '+62000000001', 'open')`,
         [conversationA, organizationA, channelA]
       );
       await admin.query(
-        `INSERT INTO wabrix.messages
+        `INSERT INTO flowdesk.messages
            (id, organization_id, conversation_id, channel_id, direction, sender_type, content, status)
          VALUES ($1, $2, $3, $4, 'inbound', 'customer', 'Apakah garansi satu tahun?', 'delivered')`,
         [messageA, organizationA, conversationA, channelA]
       );
       await admin.query(
-        `INSERT INTO wabrix.bot_configs (id, organization_id, mode)
+        `INSERT INTO flowdesk.bot_configs (id, organization_id, mode)
          VALUES ($1, $2, 'draft')`,
         [configA, organizationA]
       );
@@ -1150,9 +1155,9 @@ describe("database foundation", () => {
       expect(visibleA?.id).toBe(first.id);
       expect(invisibleB).toBeNull();
 
-      await admin.query("SET ROLE wabrix_runtime");
+      await admin.query("SET ROLE flowdesk_runtime");
       const claimed = await admin.query<{ id: string; organization_id: string }>(
-        "SELECT id, organization_id FROM wabrix.claim_bot_draft_runs(50)"
+        "SELECT id, organization_id FROM flowdesk.claim_bot_draft_runs(50)"
       );
       await admin.query("RESET ROLE");
       expect(claimed.rows).toContainEqual({ id: first.id, organization_id: organizationA });
@@ -1195,14 +1200,14 @@ describe("database foundation", () => {
         triggerMessageId: messageA
       };
       // Reset trigger to allow enqueueing another run
-      await admin.query("UPDATE wabrix.bot_runs SET status = 'stale' WHERE id = $1", [first.id]);
+      await admin.query("UPDATE flowdesk.bot_runs SET status = 'stale' WHERE id = $1", [first.id]);
       const second = await withTenantTransaction(
         pool,
         { organizationId: organizationA },
         (client) => enqueueBotDraftRun(client, secondInput)
       );
-      await admin.query("SET ROLE wabrix_runtime");
-      await admin.query("SELECT wabrix.claim_bot_draft_runs(50)");
+      await admin.query("SET ROLE flowdesk_runtime");
+      await admin.query("SELECT flowdesk.claim_bot_draft_runs(50)");
       await admin.query("RESET ROLE");
 
       await withTenantTransaction(pool, { organizationId: organizationA }, (client) =>
@@ -1223,12 +1228,12 @@ describe("database foundation", () => {
       expect(noEvidenceRun?.totalTokens).toBe(0);
 
       // 3. Transition processing -> failed
-      await admin.query("UPDATE wabrix.bot_runs SET status = 'stale' WHERE id = $1", [second.id]);
+      await admin.query("UPDATE flowdesk.bot_runs SET status = 'stale' WHERE id = $1", [second.id]);
       const third = await withTenantTransaction(pool, { organizationId: organizationA }, (client) =>
         enqueueBotDraftRun(client, secondInput)
       );
-      await admin.query("SET ROLE wabrix_runtime");
-      await admin.query("SELECT wabrix.claim_bot_draft_runs(50)");
+      await admin.query("SET ROLE flowdesk_runtime");
+      await admin.query("SELECT flowdesk.claim_bot_draft_runs(50)");
       await admin.query("RESET ROLE");
 
       await withTenantTransaction(pool, { organizationId: organizationA }, (client) =>
@@ -1251,8 +1256,8 @@ describe("database foundation", () => {
 
       // M5 #178: AUTO is accepted only when explicitly persisted, remains tenant-scoped,
       // and one bot run cannot create two outbound messages even under a retry/race.
-      await admin.query("UPDATE wabrix.bot_runs SET status = 'stale' WHERE id = $1", [third.id]);
-      await admin.query("UPDATE wabrix.bot_configs SET mode = 'auto' WHERE id = $1", [configA]);
+      await admin.query("UPDATE flowdesk.bot_runs SET status = 'stale' WHERE id = $1", [third.id]);
+      await admin.query("UPDATE flowdesk.bot_configs SET mode = 'auto' WHERE id = $1", [configA]);
       const autoRun = await withTenantTransaction(
         pool,
         { organizationId: organizationA },
@@ -1267,7 +1272,7 @@ describe("database foundation", () => {
       expect(hiddenAutoRun).toBeNull();
 
       await admin.query(
-        `INSERT INTO wabrix.messages
+        `INSERT INTO flowdesk.messages
            (organization_id, conversation_id, channel_id, direction, sender_type, content, status, metadata)
          VALUES ($1, $2, $3, 'outbound', 'bot', 'AUTO answer', 'queued',
                  jsonb_build_object('aiBotRunId', $4::text))`,
@@ -1275,7 +1280,7 @@ describe("database foundation", () => {
       );
       await expect(
         admin.query(
-          `INSERT INTO wabrix.messages
+          `INSERT INTO flowdesk.messages
              (organization_id, conversation_id, channel_id, direction, sender_type, content, status, metadata)
            VALUES ($1, $2, $3, 'outbound', 'bot', 'Duplicate AUTO answer', 'queued',
                    jsonb_build_object('aiBotRunId', $4::text))`,
@@ -1305,7 +1310,7 @@ describe("database foundation", () => {
     }>(
       `SELECT relname, relrowsecurity, relforcerowsecurity
        FROM pg_class
-       WHERE relnamespace = 'wabrix'::regnamespace AND relname = ANY($1::text[])
+       WHERE relnamespace = 'flowdesk'::regnamespace AND relname = ANY($1::text[])
        ORDER BY relname`,
       [m4Tables]
     );
@@ -1314,7 +1319,7 @@ describe("database foundation", () => {
 
     const indexes = await admin.query<{ indexname: string }>(
       `SELECT indexname FROM pg_indexes
-       WHERE schemaname = 'wabrix' AND indexname = 'idx_chunks_embedding_cosine'`
+       WHERE schemaname = 'flowdesk' AND indexname = 'idx_chunks_embedding_cosine'`
     );
     expect(indexes.rows).toHaveLength(1);
     expect(indexes.rows[0]?.indexname).toBe("idx_chunks_embedding_cosine");
@@ -1323,7 +1328,7 @@ describe("database foundation", () => {
   it("persists 1536d vector chunks and performs similarity search in a tenant transaction", async () => {
     const orgId = "00000000-0000-7000-8000-0000000000a1";
     await admin.query(
-      `INSERT INTO wabrix.organizations (id, slug, display_name)
+      `INSERT INTO flowdesk.organizations (id, slug, display_name)
        VALUES ($1, 'vector-test-org', 'Vector Test Org')
        ON CONFLICT (id) DO NOTHING`,
       [orgId]
@@ -1354,7 +1359,7 @@ describe("database foundation", () => {
             chunks: [
               {
                 chunkIndex: 0,
-                content: "Wabrix refunds are processed within seven business days.",
+                content: "FlowDesk refunds are processed within seven business days.",
                 contentHash: "chunkhash123",
                 embedding: normalizedVector
               }
@@ -1372,7 +1377,7 @@ describe("database foundation", () => {
 
       expect(searchResults).toHaveLength(1);
       expect(searchResults[0]?.similarity).toBeGreaterThan(0.99);
-      expect(searchResults[0]?.content).toContain("Wabrix refunds");
+      expect(searchResults[0]?.content).toContain("FlowDesk refunds");
     } finally {
       await testPool.end();
     }
@@ -1382,7 +1387,7 @@ describe("database foundation", () => {
     const orgA = "00000000-0000-7000-8000-0000000000b1";
     const orgB = "00000000-0000-7000-8000-0000000000b2";
     await admin.query(
-      `INSERT INTO wabrix.organizations (id, slug, display_name)
+      `INSERT INTO flowdesk.organizations (id, slug, display_name)
        VALUES ($1, 'rg-org-a', 'Release Gate Org A'),
               ($2, 'rg-org-b', 'Release Gate Org B')
        ON CONFLICT (id) DO NOTHING`,
@@ -1400,11 +1405,11 @@ describe("database foundation", () => {
       );
       expect(configA.id).toBeDefined();
 
-      // 2. An unscoped query under wabrix_runtime (without setting app.organization_id)
+      // 2. An unscoped query under flowdesk_runtime (without setting app.organization_id)
       // cannot view bot_configs (proving the root cause of the false 404 NOT_FOUND)
       const unscopedClient = await testPool.connect();
       try {
-        await unscopedClient.query("SET ROLE wabrix_runtime");
+        await unscopedClient.query("SET ROLE flowdesk_runtime");
         const unscopedRes = await getBotConfig(unscopedClient, orgA);
         expect(unscopedRes).toBeNull();
       } finally {
@@ -1422,7 +1427,7 @@ describe("database foundation", () => {
           expect(visibleConfig?.id).toBe(configA.id);
 
           const inserted = await client.query<{ id: string }>(
-            `INSERT INTO wabrix.auto_release_gates (
+            `INSERT INTO flowdesk.auto_release_gates (
                organization_id, bot_config_id, cohort, status, eval_scores, approvals,
                rollback_owner
              ) VALUES ($1, $2, 'beta', 'pending', '{}'::jsonb, '[]'::jsonb, 'SRE')
@@ -1440,7 +1445,7 @@ describe("database foundation", () => {
         { organizationId: orgA },
         async (client) => {
           const res = await client.query<{ id: string }>(
-            `SELECT id FROM wabrix.auto_release_gates WHERE organization_id = $1`,
+            `SELECT id FROM flowdesk.auto_release_gates WHERE organization_id = $1`,
             [orgA]
           );
           return res.rows;
@@ -1454,7 +1459,7 @@ describe("database foundation", () => {
         { organizationId: orgB },
         async (client) => {
           const res = await client.query<{ id: string }>(
-            `SELECT id FROM wabrix.auto_release_gates WHERE organization_id = $1`,
+            `SELECT id FROM flowdesk.auto_release_gates WHERE organization_id = $1`,
             [orgA]
           );
           return res.rows;
@@ -1470,7 +1475,7 @@ describe("database foundation", () => {
     const orgA = "00000000-0000-7000-8000-0000000000c1";
     const orgB = "00000000-0000-7000-8000-0000000000c2";
     await admin.query(
-      `INSERT INTO wabrix.organizations (id, slug, display_name)
+      `INSERT INTO flowdesk.organizations (id, slug, display_name)
        VALUES ($1, 'policy-org-a', 'Policy Org A'),
               ($2, 'policy-org-b', 'Policy Org B')
        ON CONFLICT (id) DO NOTHING`,
@@ -1482,10 +1487,10 @@ describe("database foundation", () => {
       // 1. Unscoped runtime connection cannot insert into automation_policies (replicates defect)
       const unscopedClient = await testPool.connect();
       try {
-        await unscopedClient.query("SET ROLE wabrix_runtime");
+        await unscopedClient.query("SET ROLE flowdesk_runtime");
         await expect(
           unscopedClient.query(
-            `INSERT INTO wabrix.automation_policies (
+            `INSERT INTO flowdesk.automation_policies (
                organization_id, version, status, name, rules, metadata
              ) VALUES ($1, 1, 'draft', 'Defect Test', '[]'::jsonb, '{}'::jsonb)`,
             [orgA]
@@ -1494,7 +1499,7 @@ describe("database foundation", () => {
 
         // Unscoped select returns 0 rows
         const unscopedSelect = await unscopedClient.query(
-          `SELECT * FROM wabrix.automation_policies WHERE organization_id = $1`,
+          `SELECT * FROM flowdesk.automation_policies WHERE organization_id = $1`,
           [orgA]
         );
         expect(unscopedSelect.rows).toHaveLength(0);
@@ -1640,18 +1645,18 @@ describe("database foundation", () => {
     const testPool = new Pool({ connectionString });
 
     try {
-      await admin.query("DELETE FROM wabrix.routing_logs WHERE organization_id = $1", [orgId]);
-      await admin.query("DELETE FROM wabrix.messages WHERE organization_id = $1", [orgId]);
-      await admin.query("DELETE FROM wabrix.conversations WHERE organization_id = $1", [orgId]);
-      await admin.query("DELETE FROM wabrix.routing_rules WHERE organization_id = $1", [orgId]);
-      await admin.query("DELETE FROM wabrix.automation_policies WHERE organization_id = $1", [
+      await admin.query("DELETE FROM flowdesk.routing_logs WHERE organization_id = $1", [orgId]);
+      await admin.query("DELETE FROM flowdesk.messages WHERE organization_id = $1", [orgId]);
+      await admin.query("DELETE FROM flowdesk.conversations WHERE organization_id = $1", [orgId]);
+      await admin.query("DELETE FROM flowdesk.routing_rules WHERE organization_id = $1", [orgId]);
+      await admin.query("DELETE FROM flowdesk.automation_policies WHERE organization_id = $1", [
         orgId
       ]);
-      await admin.query("DELETE FROM wabrix.channels WHERE organization_id = $1", [orgId]);
-      await admin.query("DELETE FROM wabrix.organizations WHERE id = $1", [orgId]);
+      await admin.query("DELETE FROM flowdesk.channels WHERE organization_id = $1", [orgId]);
+      await admin.query("DELETE FROM flowdesk.organizations WHERE id = $1", [orgId]);
 
       await admin.query(
-        "INSERT INTO wabrix.organizations (id, slug, display_name) VALUES ($1, 'routing-test-org', 'Routing Test Org')",
+        "INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES ($1, 'routing-test-org', 'Routing Test Org')",
         [orgId]
       );
 
@@ -1779,7 +1784,7 @@ describe("database foundation", () => {
         await client.query("SAVEPOINT routing_eval");
         try {
           // Force 22P02 invalid uuid syntax
-          await client.query("SELECT * FROM wabrix.routing_rules WHERE id = $1", [
+          await client.query("SELECT * FROM flowdesk.routing_rules WHERE id = $1", [
             "invalid-uuid-syntax"
           ]);
           await client.query("RELEASE SAVEPOINT routing_eval");
@@ -1789,7 +1794,7 @@ describe("database foundation", () => {
 
         // Outer transaction continues successfully — subsequent statement does not fail with 25P02!
         const verifyMsg = await client.query<{ id: string; content: string }>(
-          "SELECT id, content FROM wabrix.messages WHERE id = $1",
+          "SELECT id, content FROM flowdesk.messages WHERE id = $1",
           [inboundMsg.id]
         );
         expect(verifyMsg.rows).toHaveLength(1);
@@ -1808,31 +1813,34 @@ describe("database foundation", () => {
     try {
       // Clean up previous test state
       await admin.query(
-        "DELETE FROM wabrix.automation_safety_controls WHERE organization_id IN ($1, $2) OR scope = 'global'",
+        "DELETE FROM flowdesk.automation_safety_controls WHERE organization_id IN ($1, $2) OR scope = 'global'",
         [orgIdA, orgIdB]
       );
-      await admin.query("DELETE FROM wabrix.organizations WHERE id IN ($1, $2)", [orgIdA, orgIdB]);
+      await admin.query("DELETE FROM flowdesk.organizations WHERE id IN ($1, $2)", [
+        orgIdA,
+        orgIdB
+      ]);
 
       // Seed tenants
       await admin.query(
-        "INSERT INTO wabrix.organizations (id, slug, display_name) VALUES ($1, 'safety-a', 'Safety Org A')",
+        "INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES ($1, 'safety-a', 'Safety Org A')",
         [orgIdA]
       );
       await admin.query(
-        "INSERT INTO wabrix.organizations (id, slug, display_name) VALUES ($1, 'safety-b', 'Safety Org B')",
+        "INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES ($1, 'safety-b', 'Safety Org B')",
         [orgIdB]
       );
 
       // Insert global stop via admin (durable platform-level control)
       await admin.query(
-        `INSERT INTO wabrix.automation_safety_controls (scope, disabled, reason)
+        `INSERT INTO flowdesk.automation_safety_controls (scope, disabled, reason)
          VALUES ('global', true, 'M5 staging acceptance global halt')`
       );
 
       // 1. Runtime tenant cannot directly SELECT the global row (RLS enforced)
       await withTenantTransaction(testPool, { organizationId: orgIdA }, async (client) => {
         const directSelect = await client.query(
-          "SELECT * FROM wabrix.automation_safety_controls WHERE scope = 'global'"
+          "SELECT * FROM flowdesk.automation_safety_controls WHERE scope = 'global'"
         );
         expect(directSelect.rows).toHaveLength(0);
       });
@@ -1851,7 +1859,7 @@ describe("database foundation", () => {
 
       // 3. Global stop takes precedence over narrower scopes (e.g. tenant-specific stop)
       await admin.query(
-        `INSERT INTO wabrix.automation_safety_controls (organization_id, scope, disabled, reason)
+        `INSERT INTO flowdesk.automation_safety_controls (organization_id, scope, disabled, reason)
          VALUES ($1, 'tenant', true, 'Tenant A local stop')`,
         [orgIdA]
       );
@@ -1868,7 +1876,7 @@ describe("database foundation", () => {
       // 4. Disabled or expired global rows are ignored
       // Update global stop to disabled = false (halt lifted)
       await admin.query(
-        "UPDATE wabrix.automation_safety_controls SET disabled = false WHERE scope = 'global'"
+        "UPDATE flowdesk.automation_safety_controls SET disabled = false WHERE scope = 'global'"
       );
       const liftedCheck = await withTenantTransaction(
         testPool,
@@ -1883,7 +1891,7 @@ describe("database foundation", () => {
 
       // Test expired global stop
       await admin.query(
-        "UPDATE wabrix.automation_safety_controls SET disabled = true, expires_at = now() - interval '1 hour' WHERE scope = 'global'"
+        "UPDATE flowdesk.automation_safety_controls SET disabled = true, expires_at = now() - interval '1 hour' WHERE scope = 'global'"
       );
       const expiredCheck = await withTenantTransaction(
         testPool,
@@ -1897,7 +1905,7 @@ describe("database foundation", () => {
 
       // When tenant stop is also removed, returns null
       await admin.query(
-        "DELETE FROM wabrix.automation_safety_controls WHERE organization_id = $1",
+        "DELETE FROM flowdesk.automation_safety_controls WHERE organization_id = $1",
         [orgIdA]
       );
       const nullCheck = await withTenantTransaction(
@@ -1911,7 +1919,7 @@ describe("database foundation", () => {
 
       // 5. Cross-tenant isolation remains intact: Tenant B controls are not visible to Tenant A
       await admin.query(
-        `INSERT INTO wabrix.automation_safety_controls (organization_id, scope, disabled, reason)
+        `INSERT INTO flowdesk.automation_safety_controls (organization_id, scope, disabled, reason)
          VALUES ($1, 'tenant', true, 'Tenant B secret stop')`,
         [orgIdB]
       );
@@ -1935,10 +1943,13 @@ describe("database foundation", () => {
       expect(crossTenantCheckB?.reason).toBe("Tenant B secret stop");
     } finally {
       await admin.query(
-        "DELETE FROM wabrix.automation_safety_controls WHERE organization_id IN ($1, $2) OR scope = 'global'",
+        "DELETE FROM flowdesk.automation_safety_controls WHERE organization_id IN ($1, $2) OR scope = 'global'",
         [orgIdA, orgIdB]
       );
-      await admin.query("DELETE FROM wabrix.organizations WHERE id IN ($1, $2)", [orgIdA, orgIdB]);
+      await admin.query("DELETE FROM flowdesk.organizations WHERE id IN ($1, $2)", [
+        orgIdA,
+        orgIdB
+      ]);
       await testPool.end();
     }
   });
@@ -1952,37 +1963,37 @@ describe("database foundation", () => {
 
     try {
       await admin.query(
-        "INSERT INTO wabrix.organizations (id, slug, display_name) VALUES ($1, $2, $3)",
+        "INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES ($1, $2, $3)",
         [orgIdA, "org-cost-test-a", "Org Cost Test A"]
       );
       await admin.query(
-        "INSERT INTO wabrix.organizations (id, slug, display_name) VALUES ($1, $2, $3)",
+        "INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES ($1, $2, $3)",
         [orgIdB, "org-cost-test-b", "Org Cost Test B"]
       );
 
       const channelResA = await admin.query<{ id: string }>(
-        `INSERT INTO wabrix.channels (organization_id, type, name, phone_number_id, waba_id, encrypted_credentials)
+        `INSERT INTO flowdesk.channels (organization_id, type, name, phone_number_id, waba_id, encrypted_credentials)
          VALUES ($1, 'whatsapp', 'WhatsApp Cost A', 'cost-phone-a-1', 'waba-cost-a', 'encrypted-test-value') RETURNING id`,
         [orgIdA]
       );
       const channelIdA = channelResA.rows[0]!.id;
 
       const channelResB = await admin.query<{ id: string }>(
-        `INSERT INTO wabrix.channels (organization_id, type, name, phone_number_id, waba_id, encrypted_credentials)
+        `INSERT INTO flowdesk.channels (organization_id, type, name, phone_number_id, waba_id, encrypted_credentials)
          VALUES ($1, 'whatsapp', 'WhatsApp Cost B', 'cost-phone-b-1', 'waba-cost-b', 'encrypted-test-value') RETURNING id`,
         [orgIdB]
       );
       const channelIdB = channelResB.rows[0]!.id;
 
       const convResA = await admin.query<{ id: string }>(
-        `INSERT INTO wabrix.conversations (organization_id, channel_id, customer_phone, customer_name)
+        `INSERT INTO flowdesk.conversations (organization_id, channel_id, customer_phone, customer_name)
          VALUES ($1, $2, '+62811111179', 'Customer Cost A') RETURNING id`,
         [orgIdA, channelIdA]
       );
       const convIdA = convResA.rows[0]!.id;
 
       const convResB = await admin.query<{ id: string }>(
-        `INSERT INTO wabrix.conversations (organization_id, channel_id, customer_phone, customer_name)
+        `INSERT INTO flowdesk.conversations (organization_id, channel_id, customer_phone, customer_name)
          VALUES ($1, $2, '+62822222179', 'Customer Cost B') RETURNING id`,
         [orgIdB, channelIdB]
       );
@@ -1990,7 +2001,7 @@ describe("database foundation", () => {
 
       // 1. Prior month boundary check: insert a bot run created 35 days ago for Tenant A
       await admin.query(
-        `INSERT INTO wabrix.bot_runs (organization_id, conversation_id, mode, status, cost_estimate_microcents, created_at)
+        `INSERT INTO flowdesk.bot_runs (organization_id, conversation_id, mode, status, cost_estimate_microcents, created_at)
          VALUES ($1, $2, 'auto', 'completed', $3, clock_timestamp() - INTERVAL '35 days')`,
         [orgIdA, convIdA, 100 * Number(MICROCENTS_PER_CENT)]
       );
@@ -2006,7 +2017,7 @@ describe("database foundation", () => {
 
       // 2. Current month spend: insert run for Tenant A with 50 cents spend
       await admin.query(
-        `INSERT INTO wabrix.bot_runs (organization_id, conversation_id, mode, status, cost_estimate_microcents, created_at)
+        `INSERT INTO flowdesk.bot_runs (organization_id, conversation_id, mode, status, cost_estimate_microcents, created_at)
          VALUES ($1, $2, 'auto', 'completed', $3, clock_timestamp() - INTERVAL '10 minutes')`,
         [orgIdA, convIdA, 50 * Number(MICROCENTS_PER_CENT)]
       );
@@ -2021,7 +2032,7 @@ describe("database foundation", () => {
 
       // 3. Tenant isolation: insert large spend (50000 cents) for Tenant B in current month
       await admin.query(
-        `INSERT INTO wabrix.bot_runs (organization_id, conversation_id, mode, status, cost_estimate_microcents, created_at)
+        `INSERT INTO flowdesk.bot_runs (organization_id, conversation_id, mode, status, cost_estimate_microcents, created_at)
          VALUES ($1, $2, 'auto', 'completed', $3, clock_timestamp() - INTERVAL '5 minutes')`,
         [orgIdB, convIdB, 50000 * Number(MICROCENTS_PER_CENT)]
       );
@@ -2076,39 +2087,42 @@ describe("database foundation", () => {
       expect(customerInboundB.id).toBeDefined();
       expect(customerInboundB.senderType).toBe("customer");
     } finally {
-      await admin.query("DELETE FROM wabrix.outbox_events WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.outbox_events WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.messages WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.messages WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.bot_runs WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.bot_runs WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.conversations WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.conversations WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.contacts WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.contacts WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.channels WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.channels WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.realtime_versions WHERE organization_id IN ($1, $2)", [
+      await admin.query(
+        "DELETE FROM flowdesk.realtime_versions WHERE organization_id IN ($1, $2)",
+        [orgIdA, orgIdB]
+      );
+      await admin.query("DELETE FROM flowdesk.bot_configs WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.bot_configs WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.organizations WHERE id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.organizations WHERE id IN ($1, $2)", [orgIdA, orgIdB]);
       await testPool.end();
     }
   });
@@ -2123,69 +2137,72 @@ describe("database foundation", () => {
     const testWebhookSecret = (seed = "test") => `whsec_${seed.padEnd(32, "x")}`;
 
     const cleanupM6Fixtures = async () => {
-      await admin.query("DELETE FROM wabrix.webhook_deliveries WHERE organization_id IN ($1, $2)", [
-        orgIdA,
-        orgIdB
-      ]);
-      await admin.query("DELETE FROM wabrix.outbox_events WHERE organization_id IN ($1, $2)", [
+      await admin.query(
+        "DELETE FROM flowdesk.webhook_deliveries WHERE organization_id IN ($1, $2)",
+        [orgIdA, orgIdB]
+      );
+      await admin.query("DELETE FROM flowdesk.outbox_events WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
       await admin.query(
-        "DELETE FROM wabrix.webhook_subscriptions WHERE organization_id IN ($1, $2)",
+        "DELETE FROM flowdesk.webhook_subscriptions WHERE organization_id IN ($1, $2)",
         [orgIdA, orgIdB]
       );
-      await admin.query("DELETE FROM wabrix.api_keys WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.api_keys WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
       await admin.query(
-        "DELETE FROM wabrix.analytics_aggregates_hourly WHERE organization_id IN ($1, $2)",
+        "DELETE FROM flowdesk.analytics_aggregates_hourly WHERE organization_id IN ($1, $2)",
         [orgIdA, orgIdB]
       );
       await admin.query(
-        "DELETE FROM wabrix.analytics_watermarks WHERE organization_id IN ($1, $2)",
+        "DELETE FROM flowdesk.analytics_watermarks WHERE organization_id IN ($1, $2)",
         [orgIdA, orgIdB]
       );
-      await admin.query("DELETE FROM wabrix.messages WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.messages WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.conversations WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.conversations WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.contacts WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.contacts WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.channels WHERE organization_id IN ($1, $2)", [
+      await admin.query("DELETE FROM flowdesk.channels WHERE organization_id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.realtime_versions WHERE organization_id IN ($1, $2)", [
+      await admin.query(
+        "DELETE FROM flowdesk.realtime_versions WHERE organization_id IN ($1, $2)",
+        [orgIdA, orgIdB]
+      );
+      await admin.query("DELETE FROM flowdesk.users WHERE id = $1", [userA]);
+      await admin.query("DELETE FROM flowdesk.organizations WHERE id IN ($1, $2)", [
         orgIdA,
         orgIdB
       ]);
-      await admin.query("DELETE FROM wabrix.users WHERE id = $1", [userA]);
-      await admin.query("DELETE FROM wabrix.organizations WHERE id IN ($1, $2)", [orgIdA, orgIdB]);
     };
 
     await cleanupM6Fixtures();
 
     try {
       await admin.query(
-        `INSERT INTO wabrix.organizations (id, slug, display_name) VALUES
+        `INSERT INTO flowdesk.organizations (id, slug, display_name) VALUES
          ($1, 'm6-int-org-a', 'M6 Integration Org A'),
          ($2, 'm6-int-org-b', 'M6 Integration Org B')`,
         [orgIdA, orgIdB]
       );
       await admin.query(
-        `INSERT INTO wabrix.users (id, email, display_name) VALUES ($1, 'm6-user-a@example.com', 'M6 User A')`,
+        `INSERT INTO flowdesk.users (id, email, display_name) VALUES ($1, 'm6-user-a@example.com', 'M6 User A')`,
         [userA]
       );
       await admin.query(
-        `INSERT INTO wabrix.channels (id, organization_id, type, name, status, phone_number_id, waba_id, encrypted_credentials)
+        `INSERT INTO flowdesk.channels (id, organization_id, type, name, status, phone_number_id, waba_id, encrypted_credentials)
          VALUES ($1, $2, 'whatsapp', 'Test WA Channel A', 'active', 'phone-m6-001', 'waba-m6-001', 'enc-cred')`,
         [channelIdA, orgIdA]
       );
@@ -2196,25 +2213,25 @@ describe("database foundation", () => {
       const expiredHash = "c".repeat(64);
 
       await admin.query(
-        `INSERT INTO wabrix.api_keys (organization_id, name, key_prefix, key_hash, scopes, created_by_user_id)
+        `INSERT INTO flowdesk.api_keys (organization_id, name, key_prefix, key_hash, scopes, created_by_user_id)
          VALUES ($1, 'Valid Key Org A', 'fd_live_', $2, '["conversation:read", "message:write"]'::jsonb, $3)`,
         [orgIdA, validHash, userA]
       );
       await admin.query(
-        `INSERT INTO wabrix.api_keys (organization_id, name, key_prefix, key_hash, scopes, revoked_at)
+        `INSERT INTO flowdesk.api_keys (organization_id, name, key_prefix, key_hash, scopes, revoked_at)
          VALUES ($1, 'Revoked Key Org A', 'fd_live_', $2, '["*"]'::jsonb, clock_timestamp())`,
         [orgIdA, revokedHash]
       );
       await admin.query(
-        `INSERT INTO wabrix.api_keys (organization_id, name, key_prefix, key_hash, scopes, expires_at)
+        `INSERT INTO flowdesk.api_keys (organization_id, name, key_prefix, key_hash, scopes, expires_at)
          VALUES ($1, 'Expired Key Org A', 'fd_live_', $2, '["*"]'::jsonb, clock_timestamp() - interval '1 day')`,
         [orgIdA, expiredHash]
       );
 
-      // Authenticate via findApiKeyByHash under wabrix_runtime (NOBYPASSRLS, without tenant context)
+      // Authenticate via findApiKeyByHash under flowdesk_runtime (NOBYPASSRLS, without tenant context)
       const runtimeClient = await testPool.connect();
       try {
-        await runtimeClient.query("SET ROLE wabrix_runtime");
+        await runtimeClient.query("SET ROLE flowdesk_runtime");
         const authenticatedValid = await findApiKeyByHash(runtimeClient, validHash);
         expect(authenticatedValid).not.toBeNull();
         expect(authenticatedValid?.organizationId).toBe(orgIdA);
@@ -2230,7 +2247,7 @@ describe("database foundation", () => {
         expect(authenticatedRandom).toBeNull();
 
         // Direct query on api_keys without tenant context returns empty (FORCE RLS denies)
-        const directRuntimeQuery = await runtimeClient.query("SELECT * FROM wabrix.api_keys");
+        const directRuntimeQuery = await runtimeClient.query("SELECT * FROM flowdesk.api_keys");
         expect(directRuntimeQuery.rows.length).toBe(0);
       } finally {
         await runtimeClient.query("RESET ROLE").catch(() => undefined);
@@ -2242,7 +2259,7 @@ describe("database foundation", () => {
         testPool,
         { organizationId: orgIdB },
         async (tx) => {
-          return (await tx.query<{ id: string }>("SELECT * FROM wabrix.api_keys")).rows;
+          return (await tx.query<{ id: string }>("SELECT * FROM flowdesk.api_keys")).rows;
         }
       );
       expect(tenantBKeys.length).toBe(0);
@@ -2307,7 +2324,7 @@ describe("database foundation", () => {
         aggregate_id: string;
         payload: Record<string, unknown>;
       }>(
-        `SELECT aggregate_id, payload FROM wabrix.outbox_events
+        `SELECT aggregate_id, payload FROM flowdesk.outbox_events
          WHERE organization_id = $1 AND event_type = 'developer.webhook.dispatch' AND payload->>'eventType' = 'conversation.created'`,
         [orgIdA]
       );
@@ -2319,7 +2336,7 @@ describe("database foundation", () => {
 
       // Org B must have 0 outbox events for conversation.created
       const outboxRowsOrgB = await admin.query(
-        `SELECT id FROM wabrix.outbox_events WHERE organization_id = $1`,
+        `SELECT id FROM flowdesk.outbox_events WHERE organization_id = $1`,
         [orgIdB]
       );
       expect(outboxRowsOrgB.rows.length).toBe(0);
@@ -2339,7 +2356,7 @@ describe("database foundation", () => {
         aggregate_id: string;
         payload: Record<string, unknown>;
       }>(
-        `SELECT aggregate_id, payload FROM wabrix.outbox_events
+        `SELECT aggregate_id, payload FROM flowdesk.outbox_events
          WHERE organization_id = $1 AND event_type = 'developer.webhook.dispatch' AND payload->>'eventType' = 'message.sent'`,
         [orgIdA]
       );
@@ -2372,21 +2389,21 @@ describe("database foundation", () => {
 
       // Verify Org A aggregates exist
       const aggRowsA = await admin.query(
-        "SELECT * FROM wabrix.analytics_aggregates_hourly WHERE organization_id = $1",
+        "SELECT * FROM flowdesk.analytics_aggregates_hourly WHERE organization_id = $1",
         [orgIdA]
       );
       expect(aggRowsA.rows.length).toBeGreaterThanOrEqual(1);
 
       // Verify Org B aggregates are EMPTY (zero cross-tenant leakage!)
       const aggRowsB = await admin.query(
-        "SELECT * FROM wabrix.analytics_aggregates_hourly WHERE organization_id = $1",
+        "SELECT * FROM flowdesk.analytics_aggregates_hourly WHERE organization_id = $1",
         [orgIdB]
       );
       expect(aggRowsB.rows.length).toBe(0);
 
       // Verify watermark is updated
       const watermarkA = await admin.query(
-        "SELECT * FROM wabrix.analytics_watermarks WHERE organization_id = $1",
+        "SELECT * FROM flowdesk.analytics_watermarks WHERE organization_id = $1",
         [orgIdA]
       );
       expect(watermarkA.rows.length).toBe(1);

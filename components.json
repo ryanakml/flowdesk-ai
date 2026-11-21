@@ -10,8 +10,8 @@
     "cssVariables": true
   },
   "aliases": {
-    "components": "@wabrix/ui",
-    "utils": "@wabrix/ui/lib/utils",
-    "ui": "@wabrix/ui"
+    "components": "@flowdesk/ui",
+    "utils": "@flowdesk/ui/lib/utils",
+    "ui": "@flowdesk/ui"
   }
 }

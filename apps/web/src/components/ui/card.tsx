@@ -1,4 +1,4 @@
-import { cn } from "@wabrix/ui";
+import { cn } from "@flowdesk/ui";
 
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (

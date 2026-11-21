@@ -1,6 +1,6 @@
 # M4 real AI draft pipeline testing
 
-This runbook proves the Wabrix M4 path without copying credentials into terminals, logs, screenshots,
+This runbook proves the FlowDesk M4 path without copying credentials into terminals, logs, screenshots,
 issues, or pull requests. The required runtime is Node.js 22 and pnpm 10.
 
 ## 1. Automated local gate
@@ -18,17 +18,17 @@ issues, or pull requests. The required runtime is Node.js 22 and pnpm 10.
 
    ```bash
    pnpm db:migrate
-   pnpm --filter @wabrix/db test:integration
+   pnpm --filter @flowdesk/db test:integration
    ```
 
 5. Run the M4 focused suites:
 
    ```bash
-   pnpm --filter @wabrix/providers test
-   pnpm --filter @wabrix/security test
-   pnpm --filter @wabrix/api test
-   pnpm --filter @wabrix/worker test
-   pnpm --filter @wabrix/web test
+   pnpm --filter @flowdesk/providers test
+   pnpm --filter @flowdesk/security test
+   pnpm --filter @flowdesk/api test
+   pnpm --filter @flowdesk/worker test
+   pnpm --filter @flowdesk/web test
    ```
 
 6. Run the complete repository gate:
@@ -87,14 +87,14 @@ deployment; do not deploy the feature branch manually.
    `AI_PROVIDER=gemini`, `GEMINI_CHAT_MODEL=gemini-3.7-flash`, and
    `GEMINI_EMBEDDING_MODEL=gemini-embedding-2`. OpenAI remains optional through
    `AI_PROVIDER=openai` and its corresponding model settings.
-2. On the staging host, use `sudoedit /opt/wabrix/shared/staging.env` and add only the credential
+2. On the staging host, use `sudoedit /opt/flowdesk/shared/staging.env` and add only the credential
    required by the selected provider. Never print, paste into chat, or export it through a shell
    command. Gemini free-tier proof must contain synthetic data only.
 3. Validate configuration shape without rendering values:
 
    ```bash
-   cd "/opt/wabrix/releases/$(cat /opt/wabrix/shared/current-image)"
-   docker compose --env-file /opt/wabrix/shared/staging.env -f compose.yaml config --quiet
+   cd "/opt/flowdesk/releases/$(cat /opt/flowdesk/shared/current-image)"
+   docker compose --env-file /opt/flowdesk/shared/staging.env -f compose.yaml config --quiet
    ```
 
 4. Merge only after hosted CI is green. Confirm staging `/api/v1/build-info` reports the merge SHA.

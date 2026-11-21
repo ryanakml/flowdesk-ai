@@ -217,7 +217,7 @@ export async function fetchWithAntiSsrf(
         signal: controller.signal,
         redirect: "manual",
         headers: {
-          "User-Agent": "Wabrix-KnowledgeIngestion/1.0 (+https://wabrix.dev)"
+          "User-Agent": "FlowDesk-KnowledgeIngestion/1.0 (+https://flowdesk.dev)"
         }
       });
     } catch (err: unknown) {

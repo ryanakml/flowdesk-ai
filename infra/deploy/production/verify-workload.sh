@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# Wabrix Production Running Workload Verifier (M5-07 / #181, #205)
+# FlowDesk Production Running Workload Verifier (M5-07 / #181, #205)
 # Inspects running ECS tasks / target group targets and asserts they execute the expected sha256 digests.
 # Fails closed if running digests differ from expected immutable digests.
 
@@ -20,8 +20,8 @@ fi
 
 echo "Verifying running container image digests for ${SLICE} workload..."
 
-if [[ "${WABRIX_MOCK_COMPUTE_CONTROLLER:-false}" == "true" ]]; then
-  MOCK_STATE_FILE="${MOCK_WORKLOAD_STATE_FILE:-/tmp/wabrix-workload-mock-state.json}"
+if [[ "${FLOWDESK_MOCK_COMPUTE_CONTROLLER:-false}" == "true" ]]; then
+  MOCK_STATE_FILE="${MOCK_WORKLOAD_STATE_FILE:-/tmp/flowdesk-workload-mock-state.json}"
   if [[ ! -f "${MOCK_STATE_FILE}" ]]; then
     echo "::error::[MOCK] Mock workload state file '${MOCK_STATE_FILE}' not found. Workload not deployed." >&2
     exit 1
@@ -58,7 +58,7 @@ fi
 # Real AWS verification
 AWS_REGION="${AWS_REGION:-ap-southeast-1}"
 ECS_CLUSTER_NAME="${ECS_CLUSTER_NAME:-}"
-ECS_SERVICE_NAME="${ECS_SERVICE_NAME:-wabrix-production-${SLICE}-api}"
+ECS_SERVICE_NAME="${ECS_SERVICE_NAME:-flowdesk-production-${SLICE}-api}"
 
 if [[ -z "${ECS_CLUSTER_NAME}" ]]; then
   echo "::error::ECS_CLUSTER_NAME is required for real workload verification." >&2

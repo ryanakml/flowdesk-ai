@@ -3,7 +3,7 @@
 ## Operator recovery
 
 1. If the inbox says **offline**, keep the tab open and restore network access. Sending is disabled so no draft is submitted into an unknown state.
-2. During **reconnecting**, the last authoritative list remains visible. Wabrix refetches the list and selected thread when connectivity returns.
+2. During **reconnecting**, the last authoritative list remains visible. FlowDesk refetches the list and selected thread when connectivity returns.
 3. If **conversation changed in another session** appears, choose **Reload latest**. Review the new assignment/status/tags before repeating the action.
 4. A failed optimistic text message offers **Retry** (restores its text to the composer) and **Remove**. Retry only after checking current conversation state.
 5. An attachment remains unavailable while scanning. A rejected file must not be renamed or retried to bypass policy; inspect scanner operations instead.

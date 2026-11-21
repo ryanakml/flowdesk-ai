@@ -34,7 +34,7 @@ export async function createWhatsAppEmbeddedSignupAttempt(
     status: WhatsAppEmbeddedSignupAttemptStatus;
     expires_at: Date;
   }>(
-    `INSERT INTO wabrix.whatsapp_embedded_signup_attempts
+    `INSERT INTO flowdesk.whatsapp_embedded_signup_attempts
       (organization_id, created_by_user_id, state_hash, expires_at)
      VALUES ($1, $2, $3, $4)
      RETURNING id, organization_id, status, expires_at`,
@@ -56,7 +56,7 @@ export async function beginWhatsAppEmbeddedSignupAttempt(
     status: WhatsAppEmbeddedSignupAttemptStatus;
     expires_at: Date;
   }>(
-    `UPDATE wabrix.whatsapp_embedded_signup_attempts
+    `UPDATE flowdesk.whatsapp_embedded_signup_attempts
      SET status = 'processing', processing_started_at = clock_timestamp(), updated_at = clock_timestamp()
      WHERE id = $1
        AND organization_id = $2
@@ -75,7 +75,7 @@ export async function completeWhatsAppEmbeddedSignupAttempt(
   input: { id: string; organizationId: string }
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.whatsapp_embedded_signup_attempts
+    `UPDATE flowdesk.whatsapp_embedded_signup_attempts
      SET status = 'completed', completed_at = clock_timestamp(), updated_at = clock_timestamp()
      WHERE id = $1 AND organization_id = $2 AND status = 'processing'`,
     [input.id, input.organizationId]
@@ -87,7 +87,7 @@ export async function failWhatsAppEmbeddedSignupAttempt(
   input: { id: string; organizationId: string; failureCode: string }
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.whatsapp_embedded_signup_attempts
+    `UPDATE flowdesk.whatsapp_embedded_signup_attempts
      SET status = 'failed', failure_code = $3, updated_at = clock_timestamp()
      WHERE id = $1 AND organization_id = $2 AND status = 'processing'`,
     [input.id, input.organizationId, input.failureCode]
@@ -95,7 +95,7 @@ export async function failWhatsAppEmbeddedSignupAttempt(
 }
 
 /**
- * A WABA is owned by one Wabrix tenant. The false result deliberately does
+ * A WABA is owned by one FlowDesk tenant. The false result deliberately does
  * not reveal which tenant owns a conflicting WABA.
  */
 export async function claimWhatsAppBusinessAccount(
@@ -103,7 +103,7 @@ export async function claimWhatsAppBusinessAccount(
   input: { wabaId: string; organizationId: string }
 ): Promise<boolean> {
   const inserted = await db.query<{ waba_id: string }>(
-    `INSERT INTO wabrix.whatsapp_business_accounts (waba_id, organization_id)
+    `INSERT INTO flowdesk.whatsapp_business_accounts (waba_id, organization_id)
      VALUES ($1, $2)
      ON CONFLICT (waba_id) DO NOTHING
      RETURNING waba_id`,
@@ -113,7 +113,7 @@ export async function claimWhatsAppBusinessAccount(
 
   const owned = await db.query<{ waba_id: string }>(
     `SELECT waba_id
-     FROM wabrix.whatsapp_business_accounts
+     FROM flowdesk.whatsapp_business_accounts
      WHERE waba_id = $1 AND organization_id = $2`,
     [input.wabaId, input.organizationId]
   );

@@ -7,10 +7,10 @@ import {
   recordOutboxEventFailure,
   runInTenantTransaction,
   updateAttachmentScanResult
-} from "@wabrix/db";
-import { validateMediaAttachment } from "@wabrix/domain";
-import type { MalwareScanner, ObjectStore } from "@wabrix/providers";
-import { recordMediaLifecycle } from "@wabrix/observability";
+} from "@flowdesk/db";
+import { validateMediaAttachment } from "@flowdesk/domain";
+import type { MalwareScanner, ObjectStore } from "@flowdesk/providers";
+import { recordMediaLifecycle } from "@flowdesk/observability";
 
 export interface ScanAttachmentParams {
   organizationId: string;
@@ -93,7 +93,7 @@ export async function scanQuarantinedAttachment(
       attachmentId,
       status: "rejected",
       quarantineReason: `STORAGE_OBJECT_NOT_FOUND: ${errorMsg}`,
-      scannerName: "wabrix-media-scanner"
+      scannerName: "flowdesk-media-scanner"
     });
 
     return {
@@ -118,7 +118,7 @@ export async function scanQuarantinedAttachment(
       attachmentId,
       status: "rejected",
       quarantineReason: reason,
-      scannerName: "wabrix-media-scanner"
+      scannerName: "flowdesk-media-scanner"
     });
 
     return {
@@ -148,7 +148,7 @@ export async function scanQuarantinedAttachment(
       status: "rejected",
       sha256Checksum: computedHash,
       quarantineReason: reason,
-      scannerName: "wabrix-media-scanner"
+      scannerName: "flowdesk-media-scanner"
     });
 
     return {
@@ -179,7 +179,7 @@ export async function scanQuarantinedAttachment(
       detectedMimeType: validation.detectedMime ?? undefined,
       sha256Checksum: computedHash,
       quarantineReason: reason,
-      scannerName: "wabrix-media-scanner"
+      scannerName: "flowdesk-media-scanner"
     });
 
     return {

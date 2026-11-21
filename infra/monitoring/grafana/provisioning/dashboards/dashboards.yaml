@@ -1,9 +1,9 @@
 apiVersion: 1
 
 providers:
-  - name: "Wabrix Dashboards"
+  - name: "FlowDesk Dashboards"
     orgId: 1
-    folder: "Wabrix"
+    folder: "FlowDesk"
     type: file
     disableDeletion: false
     updateIntervalSeconds: 30

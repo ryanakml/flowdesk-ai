@@ -107,7 +107,7 @@
   ],
   "refresh": "10s",
   "schemaVersion": 39,
-  "tags": ["wabrix", "m1", "security", "telemetry"],
+  "tags": ["flowdesk", "m1", "security", "telemetry"],
   "templating": {
     "list": []
   },
@@ -117,8 +117,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Wabrix M1 Operational & Security Dashboard",
-  "uid": "wabrix-m1-ops",
+  "title": "FlowDesk M1 Operational & Security Dashboard",
+  "uid": "flowdesk-m1-ops",
   "version": 1,
   "weekStart": ""
 }

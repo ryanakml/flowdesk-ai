@@ -1,5 +1,5 @@
 import { Info } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@wabrix/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@flowdesk/ui";
 
 export function MetricLabel({ label, explanation }: { label: string; explanation: string }) {
   return (

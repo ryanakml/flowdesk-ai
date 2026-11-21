@@ -2,10 +2,10 @@ import request from "supertest";
 import { createServer } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadAuthConfig } from "@wabrix/config";
-import type { DbClient } from "@wabrix/db";
-import { MockIdentityProvider } from "@wabrix/providers";
-import { serializeSessionCookie } from "@wabrix/security";
+import { loadAuthConfig } from "@flowdesk/config";
+import type { DbClient } from "@flowdesk/db";
+import { MockIdentityProvider } from "@flowdesk/providers";
+import { serializeSessionCookie } from "@flowdesk/security";
 import { createApiApp } from "./app.js";
 import { createRealtimeServer } from "./realtime.js";
 

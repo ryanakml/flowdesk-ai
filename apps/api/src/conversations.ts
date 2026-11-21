@@ -11,7 +11,7 @@ import {
   MessageSchema,
   TemplatePreviewRequestSchema,
   UpdateConversationRequestSchema
-} from "@wabrix/contracts";
+} from "@flowdesk/contracts";
 import {
   type DbClient,
   createOutboundMessageWithOutbox,
@@ -34,14 +34,14 @@ import {
   performConversationOperation,
   runInTenantTransaction,
   updateConversation
-} from "@wabrix/db";
+} from "@flowdesk/db";
 import {
   type Permission,
   calculateServiceWindow,
   isTemplateApprovedForSending,
   renderTemplate,
   validateTemplateVariables
-} from "@wabrix/domain";
+} from "@flowdesk/domain";
 import { type Request, type Response, Router } from "express";
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createIdempotencyMiddleware } from "./idempotency.js";
@@ -59,7 +59,7 @@ function sendProblem(
   detail: string
 ) {
   const problem: Problem = {
-    type: `https://wabrix.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
+    type: `https://flowdesk.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
     title,
     status,
     code,
@@ -331,9 +331,9 @@ export function createConversationsRouter(options: ConversationsRouterOptions): 
           const result = await runInTenantTransaction(options.db, { organizationId: orgId }, (db) =>
             db.query<{ version: string }>(
               `SELECT GREATEST(
-                   COALESCE((SELECT max(updated_at) FROM wabrix.conversations
+                   COALESCE((SELECT max(updated_at) FROM flowdesk.conversations
                      WHERE organization_id = $1), '-infinity'::timestamptz),
-                   COALESCE((SELECT max(updated_at) FROM wabrix.messages
+                   COALESCE((SELECT max(updated_at) FROM flowdesk.messages
                      WHERE organization_id = $1), '-infinity'::timestamptz)
                  )::text AS version`,
               [orgId]
@@ -923,8 +923,8 @@ export function createConversationsRouter(options: ConversationsRouterOptions): 
            v.status,
            v.components,
            v.variable_count AS "variableCount"
-         FROM wabrix.whatsapp_templates t
-         JOIN wabrix.whatsapp_template_versions v ON v.template_id = t.id
+         FROM flowdesk.whatsapp_templates t
+         JOIN flowdesk.whatsapp_template_versions v ON v.template_id = t.id
          WHERE t.organization_id = $1 AND t.channel_id = $2
          ORDER BY t.name ASC, v.language ASC`,
         [orgId, conversation.channelId]

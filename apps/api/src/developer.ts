@@ -12,8 +12,8 @@ import {
   listWebhookDeliveries,
   recordAuditEvent,
   runInTenantTransaction
-} from "@wabrix/db";
-import { generateApiKey, encryptWebhookSecret, validateWebhookUrl } from "@wabrix/security";
+} from "@flowdesk/db";
+import { generateApiKey, encryptWebhookSecret, validateWebhookUrl } from "@flowdesk/security";
 
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createRequireOrgPermissionMiddleware } from "./organizations.js";
@@ -38,7 +38,7 @@ function sendProblem(
   instance?: string
 ): Response {
   return response.status(status).json({
-    type: `https://wabrix.dev/errors/${status}`,
+    type: `https://flowdesk.dev/errors/${status}`,
     title,
     status,
     detail,
@@ -306,7 +306,7 @@ export function createDeveloperRouter(options: DeveloperRouterOptions): Router {
         const encryptionKey =
           options.encryptionKey ??
           process.env["ENCRYPTION_KEY"] ??
-          "wabrix-local-dev-encryption-key-32b";
+          "flowdesk-local-dev-encryption-key-32b";
         const encryptedSecret = encryptWebhookSecret(rawSecret, encryptionKey);
 
         const sub = await runInTenantTransaction(
@@ -375,11 +375,11 @@ export function createDeveloperRouter(options: DeveloperRouterOptions): Router {
               timestamp: new Date().toISOString(),
               organizationId: orgId,
               subscriptionId: webhookId,
-              message: "Wabrix developer webhook test ping"
+              message: "FlowDesk developer webhook test ping"
             };
 
             await db.query(
-              `INSERT INTO wabrix.outbox_events
+              `INSERT INTO flowdesk.outbox_events
                (organization_id, aggregate_type, aggregate_id, event_type, schema_version, payload)
                VALUES ($1, 'webhook_subscription', $2, 'developer.webhook.dispatch', 1, $3::jsonb)`,
               [

@@ -1,5 +1,5 @@
-import type { AiRuntimeConfig } from "@wabrix/config";
-import { createAiProviderRuntime, type AiProviderRuntime } from "@wabrix/providers";
+import type { AiRuntimeConfig } from "@flowdesk/config";
+import { createAiProviderRuntime, type AiProviderRuntime } from "@flowdesk/providers";
 
 export type AiRuntime = AiProviderRuntime;
 

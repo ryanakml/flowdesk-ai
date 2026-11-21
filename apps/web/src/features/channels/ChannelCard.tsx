@@ -19,7 +19,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 import { Card } from "../../components/ui/card.js";
 import type { ChannelClientRecord } from "../../api.js";
 import { WhatsAppIcon } from "./WhatsAppIcon.js";

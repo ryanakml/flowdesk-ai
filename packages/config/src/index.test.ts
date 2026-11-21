@@ -163,8 +163,8 @@ describe("loadChannelEncryptionConfig", () => {
 describe("loadWebhookConfig", () => {
   it("allows local defaults but rejects defaults and placeholders in staging", () => {
     expect(loadWebhookConfig({})).toEqual({
-      WEBHOOK_VERIFY_TOKEN: "wabrix_webhook_verify_token_default",
-      WEBHOOK_APP_SECRET: "wabrix_webhook_app_secret_default"
+      WEBHOOK_VERIFY_TOKEN: "flowdesk_webhook_verify_token_default",
+      WEBHOOK_APP_SECRET: "flowdesk_webhook_app_secret_default"
     });
     expect(() => loadWebhookConfig({ APP_ENV: "staging" })).toThrow();
     expect(() =>
@@ -211,11 +211,11 @@ describe("loadMetaEmbeddedSignupConfig", () => {
   it("treats deployment placeholders as disabled instead of usable credentials", () => {
     expect(
       loadMetaEmbeddedSignupConfig({
-        META_APP_ID: "replace-with-wabrix-meta-app-id",
-        META_APP_SECRET: "replace-with-wabrix-meta-app-secret",
+        META_APP_ID: "replace-with-flowdesk-meta-app-id",
+        META_APP_SECRET: "replace-with-flowdesk-meta-app-secret",
         META_EMBEDDED_SIGNUP_CONFIG_ID: "replace-with-meta-embedded-signup-config-id",
-        META_SYSTEM_USER_ACCESS_TOKEN: "replace-with-wabrix-system-user-access-token",
-        META_SYSTEM_USER_ID: "replace-with-wabrix-system-user-id",
+        META_SYSTEM_USER_ACCESS_TOKEN: "replace-with-flowdesk-system-user-access-token",
+        META_SYSTEM_USER_ID: "replace-with-flowdesk-system-user-id",
         META_ADMIN_SYSTEM_USER_ACCESS_TOKEN: "replace-with-business-admin-system-user-access-token"
       })
     ).toBeUndefined();

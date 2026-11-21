@@ -58,11 +58,11 @@
   ],
   "refresh": "10s",
   "schemaVersion": 39,
-  "tags": ["wabrix", "m2", "whatsapp", "messaging"],
+  "tags": ["flowdesk", "m2", "whatsapp", "messaging"],
   "templating": { "list": [] },
   "time": { "from": "now-1h", "to": "now" },
   "timezone": "browser",
-  "title": "Wabrix M2 Messaging Operations",
-  "uid": "wabrix-m2-messaging",
+  "title": "FlowDesk M2 Messaging Operations",
+  "uid": "flowdesk-m2-messaging",
   "version": 1
 }

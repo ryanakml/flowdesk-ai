@@ -1,4 +1,4 @@
-# Wabrix M5 Consolidated Staging Test Plan
+# FlowDesk M5 Consolidated Staging Test Plan
 
 This document establishes the unified, end-to-end staging validation procedure covering all five Milestone 5 capabilities:
 
@@ -14,14 +14,14 @@ This document establishes the unified, end-to-end staging validation procedure c
 
 Before commencing the staging test suite, ensure the staging environment matches the production topology:
 
-| Component                 | Staging Specification                    | Verification Method                                      |
-| :------------------------ | :--------------------------------------- | :------------------------------------------------------- |
-| **Database**              | PostgreSQL 16 + pgvector, RLS enabled    | `pnpm --filter @wabrix/db test:integration`              |
-| **Schema Migrations**     | Migrations 0001 through 0031 applied     | Query `wabrix_meta.schema_migrations` count = 31         |
-| **API Cluster**           | 2x Node.js instances behind ALB          | `curl -f https://api.staging.wabrix.internal/healthz`    |
-| **Worker Cluster**        | 2x Node.js workers processing outbox     | `curl -f https://worker.staging.wabrix.internal/healthz` |
-| **Observability**         | Prometheus + Alertmanager + Grafana      | Dashboard `wabrix-m5-slo-dashboard` loaded               |
-| **Test WhatsApp Channel** | Sandbox Cloud API credentials configured | Verify channel status = `active`                         |
+| Component                 | Staging Specification                    | Verification Method                                        |
+| :------------------------ | :--------------------------------------- | :--------------------------------------------------------- |
+| **Database**              | PostgreSQL 16 + pgvector, RLS enabled    | `pnpm --filter @flowdesk/db test:integration`              |
+| **Schema Migrations**     | Migrations 0001 through 0031 applied     | Query `flowdesk_meta.schema_migrations` count = 31         |
+| **API Cluster**           | 2x Node.js instances behind ALB          | `curl -f https://api.staging.flowdesk.internal/healthz`    |
+| **Worker Cluster**        | 2x Node.js workers processing outbox     | `curl -f https://worker.staging.flowdesk.internal/healthz` |
+| **Observability**         | Prometheus + Alertmanager + Grafana      | Dashboard `flowdesk-m5-slo-dashboard` loaded               |
+| **Test WhatsApp Channel** | Sandbox Cloud API credentials configured | Verify channel status = `active`                           |
 
 ---
 
@@ -29,13 +29,13 @@ Before commencing the staging test suite, ensure the staging environment matches
 
 ### Test 1.1: Global Killswitch Emergency Halt
 
-- **Objective**: Verify that setting `WABRIX_GLOBAL_KILLSWITCH=true` immediately halts all autonomous sending across all organizations without dropping inbound messages.
+- **Objective**: Verify that setting `FLOWDESK_GLOBAL_KILLSWITCH=true` immediately halts all autonomous sending across all organizations without dropping inbound messages.
 - **Action**:
-  1. Set environment variable `WABRIX_GLOBAL_KILLSWITCH=true` on worker deployment.
+  1. Set environment variable `FLOWDESK_GLOBAL_KILLSWITCH=true` on worker deployment.
   2. Send qualified FAQ inbound message from customer WhatsApp phone.
 - **Expected Outcome**:
-  - Inbound message is received and stored in `wabrix.messages`.
-  - Bot draft is generated and stored in `wabrix.bot_runs`.
+  - Inbound message is received and stored in `flowdesk.messages`.
+  - Bot draft is generated and stored in `flowdesk.bot_runs`.
   - Worker evaluates `auto_send` and denies dispatch: `reason: "Global killswitch is active"`.
   - Outbound message is **NOT** sent. Message appears in operator inbox as suggested draft.
   - Zero duplicate messages; zero dropped customer inbound events.
@@ -49,7 +49,7 @@ Before commencing the staging test suite, ensure the staging environment matches
 - **Expected Outcome**:
   - `bot_configs.emergency_disabled` updates to `TRUE`.
   - Bot run is generated with `status = 'completed'`, but auto-send evaluation denies with `emergency_disabled is true`.
-  - Audit event `bot:emergency-stop:toggled` is recorded in `wabrix.audit_events`.
+  - Audit event `bot:emergency-stop:toggled` is recorded in `flowdesk.audit_events`.
 
 ### Test 1.3: Human Takeover Preemption
 
@@ -99,7 +99,7 @@ Before commencing the staging test suite, ensure the staging environment matches
   2. Supply mock conversation: intent = `billing_dispute`, channel = `whatsapp`, hour = 14:00.
 - **Expected Outcome**:
   - Simulator returns evaluation result: `matched: false`, `reason: "Prohibited intent: billing_dispute"`.
-  - Zero rows inserted into `wabrix.messages` or `wabrix.outbox_events`.
+  - Zero rows inserted into `flowdesk.messages` or `flowdesk.outbox_events`.
   - Detailed condition evaluation trace returned in response.
 
 ### Test 2.3: Decision Trace Retention in Routing Logs
@@ -107,7 +107,7 @@ Before commencing the staging test suite, ensure the staging environment matches
 - **Objective**: Verify every automated or rejected routing decision is stored with full step-by-step trace.
 - **Action**:
   1. Trigger inbound customer message.
-  2. Query `wabrix.routing_logs` for `conversation_id`.
+  2. Query `flowdesk.routing_logs` for `conversation_id`.
 - **Expected Outcome**:
   - Record contains `matched_policy_id`, `policy_version`, `conditions_evaluated` JSON array, and `action_taken`.
   - Full auditability for why a message was auto-replied or escalated to human.
@@ -120,9 +120,9 @@ Before commencing the staging test suite, ensure the staging environment matches
 
 - **Objective**: Verify all 6 M5 SLO indicators are actively exported.
 - **Action**:
-  1. Query `https://api.staging.wabrix.internal/metrics`.
+  1. Query `https://api.staging.flowdesk.internal/metrics`.
 - **Expected Outcome**:
-  - `wabrix_http_requests_total`, `wabrix_inbound_webhook_duration_seconds`, `wabrix_outbox_queue_lag_seconds`, `wabrix_ai_draft_run_duration_seconds`, `wabrix_auto_send_events_total` are present with appropriate labels.
+  - `flowdesk_http_requests_total`, `flowdesk_inbound_webhook_duration_seconds`, `flowdesk_outbox_queue_lag_seconds`, `flowdesk_ai_draft_run_duration_seconds`, `flowdesk_auto_send_events_total` are present with appropriate labels.
   - Alert rules are registered in Prometheus rules API.
 
 ### Test 3.2: Drill 1 - Database Connection Pool Exhaustion
@@ -135,7 +135,7 @@ Before commencing the staging test suite, ensure the staging environment matches
 
 - **Objective**: Verify multi-tier rate limiting protects API and outbound dispatch.
 - **Action**: Send 120 requests within 1 minute from single IP.
-- **Expected Outcome**: 429 Too Many Requests returned; Prometheus counter `wabrix_rate_limit_exceeded_total` increments.
+- **Expected Outcome**: 429 Too Many Requests returned; Prometheus counter `flowdesk_rate_limit_exceeded_total` increments.
 
 ### Test 3.4: Drill 3 - Worker Crash & Outbox Redrive
 
@@ -185,7 +185,7 @@ Before commencing the staging test suite, ensure the staging environment matches
 ### Test 4.5: Automated Rollback on Canary Failure
 
 - **Action**: Inject simulated 500 errors into canary target group while at 25% traffic.
-- **Expected Outcome**: CloudWatch alarm `wabrix-prod-canary-high-error-rate` fires; automated rollback triggers; canary traffic immediately resets to 0%; stable slice handles 100% of traffic.
+- **Expected Outcome**: CloudWatch alarm `flowdesk-prod-canary-high-error-rate` fires; automated rollback triggers; canary traffic immediately resets to 0%; stable slice handles 100% of traffic.
 
 ### Test 4.6: Immutable Deployment Record Retention
 

@@ -6,13 +6,13 @@ import {
   computeWebhookSignature,
   verifyWebhookSignature,
   hasRequiredScope
-} from "@wabrix/security";
+} from "@flowdesk/security";
 import {
   getAnalyticsOverview,
   getVolumeTimeSeries,
   aggregateHourlyMetricsForOrg,
   type DbClient
-} from "@wabrix/db";
+} from "@flowdesk/db";
 import { dispatchDeveloperWebhook } from "./webhook-dispatch.js";
 
 const testWebhookSecret = (seed = "test") => `whsec_${seed.padEnd(32, "x")}`;
@@ -78,7 +78,7 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
         async query(sql: string) {
           await Promise.resolve();
           queries.push(sql);
-          if (sql.includes("wabrix.webhook_deliveries") && sql.includes("INSERT")) {
+          if (sql.includes("flowdesk.webhook_deliveries") && sql.includes("INSERT")) {
             return {
               rows: [
                 {
@@ -153,7 +153,7 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
 
       // Verify delivery outcome update was performed
-      const updateQuery = queries.find((q) => q.includes("UPDATE wabrix.webhook_deliveries"));
+      const updateQuery = queries.find((q) => q.includes("UPDATE flowdesk.webhook_deliveries"));
       expect(updateQuery).toBeDefined();
     });
 
@@ -161,7 +161,7 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
       const mockDb: DbClient = {
         async query(sql: string) {
           await Promise.resolve();
-          if (sql.includes("wabrix.webhook_deliveries") && sql.includes("INSERT")) {
+          if (sql.includes("flowdesk.webhook_deliveries") && sql.includes("INSERT")) {
             return {
               rows: [
                 {
@@ -251,7 +251,7 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
               fields: []
             };
           }
-          if (sql.includes("FROM wabrix.messages") && sql.includes("date_trunc")) {
+          if (sql.includes("FROM flowdesk.messages") && sql.includes("date_trunc")) {
             return {
               rows: [
                 {
@@ -268,7 +268,7 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
               fields: []
             };
           }
-          if (sql.includes("FROM wabrix.conversations") && sql.includes("date_trunc")) {
+          if (sql.includes("FROM flowdesk.conversations") && sql.includes("date_trunc")) {
             return {
               rows: [
                 {
@@ -297,10 +297,10 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
       expect(upsertedCount).toBeGreaterThanOrEqual(1);
 
       // Verify aggregate insert and watermark advance occurred
-      const insertAgg = queries.find((q) => q.includes("wabrix.analytics_aggregates_hourly"));
+      const insertAgg = queries.find((q) => q.includes("flowdesk.analytics_aggregates_hourly"));
       expect(insertAgg).toBeDefined();
 
-      const advanceWatermark = queries.find((q) => q.includes("wabrix.analytics_watermarks"));
+      const advanceWatermark = queries.find((q) => q.includes("flowdesk.analytics_watermarks"));
       expect(advanceWatermark).toBeDefined();
     });
 
@@ -309,7 +309,7 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
       const mockDb: DbClient = {
         async query(sql: string) {
           await Promise.resolve();
-          if (sql.includes("wabrix.conversations")) {
+          if (sql.includes("flowdesk.conversations")) {
             return {
               rows: [{ total: "120", open: "15", assigned: "70", resolved: "105" }],
               rowCount: 1,
@@ -318,7 +318,7 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
               fields: []
             };
           }
-          if (sql.includes("wabrix.messages") && sql.includes("GROUP BY")) {
+          if (sql.includes("flowdesk.messages") && sql.includes("GROUP BY")) {
             return {
               rows: [
                 { day: "2026-08-29", inbound: "100", outbound: "80", bot: "60" },
@@ -330,7 +330,7 @@ describe("Milestone 6 End-to-End Community Platform Suite (M6-06)", () => {
               fields: []
             };
           }
-          if (sql.includes("wabrix.messages")) {
+          if (sql.includes("flowdesk.messages")) {
             return {
               rows: [{ total: "450", inbound: "250", outbound: "200", bot: "300", human: "150" }],
               rowCount: 1,

@@ -1,4 +1,4 @@
-# Wabrix - Enterprise Product, Engineering, Security, and Operations Specification
+# FlowDesk - Enterprise Product, Engineering, Security, and Operations Specification
 
 **Status:** authoritative build manual  
 **Version:** 3.0.0  
@@ -6,7 +6,7 @@
 **Last updated:** 25 August 2026  
 **Project state:** pre-development, build-ready planning
 
-> Dokumen ini bukan proposal singkat, bukan PRD ringan, dan bukan blueprint high-level. Dokumen ini adalah spesifikasi implementasi menyeluruh untuk membangun Wabrix dari nol sampai siap dijual, dioperasikan, diaudit, dan di-scale sebagai SaaS enterprise.
+> Dokumen ini bukan proposal singkat, bukan PRD ringan, dan bukan blueprint high-level. Dokumen ini adalah spesifikasi implementasi menyeluruh untuk membangun FlowDesk dari nol sampai siap dijual, dioperasikan, diaudit, dan di-scale sebagai SaaS enterprise.
 
 ---
 
@@ -20,7 +20,7 @@ Dokumen ini menjadi acuan utama untuk:
 4. mendefinisikan standar engineering, security, dan operasional,
 5. memastikan hasil akhir bukan demo, tetapi platform yang layak dipakai pelanggan berbayar.
 
-Yang dimaksud "selesai" untuk Wabrix bukan hanya:
+Yang dimaksud "selesai" untuk FlowDesk bukan hanya:
 
 - UI tampil,
 - API bisa di-hit,
@@ -44,7 +44,7 @@ Yang dimaksud "selesai" adalah:
 
 ## 2. Definisi Produk
 
-Wabrix adalah platform otomasi komunikasi bisnis berbasis **WhatsApp Business Platform (Cloud API)** untuk organisasi multi-tenant. Fokus utamanya adalah:
+FlowDesk adalah platform otomasi komunikasi bisnis berbasis **WhatsApp Business Platform (Cloud API)** untuk organisasi multi-tenant. Fokus utamanya adalah:
 
 - menerima dan memproses percakapan customer secara real-time,
 - memberi tim operasional inbox bersama untuk menangani percakapan,
@@ -52,7 +52,7 @@ Wabrix adalah platform otomasi komunikasi bisnis berbasis **WhatsApp Business Pl
 - menjaga kontrol manusia penuh terhadap automasi,
 - menyediakan auditability, reliability, dan operability level enterprise.
 
-Wabrix **bukan**:
+FlowDesk **bukan**:
 
 - WhatsApp mod/unofficial client,
 - browser automation untuk akun WhatsApp personal,
@@ -76,7 +76,7 @@ Semua constraint resmi dari Meta harus dianggap sebagai aturan sistem:
 
 ### 3.1 Outcome bisnis yang harus dicapai
 
-Wabrix harus memungkinkan pelanggan:
+FlowDesk harus memungkinkan pelanggan:
 
 - menurunkan waktu respons pertama,
 - mengurangi beban manual agent,
@@ -95,7 +95,7 @@ Target awal yang masuk akal:
 
 ### 3.3 Positioning produk
 
-Wabrix harus diposisikan sebagai:
+FlowDesk harus diposisikan sebagai:
 
 - official WhatsApp operation platform,
 - AI-assisted team inbox,
@@ -104,7 +104,7 @@ Wabrix harus diposisikan sebagai:
 
 ### 3.4 Packaging komersial minimum
 
-Sebelum produk dijual, Wabrix harus sudah punya definisi:
+Sebelum produk dijual, FlowDesk harus sudah punya definisi:
 
 - paket harga,
 - kuota seat,
@@ -207,7 +207,7 @@ Contoh permission:
 
 ### 6.1 Scope GA
 
-Wabrix GA harus mencakup:
+FlowDesk GA harus mencakup:
 
 - organization onboarding,
 - official WhatsApp channel connection,
@@ -576,7 +576,7 @@ Untuk enterprise readiness, **membangun auth sepenuhnya sendiri bukan prioritas 
 - gunakan provider identity enterprise seperti WorkOS/Auth0/OIDC,
 - simpan local credential flow hanya jika memang dibutuhkan oleh market awal,
 - session aplikasi tetap dikontrol di backend,
-- permission bisnis tetap menjadi tanggung jawab Wabrix.
+- permission bisnis tetap menjadi tanggung jawab FlowDesk.
 
 ### 10.4 Catatan Go
 
@@ -587,7 +587,7 @@ Service `ingress-go` opsional hanya dibuat jika load test membuktikan ingress Ex
 ## 11. Standar Monorepo dan Struktur Direktori
 
 ```text
-wabrix/
+flowdesk/
 ├── apps/
 │   ├── web/
 │   ├── api/
@@ -1060,7 +1060,7 @@ Setiap message perlu melacak:
 
 #### Catatan penting
 
-Wabrix tidak boleh menganggap template lokal pasti approved.
+FlowDesk tidak boleh menganggap template lokal pasti approved.
 Sumber kebenaran approval tetap provider.
 
 ### 14.8 Knowledge management
@@ -1390,7 +1390,7 @@ BullMQ sifatnya at-least-once. Karena itu:
 
 ### 16.4 Reconciliation wajib
 
-Wabrix wajib punya job terjadwal untuk:
+FlowDesk wajib punya job terjadwal untuk:
 
 - re-enqueue raw webhook yang belum terproses,
 - memeriksa outbox unpublished,
@@ -1584,7 +1584,7 @@ Wajib punya:
 
 ### 20.1 Security baseline
 
-Sebelum GA, Wabrix harus memiliki:
+Sebelum GA, FlowDesk harus memiliki:
 
 - threat model STRIDE,
 - secret management terpusat,
@@ -2099,7 +2099,7 @@ Fitur dianggap done hanya jika:
 
 ### 27.1 Realita timeline
 
-Membangun Wabrix sebagai produk enterprise-ready tidak realistis jika diposisikan sebagai proyek 30 hari. Versi demo mungkin bisa. Versi buildable dan sellable membutuhkan fase yang lebih matang.
+Membangun FlowDesk sebagai produk enterprise-ready tidak realistis jika diposisikan sebagai proyek 30 hari. Versi demo mungkin bisa. Versi buildable dan sellable membutuhkan fase yang lebih matang.
 
 ### 27.2 Milestone yang masuk akal
 
@@ -2292,7 +2292,7 @@ Weekly ops review membahas:
 
 ### 31.3 Prinsip
 
-Wabrix tidak boleh baru sadar mahal setelah production. Cost harus jadi bagian dari design decision sejak awal.
+FlowDesk tidak boleh baru sadar mahal setelah production. Cost harus jadi bagian dari design decision sejak awal.
 
 ---
 
@@ -2361,14 +2361,14 @@ Tanpa keputusan ini, tim akan tersendat di tengah implementasi.
 
 ## 35. Kesimpulan Implementasi
 
-Wabrix yang benar-benar siap dijual dan dipakai tidak boleh diperlakukan sebagai:
+FlowDesk yang benar-benar siap dijual dan dipakai tidak boleh diperlakukan sebagai:
 
 - landing page + chatbot demo,
 - backend CRUD biasa,
 - WhatsApp wrapper tipis,
 - dashboard tanpa operational backbone.
 
-Wabrix harus dibangun sebagai:
+FlowDesk harus dibangun sebagai:
 
 - SaaS multi-tenant yang disiplin,
 - messaging platform yang reliabel,
@@ -2395,7 +2395,7 @@ DATABASE_URL=postgresql://...
 DATABASE_POOL_MAX=20
 REDIS_URL=redis://...
 
-S3_BUCKET=wabrix-local
+S3_BUCKET=flowdesk-local
 S3_REGION=ap-southeast-1
 S3_ENDPOINT=http://localhost:9000
 S3_FORCE_PATH_STYLE=true

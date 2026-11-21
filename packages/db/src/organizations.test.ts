@@ -35,15 +35,15 @@ function createMockDb(): DbClient {
   >();
 
   // Pre-populate users
-  users.set("u1", { id: "u1", email: "alice@wabrix.dev", displayName: "Alice" });
-  users.set("u2", { id: "u2", email: "bob@wabrix.dev", displayName: "Bob" });
+  users.set("u1", { id: "u1", email: "alice@flowdesk.dev", displayName: "Alice" });
+  users.set("u2", { id: "u2", email: "bob@flowdesk.dev", displayName: "Bob" });
 
   return {
     async query(queryText: string, values: unknown[] = []) {
       await Promise.resolve();
       const sql = queryText.replace(/\s+/g, " ").trim();
 
-      // SELECT * FROM wabrix.bootstrap_organization($1, $2, $3)
+      // SELECT * FROM flowdesk.bootstrap_organization($1, $2, $3)
       if (sql.includes("bootstrap_organization")) {
         const [slug, name, userId] = values as [string, string, string];
         const orgId = `org-${orgs.size + 1}`;
@@ -105,8 +105,8 @@ function createMockDb(): DbClient {
         };
       }
 
-      // SELECT id FROM wabrix.roles WHERE organization_id = $1 AND key = $2
-      if (sql.includes("FROM wabrix.roles WHERE organization_id = $1 AND key = $2")) {
+      // SELECT id FROM flowdesk.roles WHERE organization_id = $1 AND key = $2
+      if (sql.includes("FROM flowdesk.roles WHERE organization_id = $1 AND key = $2")) {
         const [orgId, key] = values as [string, string];
         for (const role of roles.values()) {
           if (role.orgId === orgId && role.key === key) {
@@ -116,8 +116,8 @@ function createMockDb(): DbClient {
         return { rows: [] };
       }
 
-      // INSERT INTO wabrix.invitations
-      if (sql.includes("INSERT INTO wabrix.invitations")) {
+      // INSERT INTO flowdesk.invitations
+      if (sql.includes("INSERT INTO flowdesk.invitations")) {
         const [orgId, email, roleId, tokenHash, , expiresAt] = values as [
           string,
           string,
@@ -139,7 +139,7 @@ function createMockDb(): DbClient {
         return { rows: [{ id, status: "pending", expires_at: expiresAt }] };
       }
 
-      // SELECT * FROM wabrix.consume_invitation($1, $2)
+      // SELECT * FROM flowdesk.consume_invitation($1, $2)
       if (sql.includes("consume_invitation")) {
         const [tokenHash, userId] = values as [string, string];
         for (const inv of invitations.values()) {
@@ -172,8 +172,8 @@ function createMockDb(): DbClient {
         return { rows: [] };
       }
 
-      // UPDATE wabrix.invitations (revoke)
-      if (sql.includes("UPDATE wabrix.invitations") && sql.includes("status = 'revoked'")) {
+      // UPDATE flowdesk.invitations (revoke)
+      if (sql.includes("UPDATE flowdesk.invitations") && sql.includes("status = 'revoked'")) {
         const [orgId, invId] = values as [string, string];
         const inv = invitations.get(invId);
         if (inv && inv.orgId === orgId && inv.status === "pending") {
@@ -183,8 +183,8 @@ function createMockDb(): DbClient {
         return { rowCount: 0 };
       }
 
-      // SELECT count(*) AS count FROM wabrix.memberships m JOIN wabrix.roles r ...
-      if (sql.includes("count(*) AS count FROM wabrix.memberships")) {
+      // SELECT count(*) AS count FROM flowdesk.memberships m JOIN flowdesk.roles r ...
+      if (sql.includes("count(*) AS count FROM flowdesk.memberships")) {
         const [orgId] = values as [string];
         let count = 0;
         for (const mem of memberships.values()) {
@@ -198,10 +198,10 @@ function createMockDb(): DbClient {
         return { rows: [{ count }] };
       }
 
-      // SELECT r.key AS role_key, m.status FROM wabrix.memberships m JOIN wabrix.roles r ...
+      // SELECT r.key AS role_key, m.status FROM flowdesk.memberships m JOIN flowdesk.roles r ...
       if (
         sql.includes(
-          "FROM wabrix.memberships m JOIN wabrix.roles r ON m.role_id = r.id WHERE m.organization_id = $1 AND m.id = $2"
+          "FROM flowdesk.memberships m JOIN flowdesk.roles r ON m.role_id = r.id WHERE m.organization_id = $1 AND m.id = $2"
         )
       ) {
         const [orgId, memId] = values as [string, string];
@@ -213,7 +213,7 @@ function createMockDb(): DbClient {
         return { rows: [] };
       }
 
-      // SELECT m.id, r.key AS role_key, m.status FROM wabrix.memberships m JOIN wabrix.roles r WHERE m.organization_id = $1 AND m.user_id = $2 AND m.status = 'active'
+      // SELECT m.id, r.key AS role_key, m.status FROM flowdesk.memberships m JOIN flowdesk.roles r WHERE m.organization_id = $1 AND m.user_id = $2 AND m.status = 'active'
       if (sql.includes("WHERE m.organization_id = $1 AND m.user_id = $2 AND m.status = 'active'")) {
         const [orgId, userId] = values as [string, string];
         for (const mem of memberships.values()) {
@@ -225,10 +225,10 @@ function createMockDb(): DbClient {
         return { rows: [] };
       }
 
-      // SELECT m.id, m.user_id, u.email, u.display_name, r.key AS role_key ... FROM wabrix.memberships
+      // SELECT m.id, m.user_id, u.email, u.display_name, r.key AS role_key ... FROM flowdesk.memberships
       if (
         sql.includes(
-          "FROM wabrix.memberships m JOIN wabrix.users u ON m.user_id = u.id JOIN wabrix.roles r ON m.role_id = r.id"
+          "FROM flowdesk.memberships m JOIN flowdesk.users u ON m.user_id = u.id JOIN flowdesk.roles r ON m.role_id = r.id"
         )
       ) {
         const [orgId] = values as [string];
@@ -252,7 +252,7 @@ function createMockDb(): DbClient {
         return { rows };
       }
 
-      // SELECT * FROM wabrix.list_user_organizations($1)
+      // SELECT * FROM flowdesk.list_user_organizations($1)
       if (sql.includes("list_user_organizations")) {
         const [userId] = values as [string];
         const rows: unknown[] = [];
@@ -274,8 +274,8 @@ function createMockDb(): DbClient {
         return { rows };
       }
 
-      // UPDATE wabrix.memberships SET role_id = $1
-      if (sql.includes("UPDATE wabrix.memberships SET role_id = $1")) {
+      // UPDATE flowdesk.memberships SET role_id = $1
+      if (sql.includes("UPDATE flowdesk.memberships SET role_id = $1")) {
         const [newRoleId, orgId, memId] = values as [string, string, string];
         const mem = memberships.get(memId);
         if (mem && mem.orgId === orgId) {
@@ -285,8 +285,8 @@ function createMockDb(): DbClient {
         return { rowCount: 0 };
       }
 
-      // UPDATE wabrix.memberships SET status = 'revoked'
-      if (sql.includes("UPDATE wabrix.memberships SET status = 'revoked'")) {
+      // UPDATE flowdesk.memberships SET status = 'revoked'
+      if (sql.includes("UPDATE flowdesk.memberships SET status = 'revoked'")) {
         const [orgId, memId] = values as [string, string];
         const mem = memberships.get(memId);
         if (mem && mem.orgId === orgId && mem.status !== "revoked") {
@@ -329,13 +329,13 @@ describe("Organizations and Memberships DB repository (M1-05)", () => {
   it("creates, accepts, and revokes invitations", async () => {
     const invite = await createInvitation(db, {
       organizationId: orgId,
-      email: "bob@wabrix.dev",
+      email: "bob@flowdesk.dev",
       roleKey: "agent",
       tokenHash: "invite-token-hash-1",
       invitedByUserId: "u1"
     });
 
-    expect(invite.email).toBe("bob@wabrix.dev");
+    expect(invite.email).toBe("bob@flowdesk.dev");
     expect(invite.roleKey).toBe("agent");
     expect(invite.status).toBe("pending");
 
@@ -355,7 +355,7 @@ describe("Organizations and Memberships DB repository (M1-05)", () => {
     // Creating another invite to test revocation
     const invite2 = await createInvitation(db, {
       organizationId: orgId,
-      email: "carol@wabrix.dev",
+      email: "carol@flowdesk.dev",
       roleKey: "analyst",
       tokenHash: "invite-token-hash-2",
       invitedByUserId: "u1"
@@ -378,9 +378,9 @@ describe("Organizations and Memberships DB repository (M1-05)", () => {
   it("lists active members of the organization", async () => {
     const members = await listMemberships(db, orgId);
     expect(members.length).toBe(2);
-    expect(members[0]?.email).toBe("alice@wabrix.dev");
+    expect(members[0]?.email).toBe("alice@flowdesk.dev");
     expect(members[0]?.roleKey).toBe("owner");
-    expect(members[1]?.email).toBe("bob@wabrix.dev");
+    expect(members[1]?.email).toBe("bob@flowdesk.dev");
     expect(members[1]?.roleKey).toBe("agent");
   });
 
@@ -405,7 +405,7 @@ describe("Organizations and Memberships DB repository (M1-05)", () => {
 
   it("allows updating role of non-owner members", async () => {
     const members = await listMemberships(db, orgId);
-    const bob = members.find((m) => m.email === "bob@wabrix.dev")!;
+    const bob = members.find((m) => m.email === "bob@flowdesk.dev")!;
 
     const updated = await updateMembershipRole(db, {
       organizationId: orgId,

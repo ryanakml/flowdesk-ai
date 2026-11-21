@@ -2,7 +2,7 @@
 
 ## Overview
 
-Wabrix provides contract-first API primitives ensuring stable, secure, attributable, and reproducible interactions across the multi-tenant core.
+FlowDesk provides contract-first API primitives ensuring stable, secure, attributable, and reproducible interactions across the multi-tenant core.
 
 ## 1. Cursor Pagination Primitives
 
@@ -34,7 +34,7 @@ Wabrix provides contract-first API primitives ensuring stable, secure, attributa
 
 All API errors return `application/problem+json` with standard fields:
 
-- `type`: URI identifying the error type (`https://wabrix.dev/problems/...`).
+- `type`: URI identifying the error type (`https://flowdesk.dev/problems/...`).
 - `title`: Short human-readable summary.
 - `status`: HTTP status code (400–599).
 - `code`: Machine-readable error code string.
@@ -43,13 +43,13 @@ All API errors return `application/problem+json` with standard fields:
 
 ## 4. Audit Logging
 
-- **Attribution**: Security-sensitive operations emit immutable audit records into `wabrix.audit_logs`:
+- **Attribution**: Security-sensitive operations emit immutable audit records into `flowdesk.audit_logs`:
   - `organization_id`, `actor_user_id`, `action`, `target_type`, `target_id`, `result`, `correlation_id`, `metadata`, `occurred_at`.
 - **Secret Redaction**: `redactSensitiveMetadata` sanitizes metadata before persistence. Any key matching passwords, tokens, secrets, cookies, or credentials is automatically masked with `[REDACTED]`.
 - **Viewer Route**: `GET /api/v1/organizations/:orgId/audit-logs` provides cursor-paginated audit history and is strictly restricted to roles with `audit:view` capability (`owner`, `admin`, `analyst`).
 
 ## 5. OpenAPI 3.1 Contract & Drift Detection
 
-- **Specification Source**: Generated from `@wabrix/contracts` definitions into `docs/api/openapi.json`.
+- **Specification Source**: Generated from `@flowdesk/contracts` definitions into `docs/api/openapi.json`.
 - **Generation Command**: `pnpm openapi:generate`
 - **Drift Verification**: `pnpm openapi:check` runs during `pnpm verify` and hosted CI. Any discrepancy between contracts and `openapi.json` fails the build immediately.

@@ -8,15 +8,15 @@ import {
   MICROCENTS_PER_CENT,
   recordAuditEvent,
   resolveAutomationSafety
-} from "@wabrix/db";
+} from "@flowdesk/db";
 import {
   validateAutoSendPolicy,
   appendAiDisclaimer,
   calculateServiceWindow,
   DEFAULT_MIN_CONFIDENCE_THRESHOLD,
   type PreSendValidationContext
-} from "@wabrix/domain";
-import { recordAutoSendOutcome, setEmergencyKillswitchActive } from "@wabrix/observability";
+} from "@flowdesk/domain";
+import { recordAutoSendOutcome, setEmergencyKillswitchActive } from "@flowdesk/observability";
 
 interface AutoRunState {
   run_id: string;
@@ -80,11 +80,11 @@ export async function processCompletedAutoRun(
             date_trunc('milliseconds', config.updated_at) =
               (run.config_snapshot->>'botConfigUpdatedAt')::timestamptz
               AS config_is_current
-     FROM wabrix.bot_runs AS run
-     JOIN wabrix.conversations AS conversation
+     FROM flowdesk.bot_runs AS run
+     JOIN flowdesk.conversations AS conversation
        ON conversation.organization_id = run.organization_id
       AND conversation.id = run.conversation_id
-     LEFT JOIN wabrix.bot_configs AS config
+     LEFT JOIN flowdesk.bot_configs AS config
        ON config.organization_id = run.organization_id
      WHERE run.organization_id = $1 AND run.id = $2
      FOR UPDATE OF run, conversation`,
@@ -100,7 +100,7 @@ export async function processCompletedAutoRun(
   ): Promise<CompletedAutoRunResult> => {
     const extraJson = JSON.stringify(extraMetadata ?? {});
     await db.query(
-      `UPDATE wabrix.bot_runs
+      `UPDATE flowdesk.bot_runs
        SET status = CASE WHEN $3 THEN 'stale' ELSE status END,
            error_code = CASE WHEN $3 THEN 'AUTO_CONTEXT_STALE' ELSE error_code END,
            error_detail = CASE WHEN $3 THEN $2 ELSE error_detail END,
@@ -128,7 +128,7 @@ export async function processCompletedAutoRun(
     return { autoSent: false, reason };
   };
 
-  if (process.env["WABRIX_GLOBAL_KILLSWITCH"] === "true") {
+  if (process.env["FLOWDESK_GLOBAL_KILLSWITCH"] === "true") {
     return deny("Global emergency killswitch is active", true);
   }
 
@@ -166,7 +166,7 @@ export async function processCompletedAutoRun(
     (state.rate_limit_per_hour && state.rate_limit_per_hour > 0) ||
     (state.monthly_cost_ceiling_cents && state.monthly_cost_ceiling_cents > 0)
   ) {
-    await db.query(`SELECT id FROM wabrix.bot_configs WHERE organization_id = $1 FOR UPDATE`, [
+    await db.query(`SELECT id FROM flowdesk.bot_configs WHERE organization_id = $1 FOR UPDATE`, [
       input.organizationId
     ]);
   }
@@ -174,7 +174,7 @@ export async function processCompletedAutoRun(
   if (state.rate_limit_per_hour && state.rate_limit_per_hour > 0) {
     const hourlySentResult = await db.query<{ count: string }>(
       `SELECT COUNT(*)::text AS count
-       FROM wabrix.messages
+       FROM flowdesk.messages
        WHERE organization_id = $1
          AND direction = 'outbound'
          AND metadata->>'aiBotRunId' IS NOT NULL
@@ -213,7 +213,7 @@ export async function processCompletedAutoRun(
   }
 
   const latestCustomer = await db.query<{ id: string }>(
-    `SELECT id FROM wabrix.messages
+    `SELECT id FROM flowdesk.messages
      WHERE organization_id = $1 AND conversation_id = $2 AND sender_type = 'customer'
      ORDER BY created_at DESC LIMIT 1`,
     [input.organizationId, state.conversation_id]
@@ -222,7 +222,7 @@ export async function processCompletedAutoRun(
     return deny("A newer customer message made the AUTO result stale", true);
   }
   const humanActivity = await db.query(
-    `SELECT 1 FROM wabrix.messages
+    `SELECT 1 FROM flowdesk.messages
      WHERE organization_id = $1 AND conversation_id = $2
        AND sender_type = 'agent' AND created_at >= $3
      LIMIT 1`,
@@ -273,7 +273,7 @@ export async function processCompletedAutoRun(
   });
   recordAutoSendOutcome({ status: "sent", reason: policy.reason });
   await db.query(
-    `UPDATE wabrix.bot_runs
+    `UPDATE flowdesk.bot_runs
      SET operator_action = 'auto_sent', operator_action_at = clock_timestamp(),
          metadata = metadata || jsonb_build_object(
            'autoDecision', 'allowed', 'autoDecisionReason', $3::text,

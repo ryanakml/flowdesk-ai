@@ -1,7 +1,7 @@
 # M1 Secure Multi-Tenant Core Implementation Evidence
 
 > Completion audit (2026-08-28): tenant-scoped API, idempotency, and worker work now
-> enters a real PostgreSQL transaction, executes as `wabrix_runtime`, and sets
+> enters a real PostgreSQL transaction, executes as `flowdesk_runtime`, and sets
 > transaction-local `app.organization_id`. This closes the gap where application
 > code could otherwise inherit a more privileged login role despite the RLS schema.
 
@@ -14,14 +14,14 @@
 
 ## 1. Capability Verification Summary
 
-| Requirement      | Phase | Implementation Summary                                                                               | Verification Signal                                                          | Status   |
-| ---------------- | ----- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------- |
-| `SEC-TENANT-001` | M1    | ADR-002; `TenantContext` contract; PostgreSQL Row Level Security (`wabrix.app_user`)                 | PostgreSQL RLS negative integration suite; cross-tenant query blocks         | Complete |
-| `SEC-AUTH-001`   | M1    | ADR-004; OIDC Auth0 integration; HttpOnly `__Host-` session cookie; session revocation               | Supertest auth suite; session revocation tests; mock IDP provider            | Complete |
-| `SEC-RBAC-001`   | M1    | Organization bootstrap; domain permission policy; invitation token lifecycle; last-owner protection  | Unit & integration tests in `@wabrix/domain`, `@wabrix/db`, `@wabrix/api`    | Complete |
-| `API-PRIM-001`   | M1    | Idempotency middleware (409/422/replay); audit logging; cursor pagination; OpenAPI 3.1 drift check   | Idempotency replay tests; OpenAPI drift check in CI; audit verification      | Complete |
-| `UI-WORK-001`    | M1    | Authenticated workspace shell; route guards; org switcher; invite acceptance; team management        | Vitest component suites; keyboard accessibility; server-authoritative gating | Complete |
-| `SEC-OBS-001`    | M1    | Defense-in-depth security headers; sliding window rate limiting; PII redaction; Prometheus telemetry | Rate limit 429 tests; PII masking tests; Prometheus `/metrics` verification  | Complete |
+| Requirement      | Phase | Implementation Summary                                                                               | Verification Signal                                                             | Status   |
+| ---------------- | ----- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------- |
+| `SEC-TENANT-001` | M1    | ADR-002; `TenantContext` contract; PostgreSQL Row Level Security (`flowdesk.app_user`)               | PostgreSQL RLS negative integration suite; cross-tenant query blocks            | Complete |
+| `SEC-AUTH-001`   | M1    | ADR-004; OIDC Auth0 integration; HttpOnly `__Host-` session cookie; session revocation               | Supertest auth suite; session revocation tests; mock IDP provider               | Complete |
+| `SEC-RBAC-001`   | M1    | Organization bootstrap; domain permission policy; invitation token lifecycle; last-owner protection  | Unit & integration tests in `@flowdesk/domain`, `@flowdesk/db`, `@flowdesk/api` | Complete |
+| `API-PRIM-001`   | M1    | Idempotency middleware (409/422/replay); audit logging; cursor pagination; OpenAPI 3.1 drift check   | Idempotency replay tests; OpenAPI drift check in CI; audit verification         | Complete |
+| `UI-WORK-001`    | M1    | Authenticated workspace shell; route guards; org switcher; invite acceptance; team management        | Vitest component suites; keyboard accessibility; server-authoritative gating    | Complete |
+| `SEC-OBS-001`    | M1    | Defense-in-depth security headers; sliding window rate limiting; PII redaction; Prometheus telemetry | Rate limit 429 tests; PII masking tests; Prometheus `/metrics` verification     | Complete |
 
 ---
 
@@ -30,9 +30,9 @@
 ### Epic M1-E1: Tenant Data Isolation & Schema
 
 - **M1-01 (Issue #14, PR [#26](https://github.com/Ryanakml/flow-desk-ai/pull/26)):**
-  - PostgreSQL schema `wabrix` with core multi-tenant tables (`organizations`, `users`, `identities`, `sessions`, `roles`, `memberships`, `invitations`, `audit_logs`, `idempotency_keys`).
+  - PostgreSQL schema `flowdesk` with core multi-tenant tables (`organizations`, `users`, `identities`, `sessions`, `roles`, `memberships`, `invitations`, `audit_logs`, `idempotency_keys`).
   - Row Level Security (RLS) policies enforcing `app.current_organization_id`.
-  - Non-superuser `wabrix_app` runtime role.
+  - Non-superuser `flowdesk_app` runtime role.
 
 ### Epic M1-E2: Identity, Auth & Multi-Tenancy
 
@@ -42,7 +42,7 @@
 - **M1-05 (Issue #18, PR [#28](https://github.com/Ryanakml/flow-desk-ai/pull/28)):**
   - Organization bootstrap endpoint `POST /api/v1/organizations`.
   - Member management and invitation tokens (`POST /api/v1/organizations/:orgId/invitations`, `POST /api/v1/invitations/accept`).
-  - Strict last-owner revocation/demotion defense in `@wabrix/domain`.
+  - Strict last-owner revocation/demotion defense in `@flowdesk/domain`.
 
 ### Epic M1-E3: API Primitives & Client Surface
 
@@ -91,6 +91,6 @@
 
 ## 4. Operational & Architectural Compliance
 
-1. **Modular Monolith & Non-Root Containers:** All 5 service containers (`api`, `ingress`, `web`, `worker`, `scheduler`) run as non-root user `wabrix` (UID 10001).
+1. **Modular Monolith & Non-Root Containers:** All 5 service containers (`api`, `ingress`, `web`, `worker`, `scheduler`) run as non-root user `flowdesk` (UID 10001).
 2. **Zero-Trust Tenant Boundaries:** Tenant context is enforced at the database layer (PostgreSQL RLS) and validated at every API boundary.
-3. **Contract-First Design:** Strict type safety guaranteed end-to-end via `@wabrix/contracts`, Zod validation, and automated OpenAPI 3.1 drift prevention.
+3. **Contract-First Design:** Strict type safety guaranteed end-to-end via `@flowdesk/contracts`, Zod validation, and automated OpenAPI 3.1 drift prevention.

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { renderToString } from "react-dom/server";
-import type { RealtimeHint, RealtimeReady } from "@wabrix/contracts";
+import type { RealtimeHint, RealtimeReady } from "@flowdesk/contracts";
 import { createRealtimeClient, useRealtimeSync } from "./realtime.js";
 
 const listeners = new Map<string, (payload: unknown) => void>();

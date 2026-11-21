@@ -1,16 +1,16 @@
 import request from "supertest";
 import { describe, expect, it } from "vitest";
-import { loadAuthConfig } from "@wabrix/config";
-import type { DbClient } from "@wabrix/db";
-import { MockIdentityProvider } from "@wabrix/providers";
-import { hashSessionToken, serializeSessionCookie } from "@wabrix/security";
+import { loadAuthConfig } from "@flowdesk/config";
+import type { DbClient } from "@flowdesk/db";
+import { MockIdentityProvider } from "@flowdesk/providers";
+import { hashSessionToken, serializeSessionCookie } from "@flowdesk/security";
 import { createApiApp } from "./app.js";
 import type {
   AutomationPolicyResponse,
   SimulatePolicyResponse,
   RoutingRuleResponse,
   RoutingLogResponse
-} from "@wabrix/contracts";
+} from "@flowdesk/contracts";
 
 const orgId = "a0000000-0000-4000-8000-000000000001";
 const otherOrgId = "b0000000-0000-4000-8000-000000000002";
@@ -71,8 +71,8 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
   let policyCounter = 1;
 
   const users = new Map([
-    [adminUserId, { id: adminUserId, email: "admin@wabrix.dev", display_name: "Admin User" }],
-    [agentUserId, { id: agentUserId, email: "agent@wabrix.dev", display_name: "Agent User" }]
+    [adminUserId, { id: adminUserId, email: "admin@flowdesk.dev", display_name: "Admin User" }],
+    [agentUserId, { id: agentUserId, email: "agent@flowdesk.dev", display_name: "Agent User" }]
   ]);
 
   const memberships = new Map([
@@ -109,7 +109,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
       await Promise.resolve();
       const sql = queryText.replace(/\s+/g, " ").trim();
 
-      if (sql.includes("FROM wabrix.auth_sessions")) {
+      if (sql.includes("FROM flowdesk.auth_sessions")) {
         const tokenHash = values[0] as string;
         const session = sessions.get(tokenHash);
         if (!session) return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
@@ -132,7 +132,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         };
       }
 
-      if (sql.includes("FROM wabrix.memberships")) {
+      if (sql.includes("FROM flowdesk.memberships")) {
         const oId = values[0] as string;
         const uId = values[1] as string;
         const member = memberships.get(`${oId}:${uId}`);
@@ -172,7 +172,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         };
       }
 
-      if (sql.includes("INSERT INTO wabrix.automation_policies")) {
+      if (sql.includes("INSERT INTO flowdesk.automation_policies")) {
         const id = `00000000-0000-5000-8000-00000000000${policyCounter++}`;
         const isPublished = sql.includes("'published'");
         const row: MockPolicyRow = {
@@ -195,7 +195,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
 
       if (
         sql.includes(
-          "FROM wabrix.automation_policies WHERE organization_id = $1 AND status = 'published'"
+          "FROM flowdesk.automation_policies WHERE organization_id = $1 AND status = 'published'"
         )
       ) {
         const oId = values[0] as string;
@@ -213,7 +213,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
 
       if (
         sql.includes(
-          "FROM wabrix.automation_policies WHERE organization_id = $1 ORDER BY version DESC"
+          "FROM flowdesk.automation_policies WHERE organization_id = $1 ORDER BY version DESC"
         )
       ) {
         const oId = values[0] as string;
@@ -229,7 +229,9 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         };
       }
 
-      if (sql.includes("FROM wabrix.automation_policies WHERE organization_id = $1 AND id = $2")) {
+      if (
+        sql.includes("FROM flowdesk.automation_policies WHERE organization_id = $1 AND id = $2")
+      ) {
         const oId = values[0] as string;
         const pId = values[1] as string;
         const policy = policies.get(pId);
@@ -239,7 +241,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.automation_policies SET status = 'archived'")) {
+      if (sql.includes("UPDATE flowdesk.automation_policies SET status = 'archived'")) {
         const oId = values[0] as string;
         for (const p of policies.values()) {
           if (p.organization_id === oId && p.status === "published") {
@@ -250,7 +252,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.automation_policies SET status = 'published'")) {
+      if (sql.includes("UPDATE flowdesk.automation_policies SET status = 'published'")) {
         const oId = values[0] as string;
         const pId = values[1] as string;
         const policy = policies.get(pId);
@@ -264,7 +266,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.automation_policies SET name = COALESCE($3, name)")) {
+      if (sql.includes("UPDATE flowdesk.automation_policies SET name = COALESCE($3, name)")) {
         const oId = values[0] as string;
         const pId = values[1] as string;
         const policy = policies.get(pId);
@@ -284,7 +286,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
       // Legacy Routing Rules Handlers
       // ==========================================
 
-      if (sql.includes("INSERT INTO wabrix.routing_rules")) {
+      if (sql.includes("INSERT INTO flowdesk.routing_rules")) {
         const id = `00000000-0000-7000-8000-00000000000${ruleCounter++}`;
         const row: MockRuleRow = {
           id,
@@ -304,7 +306,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
       }
 
       if (
-        sql.includes("SELECT * FROM wabrix.routing_rules WHERE organization_id = $1 AND id = $2")
+        sql.includes("SELECT * FROM flowdesk.routing_rules WHERE organization_id = $1 AND id = $2")
       ) {
         const oId = values[0] as string;
         const rId = values[1] as string;
@@ -317,7 +319,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
 
       if (
         sql.includes(
-          "SELECT * FROM wabrix.routing_rules WHERE organization_id = $1 ORDER BY priority ASC"
+          "SELECT * FROM flowdesk.routing_rules WHERE organization_id = $1 ORDER BY priority ASC"
         )
       ) {
         const oId = values[0] as string;
@@ -327,7 +329,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         return { rows: matching, rowCount: matching.length, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.routing_rules SET")) {
+      if (sql.includes("UPDATE flowdesk.routing_rules SET")) {
         const oId = values[7] as string;
         const rId = values[8] as string;
         const row = rules.get(rId);
@@ -345,7 +347,9 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("DELETE FROM wabrix.routing_rules WHERE organization_id = $1 AND id = $2")) {
+      if (
+        sql.includes("DELETE FROM flowdesk.routing_rules WHERE organization_id = $1 AND id = $2")
+      ) {
         const oId = values[0] as string;
         const rId = values[1] as string;
         const row = rules.get(rId);
@@ -358,7 +362,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
 
       if (
         sql.includes(
-          "SELECT * FROM wabrix.routing_logs WHERE organization_id = $1 AND conversation_id = $2"
+          "SELECT * FROM flowdesk.routing_logs WHERE organization_id = $1 AND conversation_id = $2"
         )
       ) {
         const oId = values[0] as string;
@@ -367,7 +371,7 @@ function createMockDb(initialLogs: MockLogRow[] = []): DbClient {
         return { rows: matching, rowCount: matching.length, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.audit_logs")) {
+      if (sql.includes("INSERT INTO flowdesk.audit_logs")) {
         return { rows: [{ id: "audit-1" }], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
@@ -381,7 +385,7 @@ function makeApp(db: DbClient) {
     APP_ENV: "local",
     SESSION_SECRET: "00000000000000000000000000000000",
     OIDC_ISSUER_URL: "https://auth.example.com",
-    OIDC_CLIENT_ID: "wabrix-client",
+    OIDC_CLIENT_ID: "flowdesk-client",
     OIDC_CLIENT_SECRET: "secret"
   });
   return createApiApp({

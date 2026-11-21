@@ -1,7 +1,7 @@
 import express, { type Request, type Response } from "express";
-import type { DbClient } from "@wabrix/db";
-import { recordWebhookEvent } from "@wabrix/db";
-import { computeSha256, getSecurityHeaders, verifyMetaSignature } from "@wabrix/security";
+import type { DbClient } from "@flowdesk/db";
+import { recordWebhookEvent } from "@flowdesk/db";
+import { computeSha256, getSecurityHeaders, verifyMetaSignature } from "@flowdesk/security";
 
 /**
  * Minimal logger interface accepted by the ingress app. Typed narrowly so the
@@ -59,12 +59,12 @@ export function createIngressApp(options?: IngressAppOptions) {
   const defaultVerifyToken =
     options?.webhookVerifyToken ??
     process.env["WEBHOOK_VERIFY_TOKEN"] ??
-    "wabrix_webhook_verify_token_default";
+    "flowdesk_webhook_verify_token_default";
 
   const defaultAppSecret =
     options?.webhookAppSecret ??
     process.env["WEBHOOK_APP_SECRET"] ??
-    "wabrix_webhook_app_secret_default";
+    "flowdesk_webhook_app_secret_default";
 
   const dbClient = options?.dbClient;
   const logger = options?.logger;
@@ -88,7 +88,7 @@ export function createIngressApp(options?: IngressAppOptions) {
     }
 
     res.status(403).json({
-      type: "https://wabrix.dev/errors/forbidden",
+      type: "https://flowdesk.dev/errors/forbidden",
       title: "Forbidden",
       status: 403,
       detail: "Webhook verification failed: invalid verify token or mode"
@@ -111,7 +111,7 @@ export function createIngressApp(options?: IngressAppOptions) {
 
       if (!rawBody || rawBody.length === 0) {
         res.status(400).json({
-          type: "https://wabrix.dev/errors/bad-request",
+          type: "https://flowdesk.dev/errors/bad-request",
           title: "Bad Request",
           status: 400,
           detail: "Empty webhook payload"
@@ -122,7 +122,7 @@ export function createIngressApp(options?: IngressAppOptions) {
       const isValid = verifyMetaSignature(rawBody, defaultAppSecret, signatureHeader);
       if (!isValid) {
         res.status(401).json({
-          type: "https://wabrix.dev/errors/unauthorized",
+          type: "https://flowdesk.dev/errors/unauthorized",
           title: "Unauthorized",
           status: 401,
           detail: "Invalid or missing X-Hub-Signature-256 signature"
@@ -136,7 +136,7 @@ export function createIngressApp(options?: IngressAppOptions) {
         parsedPayload = JSON.parse(rawBody.toString("utf8"));
       } catch {
         res.status(400).json({
-          type: "https://wabrix.dev/errors/bad-request",
+          type: "https://flowdesk.dev/errors/bad-request",
           title: "Bad Request",
           status: 400,
           detail: "Malformed JSON payload"
@@ -190,7 +190,7 @@ export function createIngressApp(options?: IngressAppOptions) {
               "ingress.webhook.persistence_failed"
             );
             res.status(503).json({
-              type: "https://wabrix.dev/errors/service-unavailable",
+              type: "https://flowdesk.dev/errors/service-unavailable",
               title: "Service Unavailable",
               status: 503,
               detail: `Durable webhook persistence failed; please retry: ${errorMessage}`

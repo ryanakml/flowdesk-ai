@@ -22,7 +22,7 @@ describe("automation policy database layer", () => {
             fields: []
           };
         }
-        if (text.includes("INSERT INTO wabrix.automation_policies")) {
+        if (text.includes("INSERT INTO flowdesk.automation_policies")) {
           const parsedRules =
             typeof params?.[3] === "string"
               ? (JSON.parse(params[3]) as Record<string, unknown>[])
@@ -81,7 +81,7 @@ describe("automation policy database layer", () => {
     expect(draft.version).toBe(1);
     expect(draft.status).toBe("draft");
     expect(draft.rules).toHaveLength(1);
-    expect(sql.some((s) => s.includes("INSERT INTO wabrix.audit_logs"))).toBe(true);
+    expect(sql.some((s) => s.includes("INSERT INTO flowdesk.audit_logs"))).toBe(true);
   });
 
   it("publishes draft policy transactionally and archives previous published", async () => {
@@ -224,6 +224,6 @@ describe("automation policy database layer", () => {
     expect(log.policyId).toBe("pol-1");
     expect(log.policyVersion).toBe(2);
     expect(log.decisionTrace).toHaveLength(1);
-    expect(sql.some((s) => s.includes("INSERT INTO wabrix.routing_logs"))).toBe(true);
+    expect(sql.some((s) => s.includes("INSERT INTO flowdesk.routing_logs"))).toBe(true);
   });
 });

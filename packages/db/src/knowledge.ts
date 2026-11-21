@@ -186,12 +186,12 @@ export async function createKnowledgeSource(
     updated_at: Date;
     deleted_at: Date | null;
   }>(
-    `INSERT INTO wabrix.knowledge_sources (
+    `INSERT INTO flowdesk.knowledge_sources (
       organization_id, type, name, source_uri, content_hash, dedupe_key, byte_size, metadata, created_by_user_id
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     ON CONFLICT (organization_id, dedupe_key)
       WHERE dedupe_key IS NOT NULL AND deleted_at IS NULL
-    DO UPDATE SET updated_at = wabrix.knowledge_sources.updated_at
+    DO UPDATE SET updated_at = flowdesk.knowledge_sources.updated_at
     RETURNING *`,
     [
       input.organizationId,
@@ -249,7 +249,7 @@ export async function getKnowledgeSourceById(
     updated_at: Date;
     deleted_at: Date | null;
   }>(
-    `SELECT * FROM wabrix.knowledge_sources
+    `SELECT * FROM flowdesk.knowledge_sources
      WHERE id = $1 AND deleted_at IS NULL`,
     [id]
   );
@@ -298,7 +298,7 @@ export async function listKnowledgeSources(
     updated_at: Date;
     deleted_at: Date | null;
   }>(
-    `SELECT * FROM wabrix.knowledge_sources
+    `SELECT * FROM flowdesk.knowledge_sources
      WHERE organization_id = $1 AND deleted_at IS NULL
      ORDER BY created_at DESC`,
     [organizationId]
@@ -331,7 +331,7 @@ export async function updateKnowledgeSourceStatus(
   statusReason?: string | null
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.knowledge_sources
+    `UPDATE flowdesk.knowledge_sources
      SET status = $1, status_reason = $2, updated_at = clock_timestamp(),
          last_indexed_at = CASE WHEN $1 = 'active' THEN clock_timestamp() ELSE last_indexed_at END
      WHERE id = $3`,
@@ -361,29 +361,29 @@ export async function enqueueKnowledgeIngestionJob(
     error_code: string | null;
     error_detail: string | null;
   }>(
-    `INSERT INTO wabrix.knowledge_ingestion_jobs (
+    `INSERT INTO flowdesk.knowledge_ingestion_jobs (
        organization_id, source_id, dedupe_key, input_text
      ) VALUES ($1, $2, $3, $4)
      ON CONFLICT (organization_id, dedupe_key) DO UPDATE
        SET status = CASE
-             WHEN wabrix.knowledge_ingestion_jobs.status = 'failed' THEN 'queued'
-             ELSE wabrix.knowledge_ingestion_jobs.status
+             WHEN flowdesk.knowledge_ingestion_jobs.status = 'failed' THEN 'queued'
+             ELSE flowdesk.knowledge_ingestion_jobs.status
            END,
            attempts = CASE
-             WHEN wabrix.knowledge_ingestion_jobs.status = 'failed' THEN 0
-             ELSE wabrix.knowledge_ingestion_jobs.attempts
+             WHEN flowdesk.knowledge_ingestion_jobs.status = 'failed' THEN 0
+             ELSE flowdesk.knowledge_ingestion_jobs.attempts
            END,
            available_at = CASE
-             WHEN wabrix.knowledge_ingestion_jobs.status = 'failed' THEN clock_timestamp()
-             ELSE wabrix.knowledge_ingestion_jobs.available_at
+             WHEN flowdesk.knowledge_ingestion_jobs.status = 'failed' THEN clock_timestamp()
+             ELSE flowdesk.knowledge_ingestion_jobs.available_at
            END,
            error_code = CASE
-             WHEN wabrix.knowledge_ingestion_jobs.status = 'failed' THEN NULL
-             ELSE wabrix.knowledge_ingestion_jobs.error_code
+             WHEN flowdesk.knowledge_ingestion_jobs.status = 'failed' THEN NULL
+             ELSE flowdesk.knowledge_ingestion_jobs.error_code
            END,
            error_detail = CASE
-             WHEN wabrix.knowledge_ingestion_jobs.status = 'failed' THEN NULL
-             ELSE wabrix.knowledge_ingestion_jobs.error_detail
+             WHEN flowdesk.knowledge_ingestion_jobs.status = 'failed' THEN NULL
+             ELSE flowdesk.knowledge_ingestion_jobs.error_detail
            END,
            updated_at = clock_timestamp()
      RETURNING id, organization_id, source_id, dedupe_key, input_text, status,
@@ -411,7 +411,7 @@ export async function claimKnowledgeIngestionJobs(
     source_id: string;
     attempts: number;
     max_attempts: number;
-  }>(`SELECT * FROM wabrix.claim_knowledge_ingestion_jobs($1::integer)`, [limit]);
+  }>(`SELECT * FROM flowdesk.claim_knowledge_ingestion_jobs($1::integer)`, [limit]);
   return res.rows.map((row) => ({
     id: row.id,
     organizationId: row.organization_id,
@@ -440,7 +440,7 @@ export async function getKnowledgeIngestionJob(
   }>(
     `SELECT id, organization_id, source_id, dedupe_key, input_text, status,
             attempts, max_attempts, available_at, error_code, error_detail
-     FROM wabrix.knowledge_ingestion_jobs WHERE id = $1`,
+     FROM flowdesk.knowledge_ingestion_jobs WHERE id = $1`,
     [id]
   );
   return res.rows[0] ? mapKnowledgeIngestionJob(res.rows[0]) : null;
@@ -457,7 +457,7 @@ export async function updateKnowledgeIngestionJob(
   }
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.knowledge_ingestion_jobs
+    `UPDATE flowdesk.knowledge_ingestion_jobs
      SET status = $2,
          input_text = CASE WHEN $2 = 'completed' THEN NULL ELSE input_text END,
          available_at = COALESCE($3, available_at),
@@ -480,7 +480,7 @@ export async function replaceKnowledgeSourceDocument(
   db: DbClient,
   input: Parameters<typeof createDocumentWithChunks>[1]
 ): Promise<{ documentId: string; chunkCount: number }> {
-  await db.query(`DELETE FROM wabrix.documents WHERE source_id = $1`, [input.sourceId]);
+  await db.query(`DELETE FROM flowdesk.documents WHERE source_id = $1`, [input.sourceId]);
   return createDocumentWithChunks(db, input);
 }
 
@@ -489,7 +489,7 @@ export async function completeKnowledgeSourceIngestion(
   input: { organizationId: string; sourceId: string; contentHash: string; byteSize: number }
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.knowledge_sources
+    `UPDATE flowdesk.knowledge_sources
      SET status = 'active', status_reason = NULL, content_hash = $2, byte_size = $3,
          last_indexed_at = clock_timestamp(), updated_at = clock_timestamp()
      WHERE id = $1`,
@@ -499,7 +499,7 @@ export async function completeKnowledgeSourceIngestion(
     input.organizationId
   ]);
   await db.query(
-    `INSERT INTO wabrix.knowledge_versions (
+    `INSERT INTO flowdesk.knowledge_versions (
        organization_id, version_number, title, snapshot_metadata
      )
      SELECT $1,
@@ -507,16 +507,16 @@ export async function completeKnowledgeSourceIngestion(
             'Knowledge snapshot',
             jsonb_build_object(
               'activeSourceCount', (
-                SELECT COUNT(*) FROM wabrix.knowledge_sources
+                SELECT COUNT(*) FROM flowdesk.knowledge_sources
                 WHERE organization_id = $1 AND status = 'active' AND deleted_at IS NULL
               ),
               'activeSourceIds', (
                 SELECT COALESCE(jsonb_agg(id ORDER BY id), '[]'::jsonb)
-                FROM wabrix.knowledge_sources
+                FROM flowdesk.knowledge_sources
                 WHERE organization_id = $1 AND status = 'active' AND deleted_at IS NULL
               )
             )
-     FROM wabrix.knowledge_versions
+     FROM flowdesk.knowledge_versions
      WHERE organization_id = $1`,
     [input.organizationId]
   );
@@ -535,7 +535,7 @@ export async function getLatestKnowledgeVersion(
     created_by_user_id: string | null;
     created_at: Date;
   }>(
-    `SELECT * FROM wabrix.knowledge_versions
+    `SELECT * FROM flowdesk.knowledge_versions
      WHERE organization_id = $1
      ORDER BY version_number DESC
      LIMIT 1`,
@@ -609,7 +609,7 @@ export async function createDocumentWithChunks(
   }
 ): Promise<{ documentId: string; chunkCount: number }> {
   const docRes = await db.query<{ id: string }>(
-    `INSERT INTO wabrix.documents (
+    `INSERT INTO flowdesk.documents (
       organization_id, source_id, title, content_type, content_hash, raw_content, token_count, metadata
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING id`,
@@ -630,7 +630,7 @@ export async function createDocumentWithChunks(
   for (const chunk of input.chunks) {
     const embeddingStr = chunk.embedding ? `[${chunk.embedding.join(",")}]` : null;
     await db.query(
-      `INSERT INTO wabrix.document_chunks (
+      `INSERT INTO flowdesk.document_chunks (
         organization_id, document_id, source_id, chunk_index, content, content_hash, embedding, token_count, metadata
       ) VALUES ($1, $2, $3, $4, $5, $6, $7::public.vector, $8, $9)`,
       [
@@ -680,12 +680,12 @@ export async function searchDocumentChunks(
     `SELECT
       id, organization_id, document_id, source_id, chunk_index, content, content_hash,
       token_count, metadata, created_at,
-      (1 - (wabrix.document_chunks.embedding <=> $1::public.vector)) AS similarity
-     FROM wabrix.document_chunks
+      (1 - (flowdesk.document_chunks.embedding <=> $1::public.vector)) AS similarity
+     FROM flowdesk.document_chunks
      WHERE organization_id = $2
        AND embedding IS NOT NULL
-       AND (1 - (wabrix.document_chunks.embedding <=> $1::public.vector)) >= $3
-     ORDER BY wabrix.document_chunks.embedding <=> $1::public.vector ASC
+       AND (1 - (flowdesk.document_chunks.embedding <=> $1::public.vector)) >= $3
+     ORDER BY flowdesk.document_chunks.embedding <=> $1::public.vector ASC
      LIMIT $4`,
     [embeddingStr, input.organizationId, similarityThreshold, topK]
   );
@@ -731,7 +731,7 @@ export async function getBotConfig(
     created_at: Date;
     updated_at: Date;
   }>(
-    `SELECT * FROM wabrix.bot_configs
+    `SELECT * FROM flowdesk.bot_configs
      WHERE organization_id = $1
      ${options?.forShare ? "FOR SHARE" : ""}`,
     [organizationId]
@@ -789,28 +789,28 @@ export async function upsertBotConfig(
     created_at: Date;
     updated_at: Date;
   }>(
-    `INSERT INTO wabrix.bot_configs (
+    `INSERT INTO flowdesk.bot_configs (
       organization_id, mode, name, instructions, tone, language, model,
       confidence_threshold, top_k, emergency_disabled, metadata, auto_enabled
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, ($2 = 'auto'))
     ON CONFLICT (organization_id) DO UPDATE SET
-      mode = CASE WHEN $12 THEN EXCLUDED.mode ELSE wabrix.bot_configs.mode END,
-      name = CASE WHEN $13 THEN EXCLUDED.name ELSE wabrix.bot_configs.name END,
-      instructions = CASE WHEN $14 THEN EXCLUDED.instructions ELSE wabrix.bot_configs.instructions END,
-      tone = CASE WHEN $15 THEN EXCLUDED.tone ELSE wabrix.bot_configs.tone END,
-      language = CASE WHEN $16 THEN EXCLUDED.language ELSE wabrix.bot_configs.language END,
-      model = CASE WHEN $17 THEN EXCLUDED.model ELSE wabrix.bot_configs.model END,
-      confidence_threshold = CASE WHEN $18 THEN EXCLUDED.confidence_threshold ELSE wabrix.bot_configs.confidence_threshold END,
-      top_k = CASE WHEN $19 THEN EXCLUDED.top_k ELSE wabrix.bot_configs.top_k END,
-      emergency_disabled = CASE WHEN $20 THEN EXCLUDED.emergency_disabled ELSE wabrix.bot_configs.emergency_disabled END,
-      metadata = CASE WHEN $21 THEN EXCLUDED.metadata ELSE wabrix.bot_configs.metadata END,
-      auto_enabled = CASE WHEN EXCLUDED.mode = 'auto' THEN TRUE ELSE wabrix.bot_configs.auto_enabled END,
+      mode = CASE WHEN $12 THEN EXCLUDED.mode ELSE flowdesk.bot_configs.mode END,
+      name = CASE WHEN $13 THEN EXCLUDED.name ELSE flowdesk.bot_configs.name END,
+      instructions = CASE WHEN $14 THEN EXCLUDED.instructions ELSE flowdesk.bot_configs.instructions END,
+      tone = CASE WHEN $15 THEN EXCLUDED.tone ELSE flowdesk.bot_configs.tone END,
+      language = CASE WHEN $16 THEN EXCLUDED.language ELSE flowdesk.bot_configs.language END,
+      model = CASE WHEN $17 THEN EXCLUDED.model ELSE flowdesk.bot_configs.model END,
+      confidence_threshold = CASE WHEN $18 THEN EXCLUDED.confidence_threshold ELSE flowdesk.bot_configs.confidence_threshold END,
+      top_k = CASE WHEN $19 THEN EXCLUDED.top_k ELSE flowdesk.bot_configs.top_k END,
+      emergency_disabled = CASE WHEN $20 THEN EXCLUDED.emergency_disabled ELSE flowdesk.bot_configs.emergency_disabled END,
+      metadata = CASE WHEN $21 THEN EXCLUDED.metadata ELSE flowdesk.bot_configs.metadata END,
+      auto_enabled = CASE WHEN EXCLUDED.mode = 'auto' THEN TRUE ELSE flowdesk.bot_configs.auto_enabled END,
       updated_at = clock_timestamp()
     RETURNING *`,
     [
       input.organizationId,
       input.mode ?? "draft",
-      input.name ?? "Wabrix AI Assistant",
+      input.name ?? "FlowDesk AI Assistant",
       input.instructions ??
         "You are a helpful customer support assistant. Answer accurately based on provided context.",
       input.tone ?? "professional",
@@ -880,7 +880,7 @@ export async function recordBotRun(
   }
 ): Promise<BotRun> {
   const res = await db.query<BotRunRow>(
-    `INSERT INTO wabrix.bot_runs (
+    `INSERT INTO flowdesk.bot_runs (
       organization_id, conversation_id, trigger_message_id, bot_config_id, knowledge_version_id,
       mode, status, suggested_content, citations, reasoning, confidence,
       prompt_tokens, completion_tokens, total_tokens, latency_ms, cost_estimate_microcents,
@@ -1013,14 +1013,14 @@ export async function enqueueBotDraftRun(
   }
 ): Promise<BotRun> {
   const result = await db.query<BotRunRow>(
-    `INSERT INTO wabrix.bot_runs (
+    `INSERT INTO flowdesk.bot_runs (
        organization_id, conversation_id, trigger_message_id, bot_config_id,
        knowledge_version_id, mode, status, requested_by_user_id, model,
        prompt_version, config_snapshot, input_message_created_at
      ) VALUES ($1, $2, $3, $4, $5, $10, 'queued', $6, $7, $11, $8, $9)
      ON CONFLICT (organization_id, conversation_id, trigger_message_id)
        WHERE trigger_message_id IS NOT NULL AND status IN ('queued', 'processing')
-     DO UPDATE SET updated_at = wabrix.bot_runs.updated_at
+     DO UPDATE SET updated_at = flowdesk.bot_runs.updated_at
      RETURNING *`,
     [
       input.organizationId,
@@ -1040,7 +1040,7 @@ export async function enqueueBotDraftRun(
 }
 
 export async function getBotRunById(db: DbClient, id: string): Promise<BotRun | null> {
-  const result = await db.query<BotRunRow>(`SELECT * FROM wabrix.bot_runs WHERE id = $1`, [id]);
+  const result = await db.query<BotRunRow>(`SELECT * FROM flowdesk.bot_runs WHERE id = $1`, [id]);
   return result.rows[0] ? mapBotRun(result.rows[0]) : null;
 }
 
@@ -1050,7 +1050,7 @@ export async function getLatestBotRunForConversation(
   conversationId: string
 ): Promise<BotRun | null> {
   const result = await db.query<BotRunRow>(
-    `SELECT * FROM wabrix.bot_runs
+    `SELECT * FROM flowdesk.bot_runs
      WHERE organization_id = $1 AND conversation_id = $2
      ORDER BY created_at DESC LIMIT 1`,
     [organizationId, conversationId]
@@ -1076,7 +1076,7 @@ export async function claimBotDraftRuns(
     conversation_id: string;
     attempts: number;
     max_attempts: number;
-  }>(`SELECT * FROM wabrix.claim_bot_draft_runs($1::integer)`, [limit]);
+  }>(`SELECT * FROM flowdesk.claim_bot_draft_runs($1::integer)`, [limit]);
   return result.rows.map((row) => ({
     id: row.id,
     organizationId: row.organization_id,
@@ -1106,7 +1106,7 @@ export async function finishBotDraftRun(
   }
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.bot_runs
+    `UPDATE flowdesk.bot_runs
      SET status = $2, suggested_content = $3, citations = $4::jsonb, reasoning = $5,
          confidence = $6, prompt_tokens = $7::integer, completion_tokens = $8::integer,
          total_tokens = ($7::integer + $8::integer), latency_ms = $9, cost_estimate_microcents = $10,
@@ -1138,7 +1138,7 @@ export async function requeueBotDraftRun(
   input: { id: string; availableAt: Date; errorCode: string; errorDetail: string }
 ): Promise<void> {
   await db.query(
-    `UPDATE wabrix.bot_runs
+    `UPDATE flowdesk.bot_runs
      SET status = 'queued', available_at = $2, claimed_at = NULL,
          error_code = $3, error_detail = $4, updated_at = clock_timestamp()
      WHERE id = $1 AND status = 'processing'`,
@@ -1148,7 +1148,7 @@ export async function requeueBotDraftRun(
 
 export async function markBotRunStale(db: DbClient, id: string): Promise<boolean> {
   const result = await db.query(
-    `UPDATE wabrix.bot_runs
+    `UPDATE flowdesk.bot_runs
      SET status = 'stale', error_code = 'NEWER_CUSTOMER_MESSAGE',
          error_detail = 'A newer customer message arrived before this draft was used.',
          completed_at = COALESCE(completed_at, clock_timestamp()),
@@ -1171,7 +1171,7 @@ export async function updateBotRunAction(
   }
 ): Promise<boolean> {
   const result = await db.query(
-    `UPDATE wabrix.bot_runs
+    `UPDATE flowdesk.bot_runs
      SET operator_action = $1, operator_action_at = clock_timestamp(), operator_user_id = $2,
          metadata = metadata || $4::jsonb,
          updated_at = clock_timestamp()

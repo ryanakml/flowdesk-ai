@@ -50,7 +50,7 @@ function createMockDb(): DbClient {
       await Promise.resolve();
       const sql = queryText.replace(/\s+/g, " ").trim();
 
-      if (sql.includes("INSERT INTO wabrix.routing_rules")) {
+      if (sql.includes("INSERT INTO flowdesk.routing_rules")) {
         const id = `rule-${counter++}`;
         const row: MockRuleRow = {
           id,
@@ -70,7 +70,7 @@ function createMockDb(): DbClient {
       }
 
       if (
-        sql.includes("SELECT * FROM wabrix.routing_rules WHERE organization_id = $1 AND id = $2")
+        sql.includes("SELECT * FROM flowdesk.routing_rules WHERE organization_id = $1 AND id = $2")
       ) {
         const orgId = values[0] as string;
         const ruleId = values[1] as string;
@@ -83,7 +83,7 @@ function createMockDb(): DbClient {
 
       if (
         sql.includes(
-          "SELECT * FROM wabrix.routing_rules WHERE organization_id = $1 ORDER BY priority ASC"
+          "SELECT * FROM flowdesk.routing_rules WHERE organization_id = $1 ORDER BY priority ASC"
         )
       ) {
         const orgId = values[0] as string;
@@ -93,7 +93,7 @@ function createMockDb(): DbClient {
         return { rows: matching, rowCount: matching.length, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.routing_rules SET")) {
+      if (sql.includes("UPDATE flowdesk.routing_rules SET")) {
         const orgId = values[7] as string;
         const ruleId = values[8] as string;
         const row = rules.get(ruleId);
@@ -111,7 +111,9 @@ function createMockDb(): DbClient {
         return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("DELETE FROM wabrix.routing_rules WHERE organization_id = $1 AND id = $2")) {
+      if (
+        sql.includes("DELETE FROM flowdesk.routing_rules WHERE organization_id = $1 AND id = $2")
+      ) {
         const orgId = values[0] as string;
         const ruleId = values[1] as string;
         const row = rules.get(ruleId);
@@ -122,7 +124,7 @@ function createMockDb(): DbClient {
         return { rows: [], rowCount: 0, command: "DELETE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.routing_logs")) {
+      if (sql.includes("INSERT INTO flowdesk.routing_logs")) {
         const id = `log-${counter++}`;
         const row: MockLogRow = {
           id,
@@ -142,7 +144,7 @@ function createMockDb(): DbClient {
 
       if (
         sql.includes(
-          "SELECT * FROM wabrix.routing_logs WHERE organization_id = $1 AND conversation_id = $2"
+          "SELECT * FROM flowdesk.routing_logs WHERE organization_id = $1 AND conversation_id = $2"
         )
       ) {
         const orgId = values[0] as string;

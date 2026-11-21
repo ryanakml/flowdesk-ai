@@ -1,5 +1,5 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@wabrix/ui";
-import { cn } from "@wabrix/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@flowdesk/ui";
+import { cn } from "@flowdesk/ui";
 
 export type StatusDotState = "active" | "degraded" | "disconnected" | "inactive";
 

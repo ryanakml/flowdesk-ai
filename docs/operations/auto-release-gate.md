@@ -1,4 +1,4 @@
-# Wabrix M5 AUTO Release Gate & Staged Enablement Policy
+# FlowDesk M5 AUTO Release Gate & Staged Enablement Policy
 
 This document governs the release gate, multi-party approvals, staged tenant cohort progression, and safety evidence required before any bot or policy version can activate autonomous sending (`AUTO` mode).
 
@@ -27,7 +27,7 @@ Automated responses cannot be activated unilaterally. Three distinct roles must 
 2. **Security Engineer (`security`)**: Validates prompt injection defenses, PII masking, and data privacy boundaries.
 3. **Engineering Peer (`peer`)**: Validates retrieval latency, rate ceilings, and failure fallback behaviors.
 
-Approvals are recorded immutably in `wabrix.auto_release_gates.approvals` with actor ID, timestamp, and review notes.
+Approvals are recorded immutably in `flowdesk.auto_release_gates.approvals` with actor ID, timestamp, and review notes.
 
 ---
 
@@ -69,7 +69,7 @@ Every release gate designates an explicit, human on-call owner (`rollbackOwner`)
 
 ### Automated Stop Conditions:
 
-1. **Global Killswitch (`WABRIX_GLOBAL_KILLSWITCH = true`)**:
+1. **Global Killswitch (`FLOWDESK_GLOBAL_KILLSWITCH = true`)**:
    - Immediately stops all AUTO dispatch across all tenants without dropping customer messages.
 2. **Tenant Emergency Stop (`emergency_disabled = true`)**:
    - Trips when reply limit is exceeded or operator triggers UI toggle.

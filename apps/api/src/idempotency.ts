@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
 import type { Request, RequestHandler, Response } from "express";
-import type { DbClient } from "@wabrix/db";
+import type { DbClient } from "@flowdesk/db";
 import {
   acquireIdempotencyKey,
   completeIdempotencyKey,
   releaseIdempotencyKey,
   runInTenantTransaction
-} from "@wabrix/db";
-import type { Problem } from "@wabrix/contracts";
+} from "@flowdesk/db";
+import type { Problem } from "@flowdesk/contracts";
 
 export function computeRequestFingerprint(request: Request): string {
   const method = request.method.toUpperCase();
@@ -25,7 +25,7 @@ function sendProblem(
 ) {
   const requestId = response.getHeader("x-request-id")?.toString() ?? "unknown";
   const problem: Problem = {
-    type: `https://wabrix.dev/problems/${code.toLowerCase().replace(/_/g, "-")}`,
+    type: `https://flowdesk.dev/problems/${code.toLowerCase().replace(/_/g, "-")}`,
     title,
     status,
     code,

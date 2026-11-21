@@ -3,11 +3,11 @@ import { extractKnowledgeContent } from "./knowledge-extractor.js";
 
 describe("Knowledge Base Content Extractor", () => {
   it("extracts text and title from plain text input", () => {
-    const rawText = "Wabrix Features Guide\nWabrix offers multi-tenant inbox management.";
+    const rawText = "FlowDesk Features Guide\nFlowDesk offers multi-tenant inbox management.";
     const result = extractKnowledgeContent(rawText, "text/plain");
 
-    expect(result.title).toBe("Wabrix Features Guide");
-    expect(result.text).toContain("Wabrix offers multi-tenant inbox management.");
+    expect(result.title).toBe("FlowDesk Features Guide");
+    expect(result.text).toContain("FlowDesk offers multi-tenant inbox management.");
     expect(result.tokenCountEstimate).toBeGreaterThan(0);
   });
 

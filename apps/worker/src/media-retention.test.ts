@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient, ExpiredAttachmentRow } from "@wabrix/db";
-import { InMemoryObjectStore } from "@wabrix/providers";
+import type { DbClient, ExpiredAttachmentRow } from "@flowdesk/db";
+import { InMemoryObjectStore } from "@flowdesk/providers";
 import { runRetentionJob } from "./media-retention.js";
 
 const orgId = "org-retention-001";
@@ -21,7 +21,7 @@ function makeMockDb(candidates: ExpiredAttachmentRow[]) {
     query: async (sql: string) => {
       await Promise.resolve();
       // listExpiredAttachments SELECT
-      if (sql.includes("FROM wabrix.attachments") && sql.includes("deleted_at IS NULL")) {
+      if (sql.includes("FROM flowdesk.attachments") && sql.includes("deleted_at IS NULL")) {
         return {
           rows: candidates,
           rowCount: candidates.length,

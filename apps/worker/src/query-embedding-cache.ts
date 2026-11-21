@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
-import { AiProviderError, type AiEmbeddingProvider } from "@wabrix/providers";
-import { recordQueryEmbeddingCache, recordQueryEmbeddingDuration } from "@wabrix/observability";
+import { AiProviderError, type AiEmbeddingProvider } from "@flowdesk/providers";
+import { recordQueryEmbeddingCache, recordQueryEmbeddingDuration } from "@flowdesk/observability";
 
 export interface EmbeddingCacheStore {
   get(key: string): Promise<string | null>;

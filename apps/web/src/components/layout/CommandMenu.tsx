@@ -12,7 +12,7 @@ import {
   CommandItem,
   CommandList,
   Button
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 
 interface CommandMenuProps {
   open?: boolean;

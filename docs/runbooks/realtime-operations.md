@@ -1,13 +1,13 @@
 # Realtime Operations Runbook
 
-Wabrix uses an authenticated Socket.IO pipeline with Redis adapter fan-out (`/realtime`) to stream tenant-isolated projection invalidation hints to connected operator workspaces.
+FlowDesk uses an authenticated Socket.IO pipeline with Redis adapter fan-out (`/realtime`) to stream tenant-isolated projection invalidation hints to connected operator workspaces.
 
 ## Architectural Principles
 
 1. **Hints, Not State**: Realtime events are strictly invalidation hints (`projection.changed`), never the source of truth. Authoritative data is always retrieved from PostgreSQL via authenticated REST endpoints.
 2. **Zero PII in Realtime Envelopes**: Event payloads adhere to `RealtimeHintSchema` (`schemaVersion: 1`, `organizationId`, `resourceType`, `resourceId`, `version`). They never carry message text, phone numbers, or customer identifiers.
 3. **Fail-Closed Authorization**: All socket handshakes and room join requests (`room.join`) verify active session and tenant/team/queue memberships against PostgreSQL.
-4. **Monotonic Version Gap Recovery**: The database maintains monotonic tenant projection versions in `wabrix.realtime_versions`. On handshake, the client provides `lastVersion`. If a gap exists, the server emits `realtime.ready` with `reconcileRequired: true`, prompting the browser to perform a full REST synchronization.
+4. **Monotonic Version Gap Recovery**: The database maintains monotonic tenant projection versions in `flowdesk.realtime_versions`. On handshake, the client provides `lastVersion`. If a gap exists, the server emits `realtime.ready` with `reconcileRequired: true`, prompting the browser to perform a full REST synchronization.
 
 ## Socket.IO Room Boundaries
 
@@ -19,7 +19,7 @@ Wabrix uses an authenticated Socket.IO pipeline with Redis adapter fan-out (`/re
 
 The realtime server executes a background authorization sweep every 5,000ms (configurable via `authorizationRecheckMs`):
 
-- Verifies session token validity in `wabrix.auth_sessions`.
+- Verifies session token validity in `flowdesk.auth_sessions`.
 - Verifies active membership in all joined rooms.
 - If session or membership is revoked, emits `access.revoked` (`SESSION_REVOKED` or `ROOM_ACCESS_REVOKED`) and forcefully disconnects the socket (`socket.disconnect(true)`).
 

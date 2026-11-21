@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
-import type { DbClient, AttachmentRecord } from "@wabrix/db";
-import { FakeMalwareScanner, InMemoryObjectStore, EICAR_TEST_SIGNATURE } from "@wabrix/providers";
+import type { DbClient, AttachmentRecord } from "@flowdesk/db";
+import { FakeMalwareScanner, InMemoryObjectStore, EICAR_TEST_SIGNATURE } from "@flowdesk/providers";
 import { scanQuarantinedAttachment } from "./media-scanner.js";
 
 function createMockWorkerDb(initialAttachment?: AttachmentRecord) {
@@ -15,9 +15,9 @@ function createMockWorkerDb(initialAttachment?: AttachmentRecord) {
   const db = {
     query: async (sql: string, values: unknown[] = []) => {
       await Promise.resolve();
-      // SELECT FROM wabrix.attachments
+      // SELECT FROM flowdesk.attachments
       if (
-        sql.includes("FROM wabrix.attachments") &&
+        sql.includes("FROM flowdesk.attachments") &&
         sql.includes("organization_id = $1 AND id = $2")
       ) {
         if (!attachment) {
@@ -32,7 +32,7 @@ function createMockWorkerDb(initialAttachment?: AttachmentRecord) {
         };
       }
 
-      // UPDATE wabrix.attachments SET status = $1
+      // UPDATE flowdesk.attachments SET status = $1
       if (sql.includes("SET status = $1")) {
         const [status, detectedMime, checksum, quarantineReason, now, scannerName] = values as [
           "clean" | "rejected",
@@ -68,8 +68,8 @@ function createMockWorkerDb(initialAttachment?: AttachmentRecord) {
         };
       }
 
-      // INSERT INTO wabrix.outbox_events
-      if (sql.includes("INSERT INTO wabrix.outbox_events")) {
+      // INSERT INTO flowdesk.outbox_events
+      if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
         return { rows: [], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 

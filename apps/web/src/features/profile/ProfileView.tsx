@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { LogOut } from "lucide-react";
-import { Button } from "@wabrix/ui";
+import { Button } from "@flowdesk/ui";
 import {
   Card,
   CardContent,

@@ -1,4 +1,4 @@
-# Wabrix Production Promotion & Canary Rollback Rehearsal Evidence
+# FlowDesk Production Promotion & Canary Rollback Rehearsal Evidence
 
 This document records the rehearsal evidence for the M5 immutable production promotion, canary health gating, workload deployment, and automated rollback path as specified in Issue #181, Issue #203, and Issue #205.
 
@@ -27,14 +27,14 @@ This document records the rehearsal evidence for the M5 immutable production pro
 
 ### Architecture Reference
 
-In accordance with **ADR-003** (`docs/adr/003-aws-ecs-reference-deployment.md`) and **Engineering Specification §21.1**, the production compute runtime is **AWS ECS Fargate** behind an Application Load Balancer (`wabrix-production-alb`).
+In accordance with **ADR-003** (`docs/adr/003-aws-ecs-reference-deployment.md`) and **Engineering Specification §21.1**, the production compute runtime is **AWS ECS Fargate** behind an Application Load Balancer (`flowdesk-production-alb`).
 
 ### Stable Catchup Promotion Lifecycle
 
 1. **Provenance & Verification:** The 40-character commit SHA is validated, GHCR manifests are inspected, and exact `sha256:...` digests are extracted into `image-digests.json`.
 2. **Canary Workload Deployment (Pre-Traffic Shift):**
    - New task definition revision is registered with exact `sha256:...` digests.
-   - `wabrix-production-canary-api` service is updated.
+   - `flowdesk-production-canary-api` service is updated.
    - Task stability and target group health are verified.
    - Running container digests are queried to confirm they match the expected digests.
    - **Only after canary workload verification is traffic shifted to 5%.**
@@ -42,7 +42,7 @@ In accordance with **ADR-003** (`docs/adr/003-aws-ecs-reference-deployment.md`) 
    - Traffic is shifted in staged increments on the ALB listener.
    - Active `/livez` probes and Prometheus SLO metrics (5xx error rate <= 0.1%, p99 latency <= 500ms, burn rate <= 1.0) are evaluated at each step.
 4. **Stable Catchup Promotion:**
-   - Once 100% canary traffic satisfies all health and SLO gates, the **stable workload** (`wabrix-production-stable-api`) is deployed with the exact same verified task definition.
+   - Once 100% canary traffic satisfies all health and SLO gates, the **stable workload** (`flowdesk-production-stable-api`) is deployed with the exact same verified task definition.
    - Stable tasks are verified healthy and running the new digest.
    - ALB listener traffic is reset to **100% stable / 0% canary**.
    - Production is never left permanently dependent on a canary slice.
@@ -70,10 +70,10 @@ All compute controllers, traffic adjusters, health evaluators, and rollback trig
 
 Before running `.github/workflows/production-release.yml` in live production:
 
-- `AWS_ROLE_TO_ASSUME`: OIDC IAM role ARN (`wabrix-production-github-actions-oidc`).
-- `ECS_CLUSTER_NAME`: ECS cluster name (`wabrix-production-cluster`).
+- `AWS_ROLE_TO_ASSUME`: OIDC IAM role ARN (`flowdesk-production-github-actions-oidc`).
+- `ECS_CLUSTER_NAME`: ECS cluster name (`flowdesk-production-cluster`).
 - `ECS_CANARY_SERVICE_NAME` / `ECS_STABLE_SERVICE_NAME`: ECS service names.
 - `PROD_LISTENER_ARN`: Production ALB listener ARN.
 - `PROD_STABLE_TG_ARN` / `PROD_CANARY_TG_ARN`: Target group ARNs.
-- `CANARY_ENDPOINT_URL`: Canary health endpoint URL (e.g. `https://canary.wabrix.ai`).
+- `CANARY_ENDPOINT_URL`: Canary health endpoint URL (e.g. `https://canary.flowdesk.ai`).
 - `PROMETHEUS_URL`: (Optional) Production Prometheus URL.

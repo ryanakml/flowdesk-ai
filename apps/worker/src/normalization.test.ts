@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { DbClient } from "@wabrix/db";
-import { FakeWhatsAppProvider } from "@wabrix/providers";
+import type { DbClient } from "@flowdesk/db";
+import { FakeWhatsAppProvider } from "@flowdesk/providers";
 import {
   normalizeCustomerPhone,
   parseWhatsAppWebhook,
@@ -184,13 +184,13 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
         await Promise.resolve();
         const sql = queryText.replace(/\s+/g, " ").trim();
 
-        if (sql.includes("SELECT id FROM wabrix.channels")) {
+        if (sql.includes("SELECT id FROM flowdesk.channels")) {
           return { rows: [{ id: channelId }], rowCount: 1, command: "SELECT", oid: 0, fields: [] };
         }
 
         if (
           sql.includes(
-            "FROM wabrix.conversations WHERE organization_id = $1 AND channel_id = $2 AND customer_phone = $3"
+            "FROM flowdesk.conversations WHERE organization_id = $1 AND channel_id = $2 AND customer_phone = $3"
           )
         ) {
           const targetPhone = values[2] as string;
@@ -202,7 +202,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
           return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
 
-        if (sql.includes("INSERT INTO wabrix.conversations")) {
+        if (sql.includes("INSERT INTO flowdesk.conversations")) {
           const id = `conv-${conversations.size + 1}`;
           const c = {
             id,
@@ -219,7 +219,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
 
         if (
           sql.includes(
-            "FROM wabrix.messages WHERE organization_id = $1 AND provider_message_id = $2"
+            "FROM flowdesk.messages WHERE organization_id = $1 AND provider_message_id = $2"
           )
         ) {
           const providerId = values[1] as string;
@@ -231,7 +231,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
           return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
 
-        if (sql.includes("INSERT INTO wabrix.messages")) {
+        if (sql.includes("INSERT INTO flowdesk.messages")) {
           const id = `msg-${messages.size + 1}`;
           const m = {
             id,
@@ -249,11 +249,11 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
           return { rows: [m], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
         }
 
-        if (sql.includes("UPDATE wabrix.conversations SET last_message_at")) {
+        if (sql.includes("UPDATE flowdesk.conversations SET last_message_at")) {
           return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
         }
 
-        if (sql.includes("FROM wabrix.bot_configs")) {
+        if (sql.includes("FROM flowdesk.bot_configs")) {
           return autoMode
             ? {
                 rows: [
@@ -279,11 +279,11 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
             : { rows: [], rowCount: 0 };
         }
 
-        if (sql.includes("FROM wabrix.knowledge_versions")) {
+        if (sql.includes("FROM flowdesk.knowledge_versions")) {
           return { rows: [], rowCount: 0 };
         }
 
-        if (sql.includes("INSERT INTO wabrix.bot_runs")) {
+        if (sql.includes("INSERT INTO flowdesk.bot_runs")) {
           botRuns.push({ mode: values[9] as string, triggerMessageId: values[2] as string });
           return {
             rows: [
@@ -310,13 +310,13 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
           };
         }
 
-        if (sql.includes("FROM wabrix.messages WHERE id = $1 AND organization_id = $2")) {
+        if (sql.includes("FROM flowdesk.messages WHERE id = $1 AND organization_id = $2")) {
           const id = values[0] as string;
           const m = messages.get(id);
           return { rows: m ? [m] : [], rowCount: m ? 1 : 0, command: "SELECT", oid: 0, fields: [] };
         }
 
-        if (sql.includes("UPDATE wabrix.messages SET status = $1")) {
+        if (sql.includes("UPDATE flowdesk.messages SET status = $1")) {
           const id = values[1] as string;
           const m = messages.get(id);
           if (m) {
@@ -327,7 +327,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
 
         if (
           sql.includes("claim_outbox_events('webhook.received'") ||
-          (sql.includes("FROM wabrix.outbox_events") &&
+          (sql.includes("FROM flowdesk.outbox_events") &&
             sql.includes("event_type = 'webhook.received'") &&
             sql.includes("published_at IS NULL"))
         ) {
@@ -341,7 +341,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
           };
         }
 
-        if (sql.includes("SELECT raw_payload FROM wabrix.webhook_events WHERE id = $1")) {
+        if (sql.includes("SELECT raw_payload FROM flowdesk.webhook_events WHERE id = $1")) {
           const id = values[0] as string;
           const ev = webhookEvents.get(id);
           return {
@@ -353,7 +353,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
           };
         }
 
-        if (sql.includes("UPDATE wabrix.webhook_events")) {
+        if (sql.includes("UPDATE flowdesk.webhook_events")) {
           const id = values[0] as string;
           const ev = webhookEvents.get(id);
           if (ev) {
@@ -363,7 +363,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
           return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
         }
 
-        if (sql.includes("UPDATE wabrix.outbox_events SET published_at")) {
+        if (sql.includes("UPDATE flowdesk.outbox_events SET published_at")) {
           const id = values[0] as string;
           const ev = outboxEvents.find((e) => e.id === id);
           if (ev) ev.published_at = new Date();
@@ -386,7 +386,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
         }
 
         if (
-          sql.includes("FROM wabrix.automation_policies") &&
+          sql.includes("FROM flowdesk.automation_policies") &&
           sql.includes("status = 'published'")
         ) {
           if (failRouting) throw new Error("22P02: invalid input syntax for type uuid");
@@ -416,7 +416,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
             : { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
 
-        if (sql.includes("FROM wabrix.routing_rules") && sql.includes("ORDER BY priority ASC")) {
+        if (sql.includes("FROM flowdesk.routing_rules") && sql.includes("ORDER BY priority ASC")) {
           if (failRouting) throw new Error("22P02: invalid input syntax for type uuid");
           return routingRules
             ? {
@@ -441,7 +441,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
             : { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
 
-        if (sql.includes("INSERT INTO wabrix.routing_logs")) {
+        if (sql.includes("INSERT INTO flowdesk.routing_logs")) {
           if (failRouting) throw new Error("22P02: invalid input syntax for type uuid");
           const log = {
             organizationId: values[0] as string,
@@ -482,7 +482,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
           };
         }
 
-        if (sql.includes("UPDATE wabrix.conversations SET queue_id")) {
+        if (sql.includes("UPDATE flowdesk.conversations SET queue_id")) {
           const convId = values[4] as string;
           const conv = conversations.get(convId);
           if (conv) {
@@ -528,7 +528,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
     const payload = fakeProvider.createInboundTextWebhook({
       phoneNumberId,
       from: "+62 812 3456 7890",
-      text: "Halo Wabrix",
+      text: "Halo FlowDesk",
       senderName: "Budi",
       messageId: "wamid.inbound.1"
     });
@@ -544,7 +544,7 @@ describe("Worker Message & Conversation Processing Pipeline (M2-06)", () => {
     expect(messages.size).toBe(1);
 
     const msg = Array.from(messages.values())[0]!;
-    expect(msg.content).toBe("Halo Wabrix");
+    expect(msg.content).toBe("Halo FlowDesk");
     expect(msg.providerMessageId).toBe("wamid.inbound.1");
 
     // Processing the exact same payload a second time does not duplicate message
@@ -800,7 +800,7 @@ describe("Channel status casing and silent-drop visibility (Issue-A fix)", () =>
         await Promise.resolve();
         const sql = queryText.replace(/\s+/g, " ").trim();
         // Simulate channel query returning empty (channel is disconnected, excluded by WHERE)
-        if (sql.includes("SELECT id FROM wabrix.channels")) {
+        if (sql.includes("SELECT id FROM flowdesk.channels")) {
           return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
@@ -840,13 +840,13 @@ describe("Channel status casing and silent-drop visibility (Issue-A fix)", () =>
       async query(queryText: string, values: unknown[] = []) {
         await Promise.resolve();
         const sql = queryText.replace(/\s+/g, " ").trim();
-        if (sql.includes("SELECT id FROM wabrix.channels")) {
+        if (sql.includes("SELECT id FROM flowdesk.channels")) {
           return { rows: [{ id: channelId }], rowCount: 1, command: "SELECT", oid: 0, fields: [] };
         }
-        if (sql.includes("FROM wabrix.conversations WHERE organization_id")) {
+        if (sql.includes("FROM flowdesk.conversations WHERE organization_id")) {
           return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
-        if (sql.includes("INSERT INTO wabrix.conversations")) {
+        if (sql.includes("INSERT INTO flowdesk.conversations")) {
           const c = {
             id: "conv-casing-1",
             organizationId: orgId,
@@ -860,11 +860,11 @@ describe("Channel status casing and silent-drop visibility (Issue-A fix)", () =>
           return { rows: [c], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
         }
         if (
-          sql.includes("FROM wabrix.messages WHERE organization_id = $1 AND provider_message_id")
+          sql.includes("FROM flowdesk.messages WHERE organization_id = $1 AND provider_message_id")
         ) {
           return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
-        if (sql.includes("INSERT INTO wabrix.messages")) {
+        if (sql.includes("INSERT INTO flowdesk.messages")) {
           const m = {
             id: `msg-casing-${messages.size + 1}`,
             content: values[7] as string,
@@ -896,10 +896,10 @@ describe("Channel status casing and silent-drop visibility (Issue-A fix)", () =>
             fields: []
           };
         }
-        if (sql.includes("UPDATE wabrix.conversations SET last_message_at")) {
+        if (sql.includes("UPDATE flowdesk.conversations SET last_message_at")) {
           return { rows: [], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
         }
-        if (sql.includes("FROM wabrix.routing_rules")) {
+        if (sql.includes("FROM flowdesk.routing_rules")) {
           return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
@@ -933,7 +933,7 @@ describe("Channel status casing and silent-drop visibility (Issue-A fix)", () =>
       async query(queryText: string) {
         await Promise.resolve();
         const sql = queryText.replace(/\s+/g, " ").trim();
-        if (sql.includes("SELECT id FROM wabrix.channels")) {
+        if (sql.includes("SELECT id FROM flowdesk.channels")) {
           return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
         }
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };

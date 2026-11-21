@@ -10,7 +10,7 @@ import {
   Settings,
   type LucideIcon
 } from "lucide-react";
-import type { Permission } from "@wabrix/domain";
+import type { Permission } from "@flowdesk/domain";
 
 export type AppRoutePath =
   | "/inbox"

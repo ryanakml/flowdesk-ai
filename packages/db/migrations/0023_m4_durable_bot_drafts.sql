@@ -1,9 +1,9 @@
 -- M4-R3/R4: durable AI draft jobs and approval-safe audit state.
 
-ALTER TABLE wabrix.bot_runs
+ALTER TABLE flowdesk.bot_runs
   DROP CONSTRAINT IF EXISTS bot_runs_status_check;
 
-UPDATE wabrix.bot_runs
+UPDATE flowdesk.bot_runs
 SET status = CASE status
   WHEN 'started' THEN 'processing'
   WHEN 'failed' THEN 'provider_failed'
@@ -11,14 +11,14 @@ SET status = CASE status
   ELSE status
 END;
 
-ALTER TABLE wabrix.bot_runs
+ALTER TABLE flowdesk.bot_runs
   ADD CONSTRAINT bot_runs_status_check CHECK (
     status IN (
       'queued', 'processing', 'completed', 'no_evidence', 'safety_blocked',
       'budget_exceeded', 'provider_failed', 'stale', 'cancelled', 'off'
     )
   ),
-  ADD COLUMN IF NOT EXISTS requested_by_user_id uuid REFERENCES wabrix.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS requested_by_user_id uuid REFERENCES flowdesk.users(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS model text,
   ADD COLUMN IF NOT EXISTS prompt_version text NOT NULL DEFAULT 'm4-v1',
   ADD COLUMN IF NOT EXISTS config_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -33,7 +33,7 @@ ALTER TABLE wabrix.bot_runs
 
 -- Establish an initial immutable boundary for organizations that already had active
 -- knowledge before durable ingestion started creating versions.
-INSERT INTO wabrix.knowledge_versions (
+INSERT INTO flowdesk.knowledge_versions (
   organization_id, version_number, title, snapshot_metadata
 )
 SELECT source.organization_id,
@@ -43,25 +43,25 @@ SELECT source.organization_id,
          'activeSourceCount', COUNT(*),
          'activeSourceIds', jsonb_agg(source.id ORDER BY source.id)
        )
-FROM wabrix.knowledge_sources AS source
+FROM flowdesk.knowledge_sources AS source
 WHERE source.status = 'active'
   AND source.deleted_at IS NULL
   AND NOT EXISTS (
-    SELECT 1 FROM wabrix.knowledge_versions AS version
+    SELECT 1 FROM flowdesk.knowledge_versions AS version
     WHERE version.organization_id = source.organization_id
   )
 GROUP BY source.organization_id
 ON CONFLICT (organization_id, version_number) DO NOTHING;
 
 CREATE UNIQUE INDEX IF NOT EXISTS bot_runs_one_active_trigger_unique
-  ON wabrix.bot_runs (organization_id, conversation_id, trigger_message_id)
+  ON flowdesk.bot_runs (organization_id, conversation_id, trigger_message_id)
   WHERE trigger_message_id IS NOT NULL AND status IN ('queued', 'processing');
 
 CREATE INDEX IF NOT EXISTS bot_runs_claim_idx
-  ON wabrix.bot_runs (available_at, created_at)
+  ON flowdesk.bot_runs (available_at, created_at)
   WHERE status = 'queued';
 
-CREATE OR REPLACE FUNCTION wabrix.claim_bot_draft_runs(input_limit integer)
+CREATE OR REPLACE FUNCTION flowdesk.claim_bot_draft_runs(input_limit integer)
 RETURNS TABLE (
   id uuid,
   organization_id uuid,
@@ -71,14 +71,14 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, wabrix
+SET search_path = pg_catalog, flowdesk
 AS $$
 BEGIN
   IF input_limit < 1 OR input_limit > 50 THEN
     RAISE EXCEPTION 'Bot draft claim limit must be between 1 and 50';
   END IF;
 
-  UPDATE wabrix.bot_runs AS run
+  UPDATE flowdesk.bot_runs AS run
   SET status = 'provider_failed',
       error_code = 'WORKER_LEASE_EXPIRED',
       error_detail = 'Draft generation stopped after the worker lease expired.',
@@ -91,7 +91,7 @@ BEGIN
   RETURN QUERY
   WITH candidates AS (
     SELECT run.id
-    FROM wabrix.bot_runs AS run
+    FROM flowdesk.bot_runs AS run
     WHERE (run.status = 'queued'
            OR (run.status = 'processing'
                AND run.claimed_at < clock_timestamp() - interval '2 minutes'))
@@ -101,7 +101,7 @@ BEGIN
     FOR UPDATE SKIP LOCKED
     LIMIT input_limit
   ), claimed AS (
-    UPDATE wabrix.bot_runs AS run
+    UPDATE flowdesk.bot_runs AS run
     SET status = 'processing',
         attempts = run.attempts + 1,
         claimed_at = clock_timestamp(),
@@ -116,13 +116,13 @@ BEGIN
   FROM claimed;
 END $$;
 
-ALTER FUNCTION wabrix.claim_bot_draft_runs(integer) OWNER TO wabrix_system;
-REVOKE ALL ON FUNCTION wabrix.claim_bot_draft_runs(integer) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION wabrix.claim_bot_draft_runs(integer) TO wabrix_runtime;
-GRANT SELECT, UPDATE ON wabrix.bot_runs TO wabrix_system;
-GRANT SELECT, INSERT, UPDATE ON wabrix.realtime_versions TO wabrix_system;
+ALTER FUNCTION flowdesk.claim_bot_draft_runs(integer) OWNER TO flowdesk_system;
+REVOKE ALL ON FUNCTION flowdesk.claim_bot_draft_runs(integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION flowdesk.claim_bot_draft_runs(integer) TO flowdesk_runtime;
+GRANT SELECT, UPDATE ON flowdesk.bot_runs TO flowdesk_system;
+GRANT SELECT, INSERT, UPDATE ON flowdesk.realtime_versions TO flowdesk_system;
 
-DROP TRIGGER IF EXISTS bot_runs_bump_realtime_version ON wabrix.bot_runs;
+DROP TRIGGER IF EXISTS bot_runs_bump_realtime_version ON flowdesk.bot_runs;
 CREATE TRIGGER bot_runs_bump_realtime_version
-AFTER INSERT OR UPDATE ON wabrix.bot_runs
-FOR EACH ROW EXECUTE FUNCTION wabrix.bump_realtime_version();
+AFTER INSERT OR UPDATE ON flowdesk.bot_runs
+FOR EACH ROW EXECUTE FUNCTION flowdesk.bump_realtime_version();

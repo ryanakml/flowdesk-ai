@@ -1,13 +1,13 @@
 -- Migration 0028: durable M5 automation safety controls and takeover cancellation support
 
-CREATE TABLE IF NOT EXISTS wabrix.automation_safety_controls (
+CREATE TABLE IF NOT EXISTS flowdesk.automation_safety_controls (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid REFERENCES wabrix.organizations(id) ON DELETE CASCADE,
+  organization_id uuid REFERENCES flowdesk.organizations(id) ON DELETE CASCADE,
   scope text NOT NULL CHECK (scope IN ('global', 'tenant', 'bot', 'channel', 'conversation')),
   scope_id uuid,
   disabled boolean NOT NULL DEFAULT true,
   reason text NOT NULL CHECK (length(trim(reason)) BETWEEN 1 AND 500),
-  actor_user_id uuid REFERENCES wabrix.users(id) ON DELETE SET NULL,
+  actor_user_id uuid REFERENCES flowdesk.users(id) ON DELETE SET NULL,
   expires_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT clock_timestamp(),
   updated_at timestamptz NOT NULL DEFAULT clock_timestamp(),
@@ -19,39 +19,39 @@ CREATE TABLE IF NOT EXISTS wabrix.automation_safety_controls (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS automation_safety_global_unique
-  ON wabrix.automation_safety_controls ((scope)) WHERE scope = 'global';
+  ON flowdesk.automation_safety_controls ((scope)) WHERE scope = 'global';
 CREATE UNIQUE INDEX IF NOT EXISTS automation_safety_tenant_unique
-  ON wabrix.automation_safety_controls (organization_id, scope) WHERE scope = 'tenant';
+  ON flowdesk.automation_safety_controls (organization_id, scope) WHERE scope = 'tenant';
 CREATE UNIQUE INDEX IF NOT EXISTS automation_safety_scoped_unique
-  ON wabrix.automation_safety_controls (organization_id, scope, scope_id)
+  ON flowdesk.automation_safety_controls (organization_id, scope, scope_id)
   WHERE scope IN ('bot', 'channel', 'conversation');
 CREATE INDEX IF NOT EXISTS automation_safety_active_lookup
-  ON wabrix.automation_safety_controls (organization_id, scope, scope_id, disabled, expires_at);
+  ON flowdesk.automation_safety_controls (organization_id, scope, scope_id, disabled, expires_at);
 
-ALTER TABLE wabrix.automation_safety_controls ENABLE ROW LEVEL SECURITY;
-ALTER TABLE wabrix.automation_safety_controls FORCE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.automation_safety_controls ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flowdesk.automation_safety_controls FORCE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS tenant_isolation_automation_safety_controls ON wabrix.automation_safety_controls;
+DROP POLICY IF EXISTS tenant_isolation_automation_safety_controls ON flowdesk.automation_safety_controls;
 CREATE POLICY tenant_isolation_automation_safety_controls
-  ON wabrix.automation_safety_controls
+  ON flowdesk.automation_safety_controls
   FOR ALL
   TO PUBLIC
   USING (
     scope <> 'global'
-    AND organization_id = wabrix.current_organization_id()
+    AND organization_id = flowdesk.current_organization_id()
   )
   WITH CHECK (
     scope <> 'global'
-    AND organization_id = wabrix.current_organization_id()
+    AND organization_id = flowdesk.current_organization_id()
   );
 
-ALTER TABLE wabrix.automation_safety_controls OWNER TO wabrix_migrator;
-GRANT SELECT, INSERT, UPDATE, DELETE ON wabrix.automation_safety_controls TO wabrix_runtime;
-GRANT SELECT ON wabrix.automation_safety_controls TO wabrix_reporting;
+ALTER TABLE flowdesk.automation_safety_controls OWNER TO flowdesk_migrator;
+GRANT SELECT, INSERT, UPDATE, DELETE ON flowdesk.automation_safety_controls TO flowdesk_runtime;
+GRANT SELECT ON flowdesk.automation_safety_controls TO flowdesk_reporting;
 
 -- Resolve active safety state through a narrow SECURITY DEFINER boundary so a runtime tenant can
 -- observe the global stop without receiving direct RLS access to the global row.
-CREATE OR REPLACE FUNCTION wabrix.resolve_automation_safety(
+CREATE OR REPLACE FUNCTION flowdesk.resolve_automation_safety(
   input_organization_id uuid,
   input_bot_config_id uuid DEFAULT NULL,
   input_channel_id uuid DEFAULT NULL,
@@ -66,10 +66,10 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = wabrix, pg_temp
+SET search_path = flowdesk, pg_temp
 AS $$
   SELECT control.id, control.scope, control.reason, control.expires_at
-  FROM wabrix.automation_safety_controls AS control
+  FROM flowdesk.automation_safety_controls AS control
   WHERE control.disabled = true
     AND (control.expires_at IS NULL OR control.expires_at > now())
     AND (
@@ -101,13 +101,13 @@ AS $$
   LIMIT 1;
 $$;
 
-ALTER FUNCTION wabrix.resolve_automation_safety(uuid, uuid, uuid, uuid) OWNER TO wabrix_migrator;
-REVOKE ALL ON FUNCTION wabrix.resolve_automation_safety(uuid, uuid, uuid, uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION wabrix.resolve_automation_safety(uuid, uuid, uuid, uuid)
-  TO wabrix_runtime, wabrix_system, wabrix_reporting;
+ALTER FUNCTION flowdesk.resolve_automation_safety(uuid, uuid, uuid, uuid) OWNER TO flowdesk_migrator;
+REVOKE ALL ON FUNCTION flowdesk.resolve_automation_safety(uuid, uuid, uuid, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION flowdesk.resolve_automation_safety(uuid, uuid, uuid, uuid)
+  TO flowdesk_runtime, flowdesk_system, flowdesk_reporting;
 
 -- Cancel pending AUTO work inside the same transaction that records a human takeover signal.
-CREATE OR REPLACE FUNCTION wabrix.cancel_pending_auto_for_conversation(
+CREATE OR REPLACE FUNCTION flowdesk.cancel_pending_auto_for_conversation(
   input_organization_id uuid,
   input_conversation_id uuid,
   input_reason text
@@ -115,10 +115,10 @@ CREATE OR REPLACE FUNCTION wabrix.cancel_pending_auto_for_conversation(
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = wabrix, pg_temp
+SET search_path = flowdesk, pg_temp
 AS $$
 BEGIN
-  UPDATE wabrix.bot_runs
+  UPDATE flowdesk.bot_runs
   SET status = 'cancelled',
       error_code = 'AUTO_TAKEOVER_CANCELLED',
       error_detail = input_reason,
@@ -133,9 +133,9 @@ BEGIN
     AND status IN ('queued', 'processing', 'completed')
     AND operator_action IS NULL;
 
-  UPDATE wabrix.outbound_intents AS intent
+  UPDATE flowdesk.outbound_intents AS intent
   SET state = 'failed', last_error = input_reason, updated_at = clock_timestamp()
-  FROM wabrix.messages AS message
+  FROM flowdesk.messages AS message
   WHERE intent.organization_id = input_organization_id
     AND message.organization_id = intent.organization_id
     AND message.id = intent.message_id
@@ -144,7 +144,7 @@ BEGIN
     AND message.metadata ? 'aiBotRunId'
     AND intent.state = 'queued';
 
-  UPDATE wabrix.messages AS message
+  UPDATE flowdesk.messages AS message
   SET status = 'failed', error_detail = input_reason, updated_at = clock_timestamp()
   WHERE message.organization_id = input_organization_id
     AND message.conversation_id = input_conversation_id
@@ -154,16 +154,16 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION wabrix.cancel_pending_auto_for_conversation(uuid, uuid, text) OWNER TO wabrix_migrator;
-REVOKE ALL ON FUNCTION wabrix.cancel_pending_auto_for_conversation(uuid, uuid, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION wabrix.cancel_pending_auto_for_conversation(uuid, uuid, text)
-  TO wabrix_runtime, wabrix_system;
+ALTER FUNCTION flowdesk.cancel_pending_auto_for_conversation(uuid, uuid, text) OWNER TO flowdesk_migrator;
+REVOKE ALL ON FUNCTION flowdesk.cancel_pending_auto_for_conversation(uuid, uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION flowdesk.cancel_pending_auto_for_conversation(uuid, uuid, text)
+  TO flowdesk_runtime, flowdesk_system;
 
-CREATE OR REPLACE FUNCTION wabrix.invalidate_auto_on_conversation_takeover()
+CREATE OR REPLACE FUNCTION flowdesk.invalidate_auto_on_conversation_takeover()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = wabrix, pg_temp
+SET search_path = flowdesk, pg_temp
 AS $$
 DECLARE
   takeover_reason text;
@@ -179,7 +179,7 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  PERFORM wabrix.cancel_pending_auto_for_conversation(
+  PERFORM flowdesk.cancel_pending_auto_for_conversation(
     NEW.organization_id,
     NEW.id,
     takeover_reason
@@ -188,23 +188,23 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS conversations_invalidate_pending_auto ON wabrix.conversations;
+DROP TRIGGER IF EXISTS conversations_invalidate_pending_auto ON flowdesk.conversations;
 CREATE TRIGGER conversations_invalidate_pending_auto
-AFTER UPDATE OF bot_paused, assigned_to_user_id, status ON wabrix.conversations
+AFTER UPDATE OF bot_paused, assigned_to_user_id, status ON flowdesk.conversations
 FOR EACH ROW
-EXECUTE FUNCTION wabrix.invalidate_auto_on_conversation_takeover();
+EXECUTE FUNCTION flowdesk.invalidate_auto_on_conversation_takeover();
 
-CREATE OR REPLACE FUNCTION wabrix.invalidate_auto_on_manual_agent_message()
+CREATE OR REPLACE FUNCTION flowdesk.invalidate_auto_on_manual_agent_message()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = wabrix, pg_temp
+SET search_path = flowdesk, pg_temp
 AS $$
 BEGIN
   IF NEW.direction = 'outbound'
     AND NEW.sender_type = 'agent'
     AND NOT (NEW.metadata ? 'aiBotRunId') THEN
-    PERFORM wabrix.cancel_pending_auto_for_conversation(
+    PERFORM flowdesk.cancel_pending_auto_for_conversation(
       NEW.organization_id,
       NEW.conversation_id,
       'Manual agent message superseded pending automation.'
@@ -214,17 +214,17 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS messages_invalidate_pending_auto ON wabrix.messages;
+DROP TRIGGER IF EXISTS messages_invalidate_pending_auto ON flowdesk.messages;
 CREATE TRIGGER messages_invalidate_pending_auto
-AFTER INSERT ON wabrix.messages
+AFTER INSERT ON flowdesk.messages
 FOR EACH ROW
-EXECUTE FUNCTION wabrix.invalidate_auto_on_manual_agent_message();
+EXECUTE FUNCTION flowdesk.invalidate_auto_on_manual_agent_message();
 
-CREATE OR REPLACE FUNCTION wabrix.invalidate_auto_on_emergency_disable()
+CREATE OR REPLACE FUNCTION flowdesk.invalidate_auto_on_emergency_disable()
 RETURNS trigger
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = wabrix, pg_temp
+SET search_path = flowdesk, pg_temp
 AS $$
 DECLARE
   conversation_record record;
@@ -233,10 +233,10 @@ BEGIN
     AND OLD.emergency_disabled IS DISTINCT FROM NEW.emergency_disabled THEN
     FOR conversation_record IN
       SELECT id
-      FROM wabrix.conversations
+      FROM flowdesk.conversations
       WHERE organization_id = NEW.organization_id
     LOOP
-      PERFORM wabrix.cancel_pending_auto_for_conversation(
+      PERFORM flowdesk.cancel_pending_auto_for_conversation(
         NEW.organization_id,
         conversation_record.id,
         'Tenant emergency stop disabled automation.'
@@ -247,8 +247,8 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS bot_configs_invalidate_pending_auto ON wabrix.bot_configs;
+DROP TRIGGER IF EXISTS bot_configs_invalidate_pending_auto ON flowdesk.bot_configs;
 CREATE TRIGGER bot_configs_invalidate_pending_auto
-AFTER UPDATE OF emergency_disabled ON wabrix.bot_configs
+AFTER UPDATE OF emergency_disabled ON flowdesk.bot_configs
 FOR EACH ROW
-EXECUTE FUNCTION wabrix.invalidate_auto_on_emergency_disable();
+EXECUTE FUNCTION flowdesk.invalidate_auto_on_emergency_disable();

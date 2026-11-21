@@ -22,7 +22,7 @@ function createMockWebhookDb(): {
       await Promise.resolve();
       const sql = queryText.replace(/\s+/g, " ").trim();
 
-      if (sql.includes("SELECT organization_id FROM wabrix.channels")) {
+      if (sql.includes("SELECT organization_id FROM flowdesk.channels")) {
         const phone = values[0] as string;
         const ch = channels.get(phone);
         if (ch) {
@@ -37,7 +37,7 @@ function createMockWebhookDb(): {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.webhook_events")) {
+      if (sql.includes("INSERT INTO flowdesk.webhook_events")) {
         const provider = values[0] as "whatsapp";
         const payloadHash = values[1] as string;
         const phoneNumberId = (values[2] as string | null) ?? null;
@@ -74,7 +74,7 @@ function createMockWebhookDb(): {
         return { rows: [record], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.outbox_events")) {
+      if (sql.includes("INSERT INTO flowdesk.outbox_events")) {
         outboxEvents.push({
           organization_id: values[0],
           aggregate_id: values[1],
@@ -97,7 +97,7 @@ function createMockWebhookDb(): {
 
       if (
         sql.includes("SELECT") &&
-        sql.includes("FROM wabrix.webhook_events WHERE provider = $1 AND payload_hash = $2")
+        sql.includes("FROM flowdesk.webhook_events WHERE provider = $1 AND payload_hash = $2")
       ) {
         const provider = values[0] as string;
         const payloadHash = values[1] as string;
@@ -109,7 +109,7 @@ function createMockWebhookDb(): {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("SELECT") && sql.includes("FROM wabrix.webhook_events WHERE id = $1")) {
+      if (sql.includes("SELECT") && sql.includes("FROM flowdesk.webhook_events WHERE id = $1")) {
         const id = values[0] as string;
         const ev = events.get(id);
         return {

@@ -10,14 +10,14 @@ describe("WhatsApp Provider Adapter (M2-02)", () => {
       const res = await fake.sendTextMessage({
         phoneNumberId: "1234567890",
         to: "+1 (650) 555-0123",
-        text: "Hello from Wabrix agent!",
+        text: "Hello from FlowDesk agent!",
         accessToken: "test_token"
       });
 
       expect(res.messageId).toContain("wamid.");
       expect(res.recipientId).toBe("16505550123");
       expect(fake.getSentMessages()).toHaveLength(1);
-      expect(fake.getSentMessages()[0]?.text).toBe("Hello from Wabrix agent!");
+      expect(fake.getSentMessages()[0]?.text).toBe("Hello from FlowDesk agent!");
 
       fake.clear();
       expect(fake.getSentMessages()).toHaveLength(0);
@@ -98,12 +98,12 @@ describe("WhatsApp Provider Adapter (M2-02)", () => {
 
       const token = await provider.exchangeEmbeddedSignupCode({
         code: "one-time-code",
-        appId: "wabrix-app-id",
+        appId: "flowdesk-app-id",
         appSecret: "server-only-app-secret"
       });
       await provider.assignWhatsAppBusinessAccountSystemUser({
         wabaId: "waba_456",
-        systemUserId: "wabrix-system-user-id",
+        systemUserId: "flowdesk-system-user-id",
         adminAccessToken: "business-admin-token"
       });
       await provider.subscribeWhatsAppBusinessAccount({
@@ -114,7 +114,7 @@ describe("WhatsApp Provider Adapter (M2-02)", () => {
       expect(token).toEqual({ accessToken: "EAAG_embedded_token", expiresIn: 3600 });
       expect(fetchFn.mock.calls[0]?.[0]).toContain("/oauth/access_token?");
       expect(fetchFn.mock.calls[1]?.[0]).toBe(
-        "https://graph.facebook.com/v21.0/waba_456/assigned_users?user=wabrix-system-user-id&tasks=%5B%22MANAGE%22%5D"
+        "https://graph.facebook.com/v21.0/waba_456/assigned_users?user=flowdesk-system-user-id&tasks=%5B%22MANAGE%22%5D"
       );
       const assignmentRequest = fetchFn.mock.calls[1]?.[1] as RequestInit | undefined;
       expect(new Headers(assignmentRequest?.headers).get("Authorization")).toBe(
@@ -160,7 +160,7 @@ describe("WhatsApp Provider Adapter (M2-02)", () => {
           : {
               id: "phone_123",
               display_phone_number: "+62 812 3456 7890",
-              verified_name: "Wabrix"
+              verified_name: "FlowDesk"
             };
         return Promise.resolve(
           new Response(JSON.stringify(responseBody), {
@@ -357,7 +357,7 @@ describe("WhatsApp Provider Adapter (M2-02)", () => {
       const res = await provider.sendTextMessage({
         phoneNumberId: "phone_12345",
         to: "+1 650 555-0199",
-        text: "Live message from Wabrix",
+        text: "Live message from FlowDesk",
         accessToken: "EAAB_test_access_token"
       });
 
@@ -379,7 +379,7 @@ describe("WhatsApp Provider Adapter (M2-02)", () => {
             type: "text",
             text: {
               preview_url: false,
-              body: "Live message from Wabrix"
+              body: "Live message from FlowDesk"
             }
           })
         })

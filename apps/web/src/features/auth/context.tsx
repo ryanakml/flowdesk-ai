@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
-import type { SessionUser, UserOrganization } from "@wabrix/contracts";
-import { type RoleKey, type Permission, hasPermission } from "@wabrix/domain";
+import type { SessionUser, UserOrganization } from "@flowdesk/contracts";
+import { type RoleKey, type Permission, hasPermission } from "@flowdesk/domain";
 import {
   getSession,
   listUserOrganizations,

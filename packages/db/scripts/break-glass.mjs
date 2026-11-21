@@ -23,7 +23,7 @@ const client = new Client({ connectionString: DATABASE_BREAK_GLASS_URL });
 await client.connect();
 try {
   await client.query(
-    `INSERT INTO wabrix_meta.break_glass_access_log (change_ticket, reason, confirmation)
+    `INSERT INTO flowdesk_meta.break_glass_access_log (change_ticket, reason, confirmation)
      VALUES ($1, $2, 'BREAK_GLASS_CONFIRMED')`,
     [BREAK_GLASS_TICKET, BREAK_GLASS_REASON]
   );

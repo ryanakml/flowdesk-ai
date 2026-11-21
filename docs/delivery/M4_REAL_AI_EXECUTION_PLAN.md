@@ -2,7 +2,7 @@
 
 ## Outcome
 
-M4 is complete only when an organization admin can add approved knowledge from the Wabrix dashboard and an agent can generate a cited reply draft using a real AI provider, review it, and send it through the existing outbound pipeline.
+M4 is complete only when an organization admin can add approved knowledge from the FlowDesk dashboard and an agent can generate a cited reply draft using a real AI provider, review it, and send it through the existing outbound pipeline.
 
 The M4 user journey is:
 
@@ -125,7 +125,7 @@ Required behavior:
 
 Acceptance:
 
-- AI output cannot leave Wabrix before an authenticated human approval.
+- AI output cannot leave FlowDesk before an authenticated human approval.
 - Repeat approval is idempotent.
 - Stale, rejected, failed, or foreign-tenant drafts cannot be sent.
 
@@ -201,9 +201,9 @@ Expected result: every command exits `0`; no production runtime path defaults si
 3. Run the database, API, and worker integration suites:
 
    ```bash
-   pnpm --filter @wabrix/db test:integration
-   pnpm --filter @wabrix/api test:integration
-   pnpm --filter @wabrix/worker test:integration
+   pnpm --filter @flowdesk/db test:integration
+   pnpm --filter @flowdesk/api test:integration
+   pnpm --filter @flowdesk/worker test:integration
    ```
 
 4. Create tenant A and tenant B fixtures.

@@ -169,7 +169,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           encoding: "utf8",
           env: {
             ...process.env,
-            WABRIX_MOCK_COMPUTE_CONTROLLER: "true",
+            FLOWDESK_MOCK_COMPUTE_CONTROLLER: "true",
             MOCK_DIGEST_MISMATCH: "true"
           },
           stdio: ["pipe", "pipe", "pipe"]
@@ -189,7 +189,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
         encoding: "utf8",
         env: {
           ...process.env,
-          WABRIX_MOCK_COMPUTE_CONTROLLER: "true",
+          FLOWDESK_MOCK_COMPUTE_CONTROLLER: "true",
           MOCK_WORKLOAD_STATE_FILE: stateFile
         }
       });
@@ -214,7 +214,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
         encoding: "utf8",
         env: {
           ...process.env,
-          WABRIX_MOCK_COMPUTE_CONTROLLER: "true",
+          FLOWDESK_MOCK_COMPUTE_CONTROLLER: "true",
           MOCK_WORKLOAD_STATE_FILE: stateFile
         }
       });
@@ -236,17 +236,17 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
       const stub = setupStubAws({
         "ecs describe-services": {
           output:
-            "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:1\n"
+            "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:1\n"
         },
         "ecs describe-task-definition": {
           output: JSON.stringify({
-            family: "wabrix-production-api-canary",
+            family: "flowdesk-production-api-canary",
             taskDefinitionArn:
-              "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:1",
+              "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:1",
             revision: 1,
             containerDefinitions: [
-              { name: "api", image: "ghcr.io/ryanakml/wabrix-api:old" },
-              { name: "web", image: "ghcr.io/ryanakml/wabrix-web:old" }
+              { name: "api", image: "ghcr.io/ryanakml/flowdesk-api:old" },
+              { name: "web", image: "ghcr.io/ryanakml/flowdesk-web:old" }
             ]
           })
         },
@@ -254,7 +254,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           output: JSON.stringify({
             taskDefinition: {
               taskDefinitionArn:
-                "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:2"
+                "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:2"
             }
           })
         },
@@ -301,9 +301,9 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
             ...process.env,
             PATH: `${stub.binDir}:${process.env["PATH"]}`,
             STUB_AWS_CONFIG_FILE: stub.configFile,
-            WABRIX_MOCK_COMPUTE_CONTROLLER: "false",
-            ECS_CLUSTER_NAME: "wabrix-production-cluster",
-            ECS_SERVICE_NAME: "wabrix-production-canary-api",
+            FLOWDESK_MOCK_COMPUTE_CONTROLLER: "false",
+            ECS_CLUSTER_NAME: "flowdesk-production-cluster",
+            ECS_SERVICE_NAME: "flowdesk-production-canary-api",
             PROD_CANARY_TG_ARN:
               "arn:aws:elasticloadbalancing:ap-southeast-1:123:targetgroup/canary/1",
             AWS_REGION: "ap-southeast-1"
@@ -331,13 +331,13 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
       const stub = setupStubAws({
         "ecs describe-services": {
           output:
-            "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:1\n"
+            "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:1\n"
         },
         "ecs describe-task-definition": {
           output: JSON.stringify({
-            family: "wabrix-production-api-canary",
+            family: "flowdesk-production-api-canary",
             taskDefinitionArn:
-              "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:1",
+              "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:1",
             revision: 1,
             containerDefinitions: [{ name: "api", image: "old" }]
           })
@@ -346,7 +346,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           output: JSON.stringify({
             taskDefinition: {
               taskDefinitionArn:
-                "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:2"
+                "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:2"
             }
           })
         },
@@ -364,7 +364,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
                   {
                     name: "api",
                     image:
-                      "ghcr.io/ryanakml/wabrix-api@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+                      "ghcr.io/ryanakml/flowdesk-api@sha256:0000000000000000000000000000000000000000000000000000000000000000",
                     imageDigest:
                       "sha256:0000000000000000000000000000000000000000000000000000000000000000"
                   }
@@ -385,9 +385,9 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
               ...process.env,
               PATH: `${stub.binDir}:${process.env["PATH"]}`,
               STUB_AWS_CONFIG_FILE: stub.configFile,
-              WABRIX_MOCK_COMPUTE_CONTROLLER: "false",
-              ECS_CLUSTER_NAME: "wabrix-production-cluster",
-              ECS_SERVICE_NAME: "wabrix-production-canary-api",
+              FLOWDESK_MOCK_COMPUTE_CONTROLLER: "false",
+              ECS_CLUSTER_NAME: "flowdesk-production-cluster",
+              ECS_SERVICE_NAME: "flowdesk-production-canary-api",
               PROD_CANARY_TG_ARN:
                 "arn:aws:elasticloadbalancing:ap-southeast-1:123:targetgroup/canary/1",
               AWS_REGION: "ap-southeast-1"
@@ -408,13 +408,13 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
       const stub = setupStubAws({
         "ecs describe-services": {
           output:
-            "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:1\n"
+            "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:1\n"
         },
         "ecs describe-task-definition": {
           output: JSON.stringify({
-            family: "wabrix-production-api-canary",
+            family: "flowdesk-production-api-canary",
             taskDefinitionArn:
-              "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:1",
+              "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:1",
             revision: 1,
             containerDefinitions: [{ name: "api", image: "old" }]
           })
@@ -423,7 +423,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           output: JSON.stringify({
             taskDefinition: {
               taskDefinitionArn:
-                "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/wabrix-production-api-canary:2"
+                "arn:aws:ecs:ap-southeast-1:123456789012:task-definition/flowdesk-production-api-canary:2"
             }
           })
         },
@@ -467,9 +467,9 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
               ...process.env,
               PATH: `${stub.binDir}:${process.env["PATH"]}`,
               STUB_AWS_CONFIG_FILE: stub.configFile,
-              WABRIX_MOCK_COMPUTE_CONTROLLER: "false",
-              ECS_CLUSTER_NAME: "wabrix-production-cluster",
-              ECS_SERVICE_NAME: "wabrix-production-canary-api",
+              FLOWDESK_MOCK_COMPUTE_CONTROLLER: "false",
+              ECS_CLUSTER_NAME: "flowdesk-production-cluster",
+              ECS_SERVICE_NAME: "flowdesk-production-canary-api",
               PROD_CANARY_TG_ARN:
                 "arn:aws:elasticloadbalancing:ap-southeast-1:123:targetgroup/canary/1",
               AWS_REGION: "ap-southeast-1"
@@ -503,7 +503,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
         encoding: "utf8",
         env: {
           ...process.env,
-          WABRIX_MOCK_COMPUTE_CONTROLLER: "true",
+          FLOWDESK_MOCK_COMPUTE_CONTROLLER: "true",
           MOCK_WORKLOAD_STATE_FILE: stateFile
         }
       });
@@ -526,7 +526,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           encoding: "utf8",
           env: {
             ...process.env,
-            WABRIX_MOCK_COMPUTE_CONTROLLER: "true",
+            FLOWDESK_MOCK_COMPUTE_CONTROLLER: "true",
             MOCK_WORKLOAD_STATE_FILE: "/nonexistent/mock-state.json"
           },
           stdio: ["pipe", "pipe", "pipe"]
@@ -575,9 +575,9 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
             ...process.env,
             PATH: `${stub.binDir}:${process.env["PATH"]}`,
             STUB_AWS_CONFIG_FILE: stub.configFile,
-            WABRIX_MOCK_COMPUTE_CONTROLLER: "false",
-            ECS_CLUSTER_NAME: "wabrix-production-cluster",
-            ECS_SERVICE_NAME: "wabrix-production-canary-api",
+            FLOWDESK_MOCK_COMPUTE_CONTROLLER: "false",
+            ECS_CLUSTER_NAME: "flowdesk-production-cluster",
+            ECS_SERVICE_NAME: "flowdesk-production-canary-api",
             AWS_REGION: "ap-southeast-1"
           }
         });
@@ -606,7 +606,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
                   {
                     name: "api",
                     image:
-                      "ghcr.io/ryanakml/wabrix-api@sha256:9999999999999999999999999999999999999999999999999999999999999999",
+                      "ghcr.io/ryanakml/flowdesk-api@sha256:9999999999999999999999999999999999999999999999999999999999999999",
                     imageDigest:
                       "sha256:9999999999999999999999999999999999999999999999999999999999999999"
                   }
@@ -626,9 +626,9 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
               ...process.env,
               PATH: `${stub.binDir}:${process.env["PATH"]}`,
               STUB_AWS_CONFIG_FILE: stub.configFile,
-              WABRIX_MOCK_COMPUTE_CONTROLLER: "false",
-              ECS_CLUSTER_NAME: "wabrix-production-cluster",
-              ECS_SERVICE_NAME: "wabrix-production-canary-api",
+              FLOWDESK_MOCK_COMPUTE_CONTROLLER: "false",
+              ECS_CLUSTER_NAME: "flowdesk-production-cluster",
+              ECS_SERVICE_NAME: "flowdesk-production-canary-api",
               AWS_REGION: "ap-southeast-1"
             },
             stdio: ["pipe", "pipe", "pipe"]
@@ -659,9 +659,9 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
               ...process.env,
               PATH: `${stub.binDir}:${process.env["PATH"]}`,
               STUB_AWS_CONFIG_FILE: stub.configFile,
-              WABRIX_MOCK_COMPUTE_CONTROLLER: "false",
-              ECS_CLUSTER_NAME: "wabrix-production-cluster",
-              ECS_SERVICE_NAME: "wabrix-production-canary-api",
+              FLOWDESK_MOCK_COMPUTE_CONTROLLER: "false",
+              ECS_CLUSTER_NAME: "flowdesk-production-cluster",
+              ECS_SERVICE_NAME: "flowdesk-production-canary-api",
               AWS_REGION: "ap-southeast-1"
             },
             stdio: ["pipe", "pipe", "pipe"]
@@ -702,7 +702,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           encoding: "utf8",
           env: {
             ...process.env,
-            WABRIX_MOCK_TRAFFIC_CONTROLLER: "false",
+            FLOWDESK_MOCK_TRAFFIC_CONTROLLER: "false",
             PROD_LISTENER_ARN: "",
             PROD_STABLE_TG_ARN: "",
             PROD_CANARY_TG_ARN: ""
@@ -717,7 +717,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
       const stateFile = path.join(os.tmpdir(), "canary-test-state-" + Date.now() + ".json");
       const mockEnv = {
         ...process.env,
-        WABRIX_MOCK_TRAFFIC_CONTROLLER: "true",
+        FLOWDESK_MOCK_TRAFFIC_CONTROLLER: "true",
         MOCK_TRAFFIC_STATE_FILE: stateFile,
         PROD_LISTENER_ARN: "arn:aws:elasticloadbalancing:ap-southeast-1:123:listener/app/alb/1",
         PROD_STABLE_TG_ARN: "arn:aws:elasticloadbalancing:ap-southeast-1:123:targetgroup/stable/1",
@@ -792,7 +792,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
             ...process.env,
             PATH: `${stub.binDir}:${process.env["PATH"]}`,
             STUB_AWS_CONFIG_FILE: stub.configFile,
-            WABRIX_MOCK_TRAFFIC_CONTROLLER: "false",
+            FLOWDESK_MOCK_TRAFFIC_CONTROLLER: "false",
             PROD_LISTENER_ARN: "arn:aws:elasticloadbalancing:ap-southeast-1:123:listener/app/alb/1",
             PROD_STABLE_TG_ARN:
               "arn:aws:elasticloadbalancing:ap-southeast-1:123:targetgroup/stable/1",
@@ -820,7 +820,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           encoding: "utf8",
           env: {
             ...process.env,
-            WABRIX_MOCK_CANARY_PROBE: "false",
+            FLOWDESK_MOCK_CANARY_PROBE: "false",
             CANARY_ENDPOINT_URL: ""
           },
           stdio: ["pipe", "pipe", "pipe"]
@@ -835,7 +835,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           encoding: "utf8",
           env: {
             ...process.env,
-            WABRIX_MOCK_CANARY_PROBE: "false",
+            FLOWDESK_MOCK_CANARY_PROBE: "false",
             CANARY_ENDPOINT_URL: "http://127.0.0.1:4000"
           },
           stdio: ["pipe", "pipe", "pipe"]
@@ -849,7 +849,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
         encoding: "utf8",
         env: {
           ...process.env,
-          WABRIX_MOCK_CANARY_PROBE: "true",
+          FLOWDESK_MOCK_CANARY_PROBE: "true",
           MOCK_CANARY_FAIL: "false"
         }
       });
@@ -864,7 +864,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
           encoding: "utf8",
           env: {
             ...process.env,
-            WABRIX_MOCK_CANARY_PROBE: "true",
+            FLOWDESK_MOCK_CANARY_PROBE: "true",
             MOCK_CANARY_FAIL: "true"
           },
           stdio: ["pipe", "pipe", "pipe"]
@@ -899,18 +899,21 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
       }).toThrow(/Production promotion strictly requires an immutable 40-character commit SHA/);
     });
 
-    it("verifies six digests in the wabrix image family", () => {
+    it.each(["wabrix", "flowdesk"])("verifies six digests in the %s image family", (family) => {
       const outFile = path.join(os.tmpdir(), "provenance-test-" + Date.now() + ".json");
       const sha = "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2";
-      const family = "wabrix";
-      execFileSync(provenanceScript, [sha, outFile], {
-        cwd: repoRoot,
-        encoding: "utf8",
-        env: {
-          ...process.env,
-          WABRIX_MOCK_PROVENANCE: "true"
+      execFileSync(
+        provenanceScript,
+        family === "wabrix" ? [sha, outFile] : [sha, outFile, family],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: {
+            ...process.env,
+            FLOWDESK_MOCK_PROVENANCE: "true"
+          }
         }
-      });
+      );
 
       const record = JSON.parse(fs.readFileSync(outFile, "utf8")) as ProvenanceRecord;
       expect(record.sourceSha).toBe(sha);
@@ -929,7 +932,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
         /immutable 40-character commit SHA/
       );
       expect(() => execFileSync(provenanceScript, [sha, "", "other"], { stdio: "pipe" })).toThrow(
-        /Image family must be wabrix/
+        /Image family must be wabrix or flowdesk/
       );
     });
   });

@@ -1,9 +1,9 @@
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
-import { loadAuthConfig } from "@wabrix/config";
-import type { DbClient } from "@wabrix/db";
-import { hashSessionToken, serializeSessionCookie, encryptSecret } from "@wabrix/security";
-import { FakeWhatsAppProvider, WhatsAppProviderError } from "@wabrix/providers";
+import { loadAuthConfig } from "@flowdesk/config";
+import type { DbClient } from "@flowdesk/db";
+import { hashSessionToken, serializeSessionCookie, encryptSecret } from "@flowdesk/security";
+import { FakeWhatsAppProvider, WhatsAppProviderError } from "@flowdesk/providers";
 import { createApiApp } from "./app.js";
 
 const orgId = "a0000000-0000-4000-8000-000000000001";
@@ -54,7 +54,7 @@ function createMockDb(): DbClient {
 
   users.set(adminUserId, {
     id: adminUserId,
-    email: "admin@wabrix.dev",
+    email: "admin@flowdesk.dev",
     displayName: "Admin",
     status: "active"
   });
@@ -110,7 +110,7 @@ function createMockDb(): DbClient {
       await Promise.resolve();
       const sql = queryText.replace(/\s+/g, " ").trim();
 
-      if (sql.includes("FROM wabrix.auth_sessions")) {
+      if (sql.includes("FROM flowdesk.auth_sessions")) {
         const hash = params[0] as string;
         for (const s of sessions.values()) {
           if (s.tokenHash === hash && !s.revokedAt) {
@@ -126,7 +126,7 @@ function createMockDb(): DbClient {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("FROM wabrix.users")) {
+      if (sql.includes("FROM flowdesk.users")) {
         const uid = params[0] as string;
         const u = users.get(uid);
         return u
@@ -140,7 +140,7 @@ function createMockDb(): DbClient {
           : { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("FROM wabrix.memberships")) {
+      if (sql.includes("FROM flowdesk.memberships")) {
         const oId = params[0] as string;
         const uId = params[1] as string;
         for (const m of memberships.values()) {
@@ -158,7 +158,7 @@ function createMockDb(): DbClient {
         return { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("SELECT * FROM wabrix.channels WHERE organization_id = $1")) {
+      if (sql.includes("SELECT * FROM flowdesk.channels WHERE organization_id = $1")) {
         const orgIdParam = params[0] as string;
         const matched = Array.from(channels.values()).filter(
           (c) => c.organization_id === orgIdParam
@@ -166,7 +166,7 @@ function createMockDb(): DbClient {
         return { rows: matched, rowCount: matched.length, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("SELECT * FROM wabrix.channels WHERE phone_number_id = $1")) {
+      if (sql.includes("SELECT * FROM flowdesk.channels WHERE phone_number_id = $1")) {
         const phoneNumberId = params[0] as string;
         const channel = Array.from(channels.values()).find(
           (candidate) => candidate.phone_number_id === phoneNumberId
@@ -176,7 +176,7 @@ function createMockDb(): DbClient {
           : { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.whatsapp_embedded_signup_attempts")) {
+      if (sql.includes("INSERT INTO flowdesk.whatsapp_embedded_signup_attempts")) {
         const id = `a0000000-0000-4000-8000-${String(signupAttempts.size + 1).padStart(12, "0")}`;
         const row = {
           id,
@@ -190,7 +190,7 @@ function createMockDb(): DbClient {
       }
 
       if (
-        sql.includes("UPDATE wabrix.whatsapp_embedded_signup_attempts SET status = 'processing'")
+        sql.includes("UPDATE flowdesk.whatsapp_embedded_signup_attempts SET status = 'processing'")
       ) {
         const attempt = signupAttempts.get(params[0] as string);
         if (
@@ -207,20 +207,20 @@ function createMockDb(): DbClient {
       }
 
       if (
-        sql.includes("UPDATE wabrix.whatsapp_embedded_signup_attempts SET status = 'completed'")
+        sql.includes("UPDATE flowdesk.whatsapp_embedded_signup_attempts SET status = 'completed'")
       ) {
         const attempt = signupAttempts.get(params[0] as string);
         if (attempt && attempt.organization_id === params[1]) attempt.status = "completed";
         return { rows: [], rowCount: attempt ? 1 : 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.whatsapp_embedded_signup_attempts SET status = 'failed'")) {
+      if (sql.includes("UPDATE flowdesk.whatsapp_embedded_signup_attempts SET status = 'failed'")) {
         const attempt = signupAttempts.get(params[0] as string);
         if (attempt && attempt.organization_id === params[1]) attempt.status = "failed";
         return { rows: [], rowCount: attempt ? 1 : 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.whatsapp_business_accounts")) {
+      if (sql.includes("INSERT INTO flowdesk.whatsapp_business_accounts")) {
         const wabaId = params[0] as string;
         const owner = params[1] as string;
         if (wabaOwners.has(wabaId)) {
@@ -230,7 +230,7 @@ function createMockDb(): DbClient {
         return { rows: [{ waba_id: wabaId }], rowCount: 1, command: "INSERT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("FROM wabrix.whatsapp_business_accounts")) {
+      if (sql.includes("FROM flowdesk.whatsapp_business_accounts")) {
         const wabaId = params[0] as string;
         const owner = params[1] as string;
         return wabaOwners.get(wabaId) === owner
@@ -238,7 +238,7 @@ function createMockDb(): DbClient {
           : { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("SELECT * FROM wabrix.channels WHERE id = $1")) {
+      if (sql.includes("SELECT * FROM flowdesk.channels WHERE id = $1")) {
         const idParam = params[0] as string;
         const c = channels.get(idParam);
         return c
@@ -246,7 +246,7 @@ function createMockDb(): DbClient {
           : { rows: [], rowCount: 0, command: "SELECT", oid: 0, fields: [] };
       }
 
-      if (sql.includes("INSERT INTO wabrix.channels")) {
+      if (sql.includes("INSERT INTO flowdesk.channels")) {
         const newId = `c-${channels.size + 1}`;
         const row: MockChannelRow = {
           id: newId,
@@ -293,7 +293,7 @@ function createMockDb(): DbClient {
         return { rows: [channel], rowCount: 1, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("UPDATE wabrix.channels")) {
+      if (sql.includes("UPDATE flowdesk.channels")) {
         const idParam = params[0] as string;
         const statusParam = params[1] as string;
         const reasonParam = params[2] as string | null;
@@ -307,13 +307,13 @@ function createMockDb(): DbClient {
         return { rows: [], rowCount: 0, command: "UPDATE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("DELETE FROM wabrix.channels")) {
+      if (sql.includes("DELETE FROM flowdesk.channels")) {
         const idParam = params[0] as string;
         const deleted = channels.delete(idParam);
         return { rows: [], rowCount: deleted ? 1 : 0, command: "DELETE", oid: 0, fields: [] };
       }
 
-      if (sql.includes("wabrix.audit_events") || sql.includes("audit")) {
+      if (sql.includes("flowdesk.audit_events") || sql.includes("audit")) {
         return {
           rows: [{ id: "audit-1", occurred_at: new Date() }],
           rowCount: 1,
@@ -344,12 +344,12 @@ describe("Self-Service Channels REST API (M6-01)", () => {
       encryptionKey: "dev-encryption-key-32-bytes-long!!",
       whatsappProvider: provider,
       embeddedSignup: {
-        appId: "wabrix-meta-app-id",
-        appSecret: "wabrix-meta-app-secret",
-        configId: "wabrix-embedded-signup-config",
-        systemUserAccessToken: "wabrix-system-user-token",
-        systemUserId: "wabrix-system-user-id",
-        adminSystemUserAccessToken: "wabrix-admin-system-user-token",
+        appId: "flowdesk-meta-app-id",
+        appSecret: "flowdesk-meta-app-secret",
+        configId: "flowdesk-embedded-signup-config",
+        systemUserAccessToken: "flowdesk-system-user-token",
+        systemUserId: "flowdesk-system-user-id",
+        adminSystemUserAccessToken: "flowdesk-admin-system-user-token",
         graphApiBaseUrl: "https://graph.facebook.com/v25.0"
       }
     }
@@ -380,7 +380,7 @@ describe("Self-Service Channels REST API (M6-01)", () => {
       appId: string;
       appSecret?: string;
     };
-    expect(startBody.appId).toBe("wabrix-meta-app-id");
+    expect(startBody.appId).toBe("flowdesk-meta-app-id");
     expect(startBody.state.length).toBeGreaterThanOrEqual(32);
     expect(startBody.appSecret).toBeUndefined();
 
@@ -403,7 +403,7 @@ describe("Self-Service Channels REST API (M6-01)", () => {
       channel: { status: "active", phoneNumberId: "10987654399" }
     });
     expect(exchangeCode).toHaveBeenCalledWith(
-      expect.objectContaining({ code: "one-time-meta-code", appSecret: "wabrix-meta-app-secret" })
+      expect.objectContaining({ code: "one-time-meta-code", appSecret: "flowdesk-meta-app-secret" })
     );
     expect(verifyPhoneNumber).toHaveBeenNthCalledWith(1, {
       phoneNumberId: "10987654399",
@@ -413,17 +413,17 @@ describe("Self-Service Channels REST API (M6-01)", () => {
     expect(assignSystemUser).toHaveBeenCalledWith(
       expect.objectContaining({
         wabaId: "9876543299",
-        systemUserId: "wabrix-system-user-id",
-        adminAccessToken: "wabrix-admin-system-user-token"
+        systemUserId: "flowdesk-system-user-id",
+        adminAccessToken: "flowdesk-admin-system-user-token"
       })
     );
     expect(verifyPhoneNumber).toHaveBeenNthCalledWith(2, {
       phoneNumberId: "10987654399",
       wabaId: "9876543299",
-      accessToken: "wabrix-system-user-token"
+      accessToken: "flowdesk-system-user-token"
     });
     expect(subscribe).toHaveBeenCalledWith(
-      expect.objectContaining({ wabaId: "9876543299", accessToken: "wabrix-system-user-token" })
+      expect.objectContaining({ wabaId: "9876543299", accessToken: "flowdesk-system-user-token" })
     );
 
     const replay = await request(app)

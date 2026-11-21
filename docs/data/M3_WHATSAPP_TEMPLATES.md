@@ -1,10 +1,10 @@
 # M3 WhatsApp Templates Data Model & Synchronization Architecture
 
-This document defines the schema, synchronization protocol, and security model for versioned WhatsApp Message Templates in Wabrix (`M3-04`, capability `TPL-SYNC-001`).
+This document defines the schema, synchronization protocol, and security model for versioned WhatsApp Message Templates in FlowDesk (`M3-04`, capability `TPL-SYNC-001`).
 
 ## 1. Relational Data Model
 
-All template tables reside in the `wabrix` schema with tenant-level Row-Level Security (`FORCE ROW LEVEL SECURITY`).
+All template tables reside in the `flowdesk` schema with tenant-level Row-Level Security (`FORCE ROW LEVEL SECURITY`).
 
 ```mermaid
 erDiagram
@@ -79,10 +79,10 @@ Templates are fetched asynchronously from the WhatsApp Business Account via Grap
 2. **Deterministic Payload Hashing**:
    - `computeTemplatePayloadHash` computes a SHA-256 hash over normalized component objects, language code, and category.
 3. **Idempotent Database Upsert**:
-   - `wabrix.whatsapp_templates` is upserted on conflict `(channel_id, name)`.
+   - `flowdesk.whatsapp_templates` is upserted on conflict `(channel_id, name)`.
    - Existing language version is inspected `FOR UPDATE`:
      - If `payload_hash` changed, `version` is incremented (`version = version + 1`).
-     - If `status` changed (e.g. `PENDING` -> `APPROVED` or `APPROVED` -> `REJECTED`), a new transition is written to `wabrix.whatsapp_template_status_history`.
+     - If `status` changed (e.g. `PENDING` -> `APPROVED` or `APPROVED` -> `REJECTED`), a new transition is written to `flowdesk.whatsapp_template_status_history`.
      - If both payload and status are unchanged, no version bump occurs and no redundant history is recorded.
 4. **Token Redaction & Diagnostic Security**:
    - Worker sync logs and error catchers scrub the channel access token with `[REDACTED_ACCESS_TOKEN]` to prevent secret leakage in monitoring systems.

@@ -1,6 +1,6 @@
-# Wabrix M5 SLO & Error-Budget Policy
+# FlowDesk M5 SLO & Error-Budget Policy
 
-This document defines the Service Level Objectives (SLOs), Service Level Indicators (SLIs), error budgets, and budget burn-rate escalation policies for Wabrix M5 production operations.
+This document defines the Service Level Objectives (SLOs), Service Level Indicators (SLIs), error budgets, and budget burn-rate escalation policies for FlowDesk M5 production operations.
 
 ---
 
@@ -56,4 +56,4 @@ We alert on multi-window multi-burn-rate consumption to distinguish rapid catast
   - Outbox Lag: `outbox_oldest_event_age_seconds` and `outbox_pending_events`
   - AUTO-Send Outcome: `auto_send_total` and `auto_send_failures_total`
   - Emergency Killswitch: `emergency_killswitch_active`
-- **Grafana Dashboard**: UID `wabrix-m5-slo` ([m5_slo_dashboard.json](file:///infra/monitoring/grafana/provisioning/dashboards/m5_slo_dashboard.json)).
+- **Grafana Dashboard**: UID `flowdesk-m5-slo` ([m5_slo_dashboard.json](file:///infra/monitoring/grafana/provisioning/dashboards/m5_slo_dashboard.json)).

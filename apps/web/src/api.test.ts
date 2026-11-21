@@ -40,7 +40,7 @@ describe("typed API client (M1-07)", () => {
         JSON.stringify({
           user: {
             id: "a0000000-0000-4000-8000-000000000001",
-            email: "user@wabrix.dev",
+            email: "user@flowdesk.dev",
             displayName: "User"
           },
           expiresAt: new Date().toISOString()
@@ -49,14 +49,14 @@ describe("typed API client (M1-07)", () => {
       )
     );
     const session = await getSession(fetcher);
-    expect(session.user.email).toBe("user@wabrix.dev");
+    expect(session.user.email).toBe("user@flowdesk.dev");
   });
 
   it("throws ApiError on 401 unauthorized", async () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
         JSON.stringify({
-          type: "https://wabrix.dev/problems/unauthorized",
+          type: "https://flowdesk.dev/problems/unauthorized",
           title: "Unauthorized",
           status: 401,
           code: "UNAUTHORIZED",
@@ -75,14 +75,14 @@ describe("typed API client (M1-07)", () => {
         JSON.stringify({
           status: "ok",
           logoutUrl:
-            "https://auth.wabrix.dev/v2/logout?client_id=123&returnTo=http://localhost:3000"
+            "https://auth.flowdesk.dev/v2/logout?client_id=123&returnTo=http://localhost:3000"
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       )
     );
     await expect(logout(fetcher)).resolves.toEqual({
       status: "ok",
-      logoutUrl: "https://auth.wabrix.dev/v2/logout?client_id=123&returnTo=http://localhost:3000"
+      logoutUrl: "https://auth.flowdesk.dev/v2/logout?client_id=123&returnTo=http://localhost:3000"
     });
     expect(fetcher).toHaveBeenCalledWith("/api/v1/auth/logout", {
       method: "POST",
@@ -154,7 +154,7 @@ describe("typed API client (M1-07)", () => {
             {
               id: "a0000000-0000-4000-8000-000000000010",
               userId: "a0000000-0000-4000-8000-000000000011",
-              email: "agent@wabrix.dev",
+              email: "agent@flowdesk.dev",
               displayName: "Agent Smith",
               roleKey: "agent",
               roleLabel: "Agent",
@@ -168,7 +168,7 @@ describe("typed API client (M1-07)", () => {
     );
     const res = await listMembers("a0000000-0000-4000-8000-000000000001", fetcher);
     expect(res.members.length).toBe(1);
-    expect(res.members[0]?.email).toBe("agent@wabrix.dev");
+    expect(res.members[0]?.email).toBe("agent@flowdesk.dev");
   });
 
   it("invites a member with Idempotency-Key", async () => {
@@ -178,7 +178,7 @@ describe("typed API client (M1-07)", () => {
           invitation: {
             id: "a0000000-0000-4000-8000-000000000020",
             organizationId: "a0000000-0000-4000-8000-000000000001",
-            email: "new@wabrix.dev",
+            email: "new@flowdesk.dev",
             role: "agent",
             status: "pending",
             expiresAt: new Date().toISOString(),
@@ -190,11 +190,11 @@ describe("typed API client (M1-07)", () => {
     );
     const res = await inviteMember(
       "a0000000-0000-4000-8000-000000000001",
-      { email: "new@wabrix.dev", role: "agent" },
+      { email: "new@flowdesk.dev", role: "agent" },
       "idemp-key-123",
       fetcher
     );
-    expect(res.invitation.email).toBe("new@wabrix.dev");
+    expect(res.invitation.email).toBe("new@flowdesk.dev");
   });
 
   it("updates member role", async () => {
@@ -475,7 +475,7 @@ describe("typed API client (M1-07)", () => {
     const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
         JSON.stringify({
-          type: "https://wabrix.dev/problems/concurrency-conflict",
+          type: "https://flowdesk.dev/problems/concurrency-conflict",
           title: "Concurrency Conflict",
           status: 409,
           code: "CONCURRENCY_CONFLICT",

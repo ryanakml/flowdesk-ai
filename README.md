@@ -24,8 +24,6 @@ Support teams can connect WhatsApp Business numbers, route incoming conversation
 | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | ![FlowDesk inbox with a conversation list, an open thread, and automation controls](apps/web/public/landing-dashboard-dark.webp) | ![FlowDesk analytics dashboard with conversation, automation, and SLA metrics](apps/web/public/landing-dashboard-dark-1.webp) |
 
-Screenshots use illustrative sample data.
-
 ## Architecture
 
 FlowDesk is a [modular monolith with separate process roles](docs/adr/001-modular-monolith-process-roles.md). The web app, REST API, webhook ingress, worker, and scheduler live in a pnpm/Turborepo workspace. PostgreSQL stores application state and durable work.
@@ -77,6 +75,8 @@ sequenceDiagram
 | Shared packages       | [`packages`](packages) — domain policies, WhatsApp/AI/storage provider adapters, security, configuration, observability, shared UI, and test fixtures                                                                                                              |
 | Local infrastructure  | [`infra/compose`](infra/compose) — Docker Compose, Redis, MinIO, ClamAV, Mailpit, OpenTelemetry Collector, Prometheus and Grafana; application logs use pino                                                                                                       |
 | Deployment reference  | [`infra/docker`](infra/docker), [`infra/deploy`](infra/deploy), and [`infra/terraform`](infra/terraform) — service images, a [single-host Compose staging runbook](docs/runbooks/single-host-staging.md), and AWS/ECS reference infrastructure and release tooling |
+
+The repository retains internal package, schema, and integration identifiers for compatibility.
 
 ## Run locally
 

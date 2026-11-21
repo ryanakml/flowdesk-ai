@@ -15,7 +15,7 @@
 | Telemetry contract            | Runtime JSON log contained service/environment/version, request ID, supplied correlation ID, method/path/status/duration, with redaction tests passing                   |
 | Production dependency closure | `pnpm deploy --prod` produced a runnable isolated API artifact; `/livez` returned 200                                                                                    |
 | Secret scan                   | Local repository scan passed                                                                                                                                             |
-| Five production images        | Built from current source; each `/livez` returned 200 as UID 10001/user `wabrix`, rejected invalid `PORT`, and stopped gracefully                                        |
+| Five production images        | Built from current source; each `/livez` returned 200 as UID 10001/user `flowdesk`, rejected invalid `PORT`, and stopped gracefully                                      |
 | Full local stack              | PostgreSQL/pgvector with three synthetic fixtures, Redis, MinIO bucket, Mailpit, OTel Collector, Prometheus, and Grafana all responded                                   |
 | Five-process dev runtime      | `make dev` started web/api/ingress/worker/scheduler; all probes passed and backend processes logged graceful signal handling                                             |
 | Terraform                     | Terraform 1.13.1 `fmt`, `init -backend=false`, `validate`, and non-applying preview `plan` passed through the official container image                                   |

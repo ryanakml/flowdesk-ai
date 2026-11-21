@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Button
-} from "@wabrix/ui";
+} from "@flowdesk/ui";
 
 interface OrgSwitcherProps {
   collapsed?: boolean;

@@ -83,7 +83,7 @@ describe("AI Safety Guardrails (M4-07) — E2E-M4-001", () => {
   describe("validateSystemPromptSafety — system prompt validation", () => {
     it("allows valid system instructions", () => {
       const valid = validateSystemPromptSafety(
-        "You are a helpful customer support agent for Wabrix. Answer only based on provided knowledge."
+        "You are a helpful customer support agent for FlowDesk. Answer only based on provided knowledge."
       );
       expect(valid).toBe(true);
     });
@@ -294,7 +294,7 @@ describe("AI Safety Guardrails (M4-07) — E2E-M4-001", () => {
       const injection = checkPromptInjection(msg);
       const piiResult = redactPiiFromPrompt(injection.sanitized);
       const budget = checkTokenBudget(
-        "Kamu adalah asisten pelanggan Wabrix yang membantu.",
+        "Kamu adalah asisten pelanggan FlowDesk yang membantu.",
         piiResult.redacted
       );
 

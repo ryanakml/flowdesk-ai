@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeAll, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
-import type { Conversation, Message } from "@wabrix/contracts";
+import type { Conversation, Message } from "@flowdesk/contracts";
 import { InboxWorkspace } from "./InboxWorkspace.js";
 
 vi.mock("../../realtime.js", () => ({ useRealtimeSync: vi.fn() }));

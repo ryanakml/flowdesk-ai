@@ -48,7 +48,7 @@ export async function recordWebhookEvent(
          correlation_id AS "correlationId", processing_error AS "processingError",
          received_at AS "receivedAt", processed_at AS "processedAt",
          created_at AS "createdAt", updated_at AS "updatedAt", deduplicated
-       FROM wabrix.record_whatsapp_webhook($1, $2, $3, $4)`,
+       FROM flowdesk.record_whatsapp_webhook($1, $2, $3, $4)`,
       [
         input.payloadHash,
         input.rawPayload,
@@ -66,7 +66,7 @@ export async function recordWebhookEvent(
   let organizationId: string | null = null;
   if (input.phoneNumberId) {
     const channelRes = await client.query<{ organization_id: string }>(
-      `SELECT organization_id FROM wabrix.channels
+      `SELECT organization_id FROM flowdesk.channels
        WHERE phone_number_id = $1 AND status != 'disconnected' LIMIT 1`,
       [input.phoneNumberId]
     );
@@ -77,7 +77,7 @@ export async function recordWebhookEvent(
 
   // Insert with conflict avoidance on (provider, payload_hash)
   const insertRes = await client.query<WebhookEventRecord>(
-    `INSERT INTO wabrix.webhook_events
+    `INSERT INTO flowdesk.webhook_events
      (provider, payload_hash, phone_number_id, organization_id, raw_payload, correlation_id)
      VALUES ($1, $2, $3, $4, $5, COALESCE($6, gen_random_uuid()))
      ON CONFLICT (provider, payload_hash) DO NOTHING
@@ -104,7 +104,7 @@ export async function recordWebhookEvent(
     if (organizationId) {
       await client.query("SELECT set_config('app.organization_id', $1, true)", [organizationId]);
       await client.query(
-        `INSERT INTO wabrix.outbox_events
+        `INSERT INTO flowdesk.outbox_events
          (organization_id, aggregate_type, aggregate_id, event_type, schema_version, payload, correlation_id)
          VALUES ($1, 'webhook_event', $2, 'webhook.received', 1, $3::jsonb, $4)`,
         [
@@ -134,7 +134,7 @@ export async function recordWebhookEvent(
        correlation_id AS "correlationId", processing_error AS "processingError",
        received_at AS "receivedAt", processed_at AS "processedAt",
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.webhook_events
+     FROM flowdesk.webhook_events
      WHERE provider = $1 AND payload_hash = $2`,
     [input.provider, input.payloadHash]
   );
@@ -163,7 +163,7 @@ export async function getWebhookEventById(
        correlation_id AS "correlationId", processing_error AS "processingError",
        received_at AS "receivedAt", processed_at AS "processedAt",
        created_at AS "createdAt", updated_at AS "updatedAt"
-     FROM wabrix.webhook_events
+     FROM flowdesk.webhook_events
      WHERE id = $1`,
     [id]
   );

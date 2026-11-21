@@ -2,8 +2,8 @@ import type {
   Conversation,
   GenerateBotDraftResponse,
   ConversationDetailResponse
-} from "@wabrix/contracts";
-import { Skeleton } from "@wabrix/ui";
+} from "@flowdesk/contracts";
+import { Skeleton } from "@flowdesk/ui";
 import { User, Clock, Tag } from "lucide-react";
 import { BotConfiguration } from "./BotConfiguration.js";
 

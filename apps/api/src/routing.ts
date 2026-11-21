@@ -11,7 +11,7 @@ import {
   type RoutingLogResponse,
   type AutomationPolicyResponse,
   type SimulatePolicyResponse
-} from "@wabrix/contracts";
+} from "@flowdesk/contracts";
 import {
   createRoutingRule,
   listRoutingRules,
@@ -32,8 +32,12 @@ import {
   type RoutingLogRecord,
   type DbAutomationPolicy,
   type DetailedRoutingLogRecord
-} from "@wabrix/db";
-import { detectPolicyConflicts, simulatePolicyEvaluation, type RoutingRule } from "@wabrix/domain";
+} from "@flowdesk/db";
+import {
+  detectPolicyConflicts,
+  simulatePolicyEvaluation,
+  type RoutingRule
+} from "@flowdesk/domain";
 import { createRequireAuthMiddleware } from "./auth.js";
 import { createRequireOrgPermissionMiddleware } from "./organizations.js";
 
@@ -55,7 +59,7 @@ function sendProblem(
   detail: string
 ) {
   const problem: Problem = {
-    type: `https://wabrix.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
+    type: `https://flowdesk.dev/problems/${code.toLowerCase().replaceAll("_", "-")}`,
     title,
     status,
     code,

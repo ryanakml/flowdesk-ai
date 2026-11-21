@@ -1,7 +1,7 @@
 groups:
-  - name: wabrix_m5_slo_alerts
+  - name: flowdesk_m5_slo_alerts
     rules:
-      - alert: WabrixWebhookLatencyHigh
+      - alert: FlowDeskWebhookLatencyHigh
         expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{route="/api/v1/webhooks/whatsapp"}[5m])) by (le)) > 0.5
         for: 2m
         labels:
@@ -12,7 +12,7 @@ groups:
           description: "WhatsApp inbound webhook p99 latency is greater than 500ms over 5m window, consuming webhook SLO error budget."
           runbook: "docs/operations/provider-outage-playbook.md"
 
-      - alert: WabrixAutoSendFailureRateHigh
+      - alert: FlowDeskAutoSendFailureRateHigh
         expr: sum(rate(auto_send_failures_total[5m])) / (sum(rate(auto_send_total[5m])) > 0 or 1) > 0.001
         for: 1m
         labels:
@@ -23,7 +23,7 @@ groups:
           description: "AUTO reply failure rate exceeds 0.1% (99.9% SLO threshold), threatening automated customer replies."
           runbook: "docs/operations/incident-operating-model.md"
 
-      - alert: WabrixEmergencyKillswitchTripped
+      - alert: FlowDeskEmergencyKillswitchTripped
         expr: emergency_killswitch_active > 0
         for: 0m
         labels:
@@ -34,7 +34,7 @@ groups:
           description: "Global or tenant emergency stop engaged. All automated outbound replies are halted until investigated and cleared."
           runbook: "docs/operations/incident-operating-model.md"
 
-      - alert: WabrixAiDraftFailureRateHigh
+      - alert: FlowDeskAiDraftFailureRateHigh
         expr: sum(rate(ai_draft_runs_total{status="failed"}[5m])) / (sum(rate(ai_draft_runs_total[5m])) > 0 or 1) > 0.05
         for: 5m
         labels:
@@ -45,7 +45,7 @@ groups:
           description: "AI generation failure rate exceeds 5% over 5m window. Agents will need to compose manual responses."
           runbook: "docs/operations/provider-outage-playbook.md"
 
-      - alert: WabrixRealtimeDisconnectionsElevated
+      - alert: FlowDeskRealtimeDisconnectionsElevated
         expr: sum(rate(realtime_reconnect_gaps_total[5m])) > 10
         for: 2m
         labels:
@@ -56,7 +56,7 @@ groups:
           description: "Elevated WebSocket reconnect gaps detected. Agents experiencing live update latency."
           runbook: "docs/operations/incident-operating-model.md"
 
-      - alert: WabrixOutboxLagHigh
+      - alert: FlowDeskOutboxLagHigh
         expr: outbox_oldest_event_age_seconds > 5
         for: 2m
         labels:

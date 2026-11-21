@@ -43,9 +43,9 @@ await client.connect();
 
 try {
   await client.query("SELECT pg_advisory_lock(834532101)");
-  await client.query("CREATE SCHEMA IF NOT EXISTS wabrix_meta");
+  await client.query("CREATE SCHEMA IF NOT EXISTS flowdesk_meta");
   await client.query(`
-    CREATE TABLE IF NOT EXISTS wabrix_meta.schema_migrations (
+    CREATE TABLE IF NOT EXISTS flowdesk_meta.schema_migrations (
       version text PRIMARY KEY,
       checksum text NOT NULL,
       applied_at timestamptz NOT NULL DEFAULT clock_timestamp(),
@@ -57,7 +57,7 @@ try {
     const sql = await readFile(join(migrationDirectory, version), "utf8");
     const checksum = createHash("sha256").update(sql).digest("hex");
     const result = await client.query(
-      "SELECT checksum FROM wabrix_meta.schema_migrations WHERE version = $1",
+      "SELECT checksum FROM flowdesk_meta.schema_migrations WHERE version = $1",
       [version]
     );
     const existing = result.rows[0]?.checksum;
@@ -75,7 +75,7 @@ try {
     try {
       await client.query(sql);
       await client.query(
-        "INSERT INTO wabrix_meta.schema_migrations (version, checksum) VALUES ($1, $2)",
+        "INSERT INTO flowdesk_meta.schema_migrations (version, checksum) VALUES ($1, $2)",
         [version, checksum]
       );
       await client.query("COMMIT");

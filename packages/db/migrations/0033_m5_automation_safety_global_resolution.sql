@@ -1,15 +1,15 @@
--- Migration 0033: resolve automation safety global kill switch via wabrix_system capability
+-- Migration 0033: resolve automation safety global kill switch via flowdesk_system capability
 -- Fixes M5 #177: global killswitch rows were invisible to resolve_automation_safety
--- because wabrix.automation_safety_controls has FORCE RLS with a policy excluding
--- global rows, while the function was owned by wabrix_migrator (NOBYPASSRLS).
--- By granting SELECT to wabrix_system (BYPASSRLS) and transferring function ownership,
+-- because flowdesk.automation_safety_controls has FORCE RLS with a policy excluding
+-- global rows, while the function was owned by flowdesk_migrator (NOBYPASSRLS).
+-- By granting SELECT to flowdesk_system (BYPASSRLS) and transferring function ownership,
 -- the narrow security-definer boundary can safely inspect global stops without exposing
--- global rows directly to wabrix_runtime.
+-- global rows directly to flowdesk_runtime.
 
-GRANT USAGE ON SCHEMA wabrix TO wabrix_system;
-GRANT SELECT ON wabrix.automation_safety_controls TO wabrix_system;
+GRANT USAGE ON SCHEMA flowdesk TO flowdesk_system;
+GRANT SELECT ON flowdesk.automation_safety_controls TO flowdesk_system;
 
-CREATE OR REPLACE FUNCTION wabrix.resolve_automation_safety(
+CREATE OR REPLACE FUNCTION flowdesk.resolve_automation_safety(
   input_organization_id uuid,
   input_bot_config_id uuid DEFAULT NULL,
   input_channel_id uuid DEFAULT NULL,
@@ -24,10 +24,10 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = wabrix, pg_temp
+SET search_path = flowdesk, pg_temp
 AS $$
   SELECT control.id, control.scope, control.reason, control.expires_at
-  FROM wabrix.automation_safety_controls AS control
+  FROM flowdesk.automation_safety_controls AS control
   WHERE control.disabled = true
     AND (control.expires_at IS NULL OR control.expires_at > now())
     AND (
@@ -59,7 +59,7 @@ AS $$
   LIMIT 1;
 $$;
 
-ALTER FUNCTION wabrix.resolve_automation_safety(uuid, uuid, uuid, uuid) OWNER TO wabrix_system;
-REVOKE ALL ON FUNCTION wabrix.resolve_automation_safety(uuid, uuid, uuid, uuid) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION wabrix.resolve_automation_safety(uuid, uuid, uuid, uuid)
-  TO wabrix_runtime, wabrix_system, wabrix_reporting;
+ALTER FUNCTION flowdesk.resolve_automation_safety(uuid, uuid, uuid, uuid) OWNER TO flowdesk_system;
+REVOKE ALL ON FUNCTION flowdesk.resolve_automation_safety(uuid, uuid, uuid, uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION flowdesk.resolve_automation_safety(uuid, uuid, uuid, uuid)
+  TO flowdesk_runtime, flowdesk_system, flowdesk_reporting;

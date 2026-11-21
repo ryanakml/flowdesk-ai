@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { CreateOutboundMessageRequest, ConversationOperationRequest } from "@wabrix/contracts";
+import type {
+  CreateOutboundMessageRequest,
+  ConversationOperationRequest
+} from "@flowdesk/contracts";
 import {
   listConversations,
   getConversation,

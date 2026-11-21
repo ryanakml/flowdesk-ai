@@ -51,9 +51,9 @@ jobs:
       - run: pnpm test:coverage
       - run: pnpm build
       - name: Install Chromium for production UI regression tests
-        run: pnpm --filter @wabrix/web exec playwright install --with-deps chromium
+        run: pnpm --filter @flowdesk/web exec playwright install --with-deps chromium
       - name: Verify production dialog visibility and interactions
-        run: pnpm --filter @wabrix/web test:e2e
+        run: pnpm --filter @flowdesk/web test:e2e
       - name: Security audit
         run: |
           for attempt in {1..5}; do
@@ -134,8 +134,8 @@ jobs:
             --label "org.opencontainers.image.title=Wabrix AI ${{ matrix.app }}" \
             --label "org.opencontainers.image.description=Wabrix AI ${{ matrix.app }} service container" \
             --tag wabrix/${{ matrix.app }}:${{ github.sha }} \
-            --cache-from type=gha,scope=wabrix-${{ matrix.app }} \
-            --cache-to type=gha,mode=max,scope=wabrix-${{ matrix.app }} \
+            --cache-from type=gha,scope=flowdesk-${{ matrix.app }} \
+            --cache-to type=gha,mode=max,scope=flowdesk-${{ matrix.app }} \
             --load \
             .
       - name: Smoke test image
@@ -183,18 +183,18 @@ jobs:
       postgres:
         image: pgvector/pgvector:0.8.0-pg16-bookworm
         env:
-          POSTGRES_DB: wabrix_test
-          POSTGRES_USER: wabrix_test
-          POSTGRES_PASSWORD: wabrix_test_local
+          POSTGRES_DB: flowdesk_test
+          POSTGRES_USER: flowdesk_test
+          POSTGRES_PASSWORD: flowdesk_test_local
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U wabrix_test -d wabrix_test"
+          --health-cmd "pg_isready -U flowdesk_test -d flowdesk_test"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20
     env:
-      DATABASE_MIGRATOR_URL: postgresql://wabrix_test:wabrix_test_local@localhost:5432/wabrix_test
-      DATABASE_URL: postgresql://wabrix_test:wabrix_test_local@localhost:5432/wabrix_test
+      DATABASE_MIGRATOR_URL: postgresql://flowdesk_test:flowdesk_test_local@localhost:5432/flowdesk_test
+      DATABASE_URL: postgresql://flowdesk_test:flowdesk_test_local@localhost:5432/flowdesk_test
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - uses: pnpm/action-setup@ff378ebe6b225b0680b81c1ad4498ae0d1d3a5e3 # v6.0.10
@@ -202,12 +202,12 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with: { node-version-file: .node-version, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run build --filter=@wabrix/worker...
-      - run: pnpm --filter @wabrix/db test:integration
-      - run: pnpm --filter @wabrix/api test:integration
-      - run: pnpm --filter @wabrix/worker test:integration
+      - run: pnpm turbo run build --filter=@flowdesk/worker...
+      - run: pnpm --filter @flowdesk/db test:integration
+      - run: pnpm --filter @flowdesk/api test:integration
+      - run: pnpm --filter @flowdesk/worker test:integration
       - name: Query embedding cache with real Redis (required)
-        run: pnpm --filter @wabrix/worker exec vitest run src/query-embedding-cache.redis.test.ts
+        run: pnpm --filter @flowdesk/worker exec vitest run src/query-embedding-cache.redis.test.ts
         env:
           RUN_REDIS_INTEGRATION: "true"
           REDIS_TEST_URL: redis://127.0.0.1:6379
@@ -255,7 +255,7 @@ jobs:
           DEPLOY_USER: ${{ vars.STAGING_USER }}
           DEPLOY_PORT: ${{ vars.STAGING_SSH_PORT || '22' }}
         run: |
-          release_dir=/opt/wabrix/releases/${GITHUB_SHA}
+          release_dir=/opt/flowdesk/releases/${GITHUB_SHA}
           ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "mkdir -p '${release_dir}'"
           scp -P "${DEPLOY_PORT}" \
             infra/deploy/single-host/compose.yaml \
@@ -277,14 +277,14 @@ jobs:
           }
           trap cleanup_registry_login EXIT
           printf '%s' "$GHCR_TOKEN" | ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "docker login ghcr.io --username '${GITHUB_ACTOR}' --password-stdin"
-          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "cd '/opt/wabrix/releases/${GITHUB_SHA}' && chmod 0750 deploy.sh && ./deploy.sh '${GITHUB_SHA}'"
+          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "cd '/opt/flowdesk/releases/${GITHUB_SHA}' && chmod 0750 deploy.sh && ./deploy.sh '${GITHUB_SHA}'"
       - name: Public smoke test
         env:
           DEPLOY_HOST: ${{ vars.STAGING_HOST }}
           DEPLOY_USER: ${{ vars.STAGING_USER }}
           DEPLOY_PORT: ${{ vars.STAGING_SSH_PORT || '22' }}
         run: |
-          public_base_url=$(ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "sed -n 's/^PUBLIC_BASE_URL=//p' /opt/wabrix/shared/staging.env | head -n 1")
+          public_base_url=$(ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "sed -n 's/^PUBLIC_BASE_URL=//p' /opt/flowdesk/shared/staging.env | head -n 1")
           if [[ ! ${public_base_url} =~ ^https://[A-Za-z0-9.-]+(:[0-9]{1,5})?/?$ ]]; then
             echo "staging PUBLIC_BASE_URL must be a valid HTTPS origin" >&2
             exit 1

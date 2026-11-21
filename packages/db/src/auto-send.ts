@@ -12,7 +12,7 @@ export async function countRecentAutoReplies(
 ): Promise<number> {
   const result = await db.query<CountRow>(
     `SELECT count(*) AS count
-     FROM wabrix.messages
+     FROM flowdesk.messages
      WHERE organization_id = $1
        AND conversation_id = $2
        AND sender_type = 'bot'
@@ -36,7 +36,7 @@ export async function getMonthlyAiSpend(
 ): Promise<MonthlyAiSpend> {
   const result = await db.query<{ total_microcents: string }>(
     `SELECT COALESCE(SUM(cost_estimate_microcents), 0)::text AS total_microcents
-     FROM wabrix.bot_runs
+     FROM flowdesk.bot_runs
      WHERE organization_id = $1
        AND created_at >= date_trunc('month', clock_timestamp())`,
     [organizationId]
