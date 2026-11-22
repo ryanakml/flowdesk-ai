@@ -23,6 +23,7 @@
     "@tanstack/react-router": "^1.170.32",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
+    "framer-motion": "^14.14.0",
     "lucide-react": "^1.41.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
