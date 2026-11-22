@@ -1,7 +1,5 @@
 # FlowDesk
 
-![FlowDesk landing page with the "Scale your WhatsApp with AI" headline](apps/web/public/landing-hero.webp)
-
 **An enterprise-grade shared WhatsApp inbox with AI-assisted replies, backed by a durable PostgreSQL message pipeline.**
 
 [Live Hosted Demo](https://flowdesk.nylo.me) · [Product preview](#product-preview) · [Architecture](#architecture) · [Stack](#stack-and-repository-layout) · [Run locally](#run-locally) · [Testing](#testing) · [Documentation](#documentation) · [Contributing](#contributing)
