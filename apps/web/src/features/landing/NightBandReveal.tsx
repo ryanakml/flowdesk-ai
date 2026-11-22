@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Lock, Key, ShieldCheck, Database } from "lucide-react";
+import { ChevronRight, Lock, Key, ShieldCheck, Database, Cpu } from "lucide-react";
 import { REVEAL_EASE, VIEWPORT_DEFAULT } from "./motionTokens.js";
 
 const CIPHER_SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?/~0123456789";
 const BASE_PHRASE =
-  "END-TO-END ENCRYPTED PROTOCOL · ZERO-KNOWLEDGE AUDIT TRAIL · SOVEREIGN KEY DERIVATION";
+  "SOVEREIGN ENCRYPTION · STRICT TENANT ISOLATION · ZERO-KNOWLEDGE AUDIT TRAIL · NO MODEL TRAINING ON YOUR DATA";
 
 export const NightBandReveal: React.FC = () => {
   const [scrambleText, setScrambleText] = useState(BASE_PHRASE);
@@ -43,7 +43,10 @@ export const NightBandReveal: React.FC = () => {
   };
 
   return (
-    <section className="bg-[#111b21] text-white py-28 px-6 sm:px-12 lg:px-[60px] relative overflow-hidden">
+    <section
+      id="security"
+      className="bg-[#111b21] text-white py-28 px-6 sm:px-12 lg:px-[60px] relative overflow-hidden"
+    >
       <div className="max-w-[1080px] mx-auto">
         <motion.div
           variants={containerVariants}
@@ -72,10 +75,10 @@ export const NightBandReveal: React.FC = () => {
                     </div>
                     <div>
                       <h4 className="text-[15px] font-medium text-white leading-none">
-                        Cryptographic Vault
+                        Sovereign Vault Isolation
                       </h4>
                       <span className="text-[11px] text-[#25d366] mt-1 block font-mono">
-                        Noise Protocol · Curve25519
+                        Hardware HSM · Tenant KMS Key Derivation
                       </span>
                     </div>
                   </div>
@@ -83,19 +86,26 @@ export const NightBandReveal: React.FC = () => {
                 </div>
 
                 {/* Telemetry rows */}
-                <div className="py-6 space-y-3 font-mono text-xs text-white/70">
+                <div className="py-5 space-y-2.5 font-mono text-xs text-white/70">
                   <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-[#33463f]/50">
                     <span className="flex items-center gap-2 text-white/50">
-                      <Key className="w-3.5 h-3.5 text-[#25d366]" /> Ephemeral Keypair
+                      <Key className="w-3.5 h-3.5 text-[#25d366]" /> Session KMS Key
                     </span>
-                    <span className="text-[#25d366] font-semibold">0x7F4B…39CA</span>
+                    <span className="text-[#25d366] font-semibold">0x7F4B…39CA (15m)</span>
                   </div>
 
                   <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-[#33463f]/50">
                     <span className="flex items-center gap-2 text-white/50">
-                      <Database className="w-3.5 h-3.5 text-[#25d366]" /> Payload Cipher
+                      <Database className="w-3.5 h-3.5 text-[#25d366]" /> Envelope Cipher
                     </span>
-                    <span>AES-256-GCM</span>
+                    <span>AES-256-GCM + SHA-512</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-[#33463f]/50">
+                    <span className="flex items-center gap-2 text-white/50">
+                      <Cpu className="w-3.5 h-3.5 text-[#25d366]" /> LLM Retention
+                    </span>
+                    <span className="text-emerald-400">Strictly Zero-Training</span>
                   </div>
                 </div>
 
@@ -117,7 +127,7 @@ export const NightBandReveal: React.FC = () => {
                 {/* Bottom Verification Note */}
                 <div className="pt-4 mt-2 text-center flex items-center justify-center gap-2 text-[12px] text-white/60">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#25d366] animate-ping" />
-                  <span>Zero raw messages or encryption keys touch intermediate servers.</span>
+                  <span>Your enterprise chat logs are never used to train public models.</span>
                 </div>
               </motion.div>
             </div>
@@ -126,14 +136,14 @@ export const NightBandReveal: React.FC = () => {
           {/* Right Column: 60px Typography & White Underlined Link */}
           <div className="lg:col-span-6 flex flex-col justify-center">
             <h2 className="text-[40px] sm:text-[50px] lg:text-[60px] leading-[1] font-normal tracking-normal text-white text-balance">
-              Speak <span className="text-[#25d366]">freely</span> with end-to-end privacy built
-              into the core
+              Protect your data with <span className="text-[#25d366]">sovereign</span> cryptographic
+              isolation
             </h2>
 
             <p className="text-[18px] leading-[25px] font-normal text-white/80 mt-6 max-w-[480px]">
-              Your personal messages, audio notes, and team files are secured with uncompromising
-              cryptographic guarantees. Only you and the recipient hold the keys — not even FlowDesk
-              can read or listen to them.
+              Customer phone numbers, message histories, and internal knowledge bases remain
+              strictly sovereign to your organization. FlowDesk combines hardware-backed envelope
+              encryption with zero data retention for all AI operations.
             </p>
 
             <div className="mt-8">

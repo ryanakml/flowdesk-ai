@@ -5,6 +5,7 @@ import { REVEAL_EASE, VIEWPORT_DEFAULT } from "./motionTokens.js";
 interface AvatarPill {
   id: string;
   name: string;
+  role: string;
   message: string;
   avatarBg: string;
   driftDuration: number;
@@ -15,31 +16,35 @@ const TOP_PILLS: AvatarPill[] = [
   {
     id: "top-1",
     name: "Maya",
-    message: "Just landed at Terminal 2 ✈️",
+    role: "Support Lead",
+    message: "Order #8291 rerouted to Jakarta hub ✅",
     avatarBg: "#e6ffda",
     driftDuration: 3.4,
     driftRange: -10
   },
   {
     id: "top-2",
-    name: "Liam",
-    message: "Sent over the project deck 📄",
+    name: "David",
+    role: "Customer",
+    message: "Got my invoice confirmation in 30 seconds! 🙌",
     avatarBg: "#d9fdd3",
     driftDuration: 4.0,
     driftRange: -12
   },
   {
     id: "top-3",
-    name: "Elena",
-    message: "Let's grab a coffee at 10 ☕",
+    name: "Sarah",
+    role: "Operations",
+    message: "Knowledge base updated with holiday hours 📋",
     avatarBg: "#fef08a",
     driftDuration: 3.6,
     driftRange: -9
   },
   {
     id: "top-4",
-    name: "David",
-    message: "Sound check is ready 🎙️",
+    name: "Carlos",
+    role: "Client",
+    message: "Signed service agreement received via WhatsApp 📄",
     avatarBg: "#bfdbfe",
     driftDuration: 4.2,
     driftRange: -11
@@ -49,8 +54,9 @@ const TOP_PILLS: AvatarPill[] = [
 const BOTTOM_PILLS: AvatarPill[] = [
   {
     id: "bot-1",
-    name: "Sophia",
-    message: "Team sync starting now 🔔",
+    name: "Elena",
+    role: "Billing Desk",
+    message: "Multi-tenant payment dispatched to accounts 💳",
     avatarBg: "#fed7aa",
     driftDuration: 3.8,
     driftRange: -10
@@ -58,7 +64,8 @@ const BOTTOM_PILLS: AvatarPill[] = [
   {
     id: "bot-2",
     name: "Marcus",
-    message: "Contract signed and approved ✅",
+    role: "Store Manager",
+    message: "VIP customer status verified automatically 🌟",
     avatarBg: "#e6ffda",
     driftDuration: 3.5,
     driftRange: -12
@@ -66,7 +73,8 @@ const BOTTOM_PILLS: AvatarPill[] = [
   {
     id: "bot-3",
     name: "Aria",
-    message: "Sending voice memo in 2 min 🎧",
+    role: "AI Co-pilot",
+    message: "Grounded reply confidence: 99.4% · Policy v3 🎯",
     avatarBg: "#ddd6fe",
     driftDuration: 4.1,
     driftRange: -9
@@ -74,7 +82,8 @@ const BOTTOM_PILLS: AvatarPill[] = [
   {
     id: "bot-4",
     name: "Lucas",
-    message: "See you all tomorrow! 👋",
+    role: "Customer",
+    message: "Best WhatsApp support experience so far! ❤️",
     avatarBg: "#fbcfe8",
     driftDuration: 3.7,
     driftRange: -11
@@ -85,7 +94,7 @@ export const EmotionalAvatarCloud: React.FC = () => {
   return (
     <section className="bg-[#fcf5eb] py-28 px-6 sm:px-12 lg:px-[60px] overflow-hidden">
       <div className="max-w-[1080px] mx-auto flex flex-col items-center">
-        {/* Phase 1 (0ms): Top Cluster of 4 Floating Avatar + Greeting Pills */}
+        {/* Phase 1 (0ms): Top Cluster of 4 Floating Avatar + Interaction Pills */}
         <div className="w-full flex flex-wrap justify-center sm:justify-between items-center gap-3 sm:gap-4 mb-10 max-w-[940px]">
           {TOP_PILLS.map((pill, idx) => (
             <motion.div
@@ -120,7 +129,8 @@ export const EmotionalAvatarCloud: React.FC = () => {
                   {pill.name[0]}
                 </div>
                 <div className="text-[13px] text-[#1c1e21] flex items-center gap-1.5">
-                  <span className="font-medium">{pill.name}:</span>
+                  <span className="font-medium">{pill.name}</span>
+                  <span className="text-[11px] text-gray-400">({pill.role}):</span>
                   <span className="text-[#5e5e5e]">{pill.message}</span>
                 </div>
               </motion.div>
@@ -141,12 +151,11 @@ export const EmotionalAvatarCloud: React.FC = () => {
           className="max-w-[880px] text-center my-6"
         >
           <p className="text-[32px] sm:text-[42px] lg:text-[48px] leading-[1.1] font-normal tracking-normal text-[#1c1e21] text-balance">
-            With private messaging and calling, you can be yourself, speak freely and feel close to
-            the people who matter most.
+            When customer conversations feel effortless, trust follows naturally.
           </p>
         </motion.div>
 
-        {/* Phase 3 (+350ms): Bottom Cluster of 4 Floating Avatar + Greeting Pills */}
+        {/* Phase 3 (+350ms): Bottom Cluster of 4 Floating Avatar + Interaction Pills */}
         <div className="w-full flex flex-wrap justify-center sm:justify-between items-center gap-3 sm:gap-4 mt-10 max-w-[940px]">
           {BOTTOM_PILLS.map((pill, idx) => (
             <motion.div
@@ -181,7 +190,8 @@ export const EmotionalAvatarCloud: React.FC = () => {
                   {pill.name[0]}
                 </div>
                 <div className="text-[13px] text-[#1c1e21] flex items-center gap-1.5">
-                  <span className="font-medium">{pill.name}:</span>
+                  <span className="font-medium">{pill.name}</span>
+                  <span className="text-[11px] text-gray-400">({pill.role}):</span>
                   <span className="text-[#5e5e5e]">{pill.message}</span>
                 </div>
               </motion.div>

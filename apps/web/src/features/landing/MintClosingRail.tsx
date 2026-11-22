@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Radio, Mic, Building2, Smartphone } from "lucide-react";
+import { ChevronLeft, ChevronRight, Megaphone, Zap, Webhook, BarChart3 } from "lucide-react";
 import { REVEAL_EASE, VIEWPORT_DEFAULT } from "./motionTokens.js";
 
 interface EditorialCardItem {
@@ -14,31 +14,31 @@ interface EditorialCardItem {
 const CARDS: EditorialCardItem[] = [
   {
     id: "card-1",
-    icon: Radio,
-    title: "Stay updated with broadcast channels",
-    body: "Follow teams, organizations, and announcements in private broadcast streams designed for high signal-to-noise communication.",
-    actionText: "Explore Channels"
+    icon: Megaphone,
+    title: "Targeted broadcast campaigns at scale",
+    body: "Dispatch personalized updates and notifications to 100k+ opted-in customers using Meta-approved HSM templates with 99.98% delivery rate.",
+    actionText: "Explore Campaigns"
   },
   {
     id: "card-2",
-    icon: Mic,
-    title: "High-clarity interactive voice notes",
-    body: "Draft, pause, scrub, and review voice messages with waveform playback before sending to ensure your message is communicated clearly.",
-    actionText: "Learn Voice Features"
+    icon: Zap,
+    title: "Canned snippets & instant shortcuts",
+    body: "Slash response times with /shortcut snippets, customer variable interpolation, rich media attachments, and automated ticket classification.",
+    actionText: "View Productivity"
   },
   {
     id: "card-3",
-    icon: Building2,
-    title: "Official enterprise automation desk",
-    body: "Connect your business systems with verified Meta Cloud API webhooks, shared team inboxes, and zero-data-retention AI grounding.",
-    actionText: "View Solutions"
+    icon: Webhook,
+    title: "Real-time webhook and CRM synchronization",
+    body: "Stream incoming WhatsApp events directly into Shopify, Salesforce, PostgreSQL, or your custom internal APIs in under 50 milliseconds.",
+    actionText: "Browse Integrations"
   },
   {
     id: "card-4",
-    icon: Smartphone,
-    title: "Native apps for every device you own",
-    body: "Experience dedicated, lightning-fast native applications tailored specifically for macOS, Windows, iOS, and Android platforms.",
-    actionText: "Download Apps"
+    icon: BarChart3,
+    title: "Granular SLA tracking & deflection analytics",
+    body: "Monitor first-response time, AI autonomous deflection percentages, and individual agent resolution volume across shifting work hours.",
+    actionText: "See Analytics"
   }
 ];
 
@@ -73,7 +73,10 @@ export const MintClosingRail: React.FC = () => {
   return (
     <div className="bg-[#111b21] pb-[40px]">
       {/* Mint Surface with 0 0 45px 45px lower corners */}
-      <section className="bg-[#e6ffda] rounded-b-[45px] text-[#1c1e21] pt-24 pb-20 px-6 sm:px-12 lg:px-[60px] overflow-hidden">
+      <section
+        id="solutions"
+        className="bg-[#e6ffda] rounded-b-[45px] text-[#1c1e21] pt-24 pb-20 px-6 sm:px-12 lg:px-[60px] overflow-hidden"
+      >
         <div className="max-w-[1080px] mx-auto">
           <motion.div
             variants={containerVariants}
@@ -86,12 +89,12 @@ export const MintClosingRail: React.FC = () => {
             <div className="lg:col-span-5 flex flex-col justify-between self-stretch min-h-[360px]">
               <div>
                 <h2 className="text-[40px] sm:text-[50px] lg:text-[60px] leading-[1] font-normal tracking-normal text-[#1c1e21] text-balance">
-                  Explore what else you can do
+                  Explore what your team can build
                 </h2>
 
                 <p className="text-[18px] leading-[25px] font-normal text-[#1c1e21] mt-6 max-w-[400px]">
-                  Discover new capabilities to communicate, organize, and streamline your daily
-                  conversations across every workflow.
+                  From automated outbound dispatch to compliant team collaboration, equip your
+                  support operations with tools designed specifically for WhatsApp.
                 </p>
               </div>
 
