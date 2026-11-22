@@ -76,6 +76,129 @@
     color: #ff5600;
   }
 
+  /* WhatsApp Reference Design System Tokens (#fcf5eb, #111b21, #e6ffda, #25d366) */
+  .bg-wa-canvas {
+    background-color: #fcf5eb;
+  }
+  .bg-wa-night {
+    background-color: #111b21;
+  }
+  .bg-wa-mint {
+    background-color: #e6ffda;
+  }
+  .bg-wa-green {
+    background-color: #25d366;
+  }
+  .bg-wa-deep {
+    background-color: #0b141a;
+  }
+  .text-wa-ink {
+    color: #1c1e21;
+  }
+  .text-wa-green {
+    color: #25d366;
+  }
+  .text-wa-night {
+    color: #111b21;
+  }
+  .text-wa-muted {
+    color: #5e5e5e;
+  }
+  .border-wa-dark-rule {
+    border-color: #33463f;
+  }
+  .border-wa-rule {
+    border-color: #f0f4f9;
+  }
+  .border-wa-ink {
+    border-color: #1c1e21;
+  }
+
+  /* WhatsApp Pill buttons (linear 0.33s background invert) */
+  .wa-pill-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #25d366;
+    color: #1c1e21;
+    border: 1px solid #1c1e21;
+    border-radius: 50px;
+    font-weight: 500;
+    transition:
+      background-color 0.33s linear,
+      color 0.33s linear,
+      border-color 0.33s linear;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .wa-pill-primary:hover {
+    background-color: #1c1e21;
+    color: #ffffff;
+    border-color: #1c1e21;
+  }
+
+  .wa-pill-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: transparent;
+    color: #1c1e21;
+    border: 1.5px solid #1c1e21;
+    border-radius: 50px;
+    font-weight: 500;
+    transition:
+      background-color 0.33s linear,
+      color 0.33s linear,
+      border-color 0.33s linear;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .wa-pill-outline:hover {
+    background-color: #1c1e21;
+    color: #ffffff;
+    border-color: #1c1e21;
+  }
+
+  /* Secondary link with green underline strictly beneath text span */
+  .wa-link-underline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    line-height: 1;
+    color: #1c1e21;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .wa-link-underline .wa-link-text {
+    border-bottom: 1.5px solid #25d366;
+    padding-bottom: 2px;
+  }
+  .wa-link-underline:hover {
+    color: #00803e;
+  }
+
+  /* Night band text link with white text and green underline */
+  .wa-link-underline-night {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    line-height: 1;
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .wa-link-underline-night .wa-link-text {
+    border-bottom: 1.5px solid #25d366;
+    padding-bottom: 2px;
+  }
+  .wa-link-underline-night:hover {
+    color: #25d366;
+  }
+
   .analytics-metric-card[data-tone="success"] {
     background: linear-gradient(125deg, var(--surface-success), var(--card) 80%);
     border-color: var(--border-success);

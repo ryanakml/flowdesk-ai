@@ -1,0 +1,58 @@
+import React from "react";
+import { ArrowDown, ChevronRight } from "lucide-react";
+
+interface StickyNavbarProps {
+  onOpenApp?: () => void;
+}
+
+export const StickyNavbar: React.FC<StickyNavbarProps> = ({ onOpenApp }) => {
+  return (
+    <header className="sticky top-0 z-50 h-[80px] bg-[#fcf5eb] border-b border-[#fcf5eb] px-6 sm:px-12 lg:px-[60px] flex items-center justify-between transition-colors duration-300">
+      {/* Brand Slot Left */}
+      <div className="flex items-center gap-2">
+        <a
+          href="/"
+          className="flex items-center gap-1.5 text-[22px] font-normal tracking-tight text-[#1c1e21] hover:opacity-90 transition-opacity"
+        >
+          <span className="font-medium">FlowDesk</span>
+          <span className="inline-block w-2 h-2 rounded-full bg-[#25d366]" />
+        </a>
+      </div>
+
+      {/* Center Links */}
+      <nav className="hidden md:flex items-center gap-8 text-[16px] font-normal text-[#1c1e21]">
+        <a href="#features" className="hover:text-[#00803e] transition-colors">
+          Features
+        </a>
+        <a href="#privacy" className="hover:text-[#00803e] transition-colors">
+          Privacy
+        </a>
+        <a href="#help" className="hover:text-[#00803e] transition-colors">
+          Help Center
+        </a>
+        <a href="#blog" className="hover:text-[#00803e] transition-colors">
+          Blog
+        </a>
+        <a href="#business" className="hover:text-[#00803e] transition-colors">
+          For Business
+        </a>
+      </nav>
+
+      {/* Right Action Pills */}
+      <div className="flex items-center gap-3">
+        <a
+          href="/inbox"
+          onClick={onOpenApp}
+          className="wa-pill-outline hidden sm:inline-flex px-5 py-2.5 text-[14px]"
+        >
+          <span>Web Login</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </a>
+        <a href="/inbox" onClick={onOpenApp} className="wa-pill-primary px-5 py-2.5 text-[14px]">
+          <span>Open FlowDesk</span>
+          <ArrowDown className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    </header>
+  );
+};
