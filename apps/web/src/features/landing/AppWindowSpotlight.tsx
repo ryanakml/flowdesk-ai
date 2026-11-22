@@ -196,18 +196,18 @@ export const AppWindowSpotlight: React.FC = () => {
           {/* Right: 60px Headline & Underlined Link */}
           <div className="lg:col-span-5 flex flex-col justify-center">
             <h2 className="text-[40px] sm:text-[50px] lg:text-[60px] leading-[1] font-normal tracking-normal text-[#1c1e21] text-balance">
-              One shared team inbox for every customer conversation
+              One shared inbox for your whole team
             </h2>
 
             <p className="text-[18px] leading-[25px] font-normal text-[#1c1e21] mt-5">
-              No more passing around one company phone or losing track of customer requests. Assign
-              threads to teammates, leave private internal notes, and maintain full context across
-              every shift.
+              Stop passing around a shared office phone. Your agents can reply from the same
+              WhatsApp number at the same time, assign threads, and leave internal notes without the
+              customer ever noticing.
             </p>
 
             <div className="mt-8">
               <a href="#inbox" className="wa-link-underline">
-                <span className="wa-link-text">Explore the team inbox</span>
+                <span className="wa-link-text">See how the team inbox works</span>
                 <ChevronRight className="w-4 h-4 text-[#1c1e21]" />
               </a>
             </div>

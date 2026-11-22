@@ -136,19 +136,18 @@ export const NightBandReveal: React.FC = () => {
           {/* Right Column: 60px Typography & White Underlined Link */}
           <div className="lg:col-span-6 flex flex-col justify-center">
             <h2 className="text-[40px] sm:text-[50px] lg:text-[60px] leading-[1] font-normal tracking-normal text-white text-balance">
-              Protect your data with <span className="text-[#25d366]">sovereign</span> cryptographic
-              isolation
+              Zero training on your customer conversations
             </h2>
 
             <p className="text-[18px] leading-[25px] font-normal text-white/80 mt-6 max-w-[480px]">
-              Customer phone numbers, message histories, and internal knowledge bases remain
-              strictly sovereign to your organization. FlowDesk combines hardware-backed envelope
-              encryption with zero data retention for all AI operations.
+              Customer phone numbers, home addresses, and private messages stay strictly yours.
+              FlowDesk enforces hardware-backed envelope encryption, tenant KMS key isolation, and a
+              strict contract guarantee: your chats are never fed to public LLMs.
             </p>
 
             <div className="mt-8">
               <a href="#security" className="wa-link-underline-night">
-                <span className="wa-link-text">Read our technical security whitepaper</span>
+                <span className="wa-link-text">Read the security architecture</span>
                 <ChevronRight className="w-4 h-4 text-white" />
               </a>
             </div>

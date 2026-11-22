@@ -26,7 +26,7 @@ const TOP_PILLS: AvatarPill[] = [
     id: "top-2",
     name: "David",
     role: "Customer",
-    message: "Got my invoice confirmation in 30 seconds! 🙌",
+    message: "Got my refund confirmation in 30 seconds 🙌",
     avatarBg: "#d9fdd3",
     driftDuration: 4.0,
     driftRange: -12
@@ -35,7 +35,7 @@ const TOP_PILLS: AvatarPill[] = [
     id: "top-3",
     name: "Sarah",
     role: "Operations",
-    message: "Knowledge base updated with holiday hours 📋",
+    message: "Exchange policy updated with holiday hours 📋",
     avatarBg: "#fef08a",
     driftDuration: 3.6,
     driftRange: -9
@@ -44,7 +44,7 @@ const TOP_PILLS: AvatarPill[] = [
     id: "top-4",
     name: "Carlos",
     role: "Client",
-    message: "Signed service agreement received via WhatsApp 📄",
+    message: "Signed service agreement received on WhatsApp 📄",
     avatarBg: "#bfdbfe",
     driftDuration: 4.2,
     driftRange: -11
@@ -56,7 +56,7 @@ const BOTTOM_PILLS: AvatarPill[] = [
     id: "bot-1",
     name: "Elena",
     role: "Billing Desk",
-    message: "Multi-tenant payment dispatched to accounts 💳",
+    message: "Invoice #INV-204 dispatched and paid via QRIS 💳",
     avatarBg: "#fed7aa",
     driftDuration: 3.8,
     driftRange: -10
@@ -65,7 +65,7 @@ const BOTTOM_PILLS: AvatarPill[] = [
     id: "bot-2",
     name: "Marcus",
     role: "Store Manager",
-    message: "VIP customer status verified automatically 🌟",
+    message: "VIP tier activated after 3rd re-order 🌟",
     avatarBg: "#e6ffda",
     driftDuration: 3.5,
     driftRange: -12
@@ -74,7 +74,7 @@ const BOTTOM_PILLS: AvatarPill[] = [
     id: "bot-3",
     name: "Aria",
     role: "AI Co-pilot",
-    message: "Grounded reply confidence: 99.4% · Policy v3 🎯",
+    message: "Grounded in Return_Policy_v2.4 (99% match) 🛡️",
     avatarBg: "#ddd6fe",
     driftDuration: 4.1,
     driftRange: -9
@@ -82,8 +82,8 @@ const BOTTOM_PILLS: AvatarPill[] = [
   {
     id: "bot-4",
     name: "Lucas",
-    role: "Customer",
-    message: "Best WhatsApp support experience so far! ❤️",
+    role: "Warehouse",
+    message: "Tracking link delivered to customer in 42ms ⚡",
     avatarBg: "#fbcfe8",
     driftDuration: 3.7,
     driftRange: -11
@@ -151,7 +151,7 @@ export const EmotionalAvatarCloud: React.FC = () => {
           className="max-w-[880px] text-center my-6"
         >
           <p className="text-[32px] sm:text-[42px] lg:text-[48px] leading-[1.1] font-normal tracking-normal text-[#1c1e21] text-balance">
-            When customer conversations feel effortless, trust follows naturally.
+            When customer questions are answered in under a minute, trust follows naturally.
           </p>
         </motion.div>
 

@@ -15,29 +15,29 @@ const CARDS: EditorialCardItem[] = [
   {
     id: "card-1",
     icon: Megaphone,
-    title: "Targeted broadcast campaigns at scale",
-    body: "Dispatch personalized updates and notifications to 100k+ opted-in customers using Meta-approved HSM templates with 99.98% delivery rate.",
+    title: "Broadcast campaigns to 100,000+ customers",
+    body: "Dispatch order updates and notifications using Meta-approved HSM templates with a 99.98% delivery rate.",
     actionText: "Explore Campaigns"
   },
   {
     id: "card-2",
     icon: Zap,
-    title: "Canned snippets & instant shortcuts",
-    body: "Slash response times with /shortcut snippets, customer variable interpolation, rich media attachments, and automated ticket classification.",
+    title: "Keyboard snippets and canned replies",
+    body: "Cut resolution times with /shortcut snippets, customer name interpolation, media files, and auto-tagging.",
     actionText: "View Productivity"
   },
   {
     id: "card-3",
     icon: Webhook,
-    title: "Real-time webhook and CRM synchronization",
-    body: "Stream incoming WhatsApp events directly into Shopify, Salesforce, PostgreSQL, or your custom internal APIs in under 50 milliseconds.",
+    title: "Sync WhatsApp events directly to your CRM",
+    body: "Stream new messages into Shopify, Salesforce, PostgreSQL, or your internal webhooks in under 50 milliseconds.",
     actionText: "Browse Integrations"
   },
   {
     id: "card-4",
     icon: BarChart3,
-    title: "Granular SLA tracking & deflection analytics",
-    body: "Monitor first-response time, AI autonomous deflection percentages, and individual agent resolution volume across shifting work hours.",
+    title: "Track response times and agent resolution rates",
+    body: "Monitor first-reply speed, autonomous AI resolution rates, and individual agent volume across every shift.",
     actionText: "See Analytics"
   }
 ];
@@ -89,12 +89,12 @@ export const MintClosingRail: React.FC = () => {
             <div className="lg:col-span-5 flex flex-col justify-between self-stretch min-h-[360px]">
               <div>
                 <h2 className="text-[40px] sm:text-[50px] lg:text-[60px] leading-[1] font-normal tracking-normal text-[#1c1e21] text-balance">
-                  Explore what your team can build
+                  Built for teams handling 500+ chats a day
                 </h2>
 
                 <p className="text-[18px] leading-[25px] font-normal text-[#1c1e21] mt-6 max-w-[400px]">
-                  From automated outbound dispatch to compliant team collaboration, equip your
-                  support operations with tools designed specifically for WhatsApp.
+                  Whether you answer order questions, confirm clinic appointments, or dispatch
+                  couriers, FlowDesk turns WhatsApp into a reliable, trackable workspace.
                 </p>
               </div>
 
