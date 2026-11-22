@@ -81,111 +81,98 @@ export const DarkFooter: React.FC<DarkFooterProps> = ({ onOpenApp }) => {
 
           {/* Right 4 Link Columns */}
           <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
-            {/* Column 1: What we do */}
+            {/* Column 1: Capabilities */}
             <div>
               <span className="text-[12px] leading-[1.3] text-[#25d366] uppercase tracking-wider block mb-4">
-                What we do
+                Capabilities
               </span>
               <ul className="space-y-3.5 text-[16px] text-white/80">
                 <li>
-                  <a href="#features" className="hover:text-white transition-colors">
-                    Features
+                  <a href="#inbox" className="hover:text-white transition-colors">
+                    Team Inbox
                   </a>
                 </li>
                 <li>
-                  <a href="#blog" className="hover:text-white transition-colors">
-                    Blog
+                  <a href="#knowledge" className="hover:text-white transition-colors">
+                    AI Knowledge Grounding
+                  </a>
+                </li>
+                <li>
+                  <a href="#meta-api" className="hover:text-white transition-colors">
+                    Meta Cloud API
+                  </a>
+                </li>
+                <li>
+                  <a href="#solutions" className="hover:text-white transition-colors">
+                    Outbound Broadcasts
+                  </a>
+                </li>
+                <li>
+                  <a href="#integrations" className="hover:text-white transition-colors">
+                    Webhook Integrations
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Column 2: Resources */}
+            <div>
+              <span className="text-[12px] leading-[1.3] text-[#25d366] uppercase tracking-wider block mb-4">
+                Resources
+              </span>
+              <ul className="space-y-3.5 text-[16px] text-white/80">
+                <li>
+                  <a href="#api" className="hover:text-white transition-colors">
+                    API Reference
+                  </a>
+                </li>
+                <li>
+                  <a href="#policy" className="hover:text-white transition-colors">
+                    Meta Policy Guide
+                  </a>
+                </li>
+                <li>
+                  <a href="#webhooks" className="hover:text-white transition-colors">
+                    WhatsApp Webhooks
                   </a>
                 </li>
                 <li>
                   <a href="#security" className="hover:text-white transition-colors">
-                    Security
+                    Security Whitepaper
                   </a>
                 </li>
                 <li>
-                  <a href="#business" className="hover:text-white transition-colors">
-                    For Business
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 2: Who we are */}
-            <div>
-              <span className="text-[12px] leading-[1.3] text-[#25d366] uppercase tracking-wider block mb-4">
-                Who we are
-              </span>
-              <ul className="space-y-3.5 text-[16px] text-white/80">
-                <li>
-                  <a href="#about" className="hover:text-white transition-colors">
-                    About us
-                  </a>
-                </li>
-                <li>
-                  <a href="#careers" className="hover:text-white transition-colors">
-                    Careers
-                  </a>
-                </li>
-                <li>
-                  <a href="#brand" className="hover:text-white transition-colors">
-                    Brand Center
-                  </a>
-                </li>
-                <li>
-                  <a href="#privacy" className="hover:text-white transition-colors">
-                    Privacy Policy
+                  <a href="#handbook" className="hover:text-white transition-colors">
+                    WhatsApp Handbook
                   </a>
                 </li>
               </ul>
             </div>
 
-            {/* Column 3: Use FlowDesk */}
+            {/* Column 3: Trust & Platform */}
             <div>
               <span className="text-[12px] leading-[1.3] text-[#25d366] uppercase tracking-wider block mb-4">
-                Use FlowDesk
+                Trust & Platform
               </span>
               <ul className="space-y-3.5 text-[16px] text-white/80">
                 <li>
-                  <a href="#android" className="hover:text-white transition-colors">
-                    Android
+                  <a href="#security" className="hover:text-white transition-colors">
+                    Sovereign Encryption
                   </a>
                 </li>
                 <li>
-                  <a href="#ios" className="hover:text-white transition-colors">
-                    iPhone
+                  <a href="#zero-training" className="hover:text-white transition-colors">
+                    Zero-Training Guarantee
                   </a>
                 </li>
                 <li>
-                  <a href="#mac" className="hover:text-white transition-colors">
-                    Mac & PC
+                  <a href="#compliance" className="hover:text-white transition-colors">
+                    SOC 2 Type II
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="/inbox"
-                    onClick={onOpenApp}
-                    className="hover:text-white transition-colors"
-                  >
-                    FlowDesk Web
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 4: Need help? */}
-            <div>
-              <span className="text-[12px] leading-[1.3] text-[#25d366] uppercase tracking-wider block mb-4">
-                Need help?
-              </span>
-              <ul className="space-y-3.5 text-[16px] text-white/80">
-                <li>
-                  <a href="#contact" className="hover:text-white transition-colors">
-                    Contact Us
-                  </a>
-                </li>
-                <li>
-                  <a href="#help" className="hover:text-white transition-colors">
-                    Help Center
+                  <a href="#gdpr" className="hover:text-white transition-colors">
+                    GDPR & DPPA
                   </a>
                 </li>
                 <li>
@@ -193,9 +180,38 @@ export const DarkFooter: React.FC<DarkFooterProps> = ({ onOpenApp }) => {
                     System Status
                   </a>
                 </li>
+              </ul>
+            </div>
+
+            {/* Column 4: Company */}
+            <div>
+              <span className="text-[12px] leading-[1.3] text-[#25d366] uppercase tracking-wider block mb-4">
+                Company
+              </span>
+              <ul className="space-y-3.5 text-[16px] text-white/80">
                 <li>
-                  <a href="#advisories" className="hover:text-white transition-colors">
-                    Security Advisories
+                  <a href="#about" className="hover:text-white transition-colors">
+                    About FlowDesk
+                  </a>
+                </li>
+                <li>
+                  <a href="#pricing" className="hover:text-white transition-colors">
+                    Enterprise Pricing
+                  </a>
+                </li>
+                <li>
+                  <a href="#changelog" className="hover:text-white transition-colors">
+                    Release Notes
+                  </a>
+                </li>
+                <li>
+                  <a href="#brand" className="hover:text-white transition-colors">
+                    Brand Assets
+                  </a>
+                </li>
+                <li>
+                  <a href="#contact" className="hover:text-white transition-colors">
+                    Contact Sales
                   </a>
                 </li>
               </ul>

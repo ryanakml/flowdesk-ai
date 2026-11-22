@@ -2,20 +2,21 @@ import React from "react";
 import { motion } from "framer-motion";
 import {
   ChevronRight,
-  PhoneCall,
-  Mic,
-  Calendar,
-  FileText,
-  Smile,
-  Laptop,
-  Smartphone,
-  CheckCheck,
   ShieldCheck,
-  Sparkles
+  FileCheck,
+  Sparkles,
+  CheckCheck,
+  Zap,
+  Package,
+  Clock,
+  Lock,
+  Smartphone,
+  Laptop
 } from "lucide-react";
 import { REVEAL_EASE, SPRING_POP, VIEWPORT_DEFAULT } from "./motionTokens.js";
 
 interface BenefitSectionProps {
+  id?: string;
   reverse?: boolean;
   heading: string;
   body: string;
@@ -25,6 +26,7 @@ interface BenefitSectionProps {
 }
 
 const BenefitPair: React.FC<BenefitSectionProps> = ({
+  id,
   reverse = false,
   heading,
   body,
@@ -48,7 +50,7 @@ const BenefitPair: React.FC<BenefitSectionProps> = ({
   };
 
   return (
-    <div className="py-24 first:pt-16 last:pb-24">
+    <div id={id} className="py-24 first:pt-16 last:pb-24">
       <div className="max-w-[1080px] mx-auto">
         <motion.div
           variants={baseVariants}
@@ -98,77 +100,72 @@ const BenefitPair: React.FC<BenefitSectionProps> = ({
 export const AlternatingBenefits: React.FC = () => {
   return (
     <section className="bg-[#fcf5eb] px-6 sm:px-12 lg:px-[60px]">
-      {/* Benefit Pair 1 (Section 4): Voice & Calls */}
+      {/* Benefit Pair 1 (Section 4): Deterministic AI Knowledge Grounding */}
       <BenefitPair
-        heading="Never miss a moment with voice and group calls"
-        body="From quick check-ins to deep team brainstorms, feel like you are in the same room with high-fidelity audio and video designed for clarity."
-        linkText="Explore voice features"
-        linkHref="#voice"
+        id="knowledge"
+        heading="Answers grounded in truth, never guesswork"
+        body="Upload your policy documents, product manuals, and FAQ sheets. FlowDesk retrieves exact sentences and verifies every fact before generating a single word — with zero hallucinations."
+        linkText="See how grounding works"
+        linkHref="#knowledge"
       >
-        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-xl select-none">
-          {/* Card Top Header */}
+        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-2xl select-none">
+          {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center font-bold text-sm shadow-sm">
-                MK
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-[#25d366]/20 text-[#25d366] flex items-center justify-center">
+                <FileCheck className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-[16px] font-medium leading-none">Mira K.</h4>
-                <span className="text-[12px] text-[#25d366] mt-1 block font-medium">
-                  Active Call · 12:45
+                <h4 className="text-[15px] font-medium leading-none text-white">
+                  Knowledge Extractor
+                </h4>
+                <span className="text-[11px] text-[#25d366] mt-1 block">
+                  Return_Policy_2026.pdf
                 </span>
               </div>
             </div>
-            <PhoneCall className="w-5 h-5 text-[#25d366]" />
+            <ShieldCheck className="w-5 h-5 text-[#25d366]" />
           </div>
 
-          {/* Central Call Visualization with animated waveform */}
-          <div className="flex flex-col items-center justify-center space-y-4 my-auto">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#25d366] to-[#e6ffda] p-1 flex items-center justify-center shadow-lg">
-              <div className="w-full h-full rounded-full bg-[#111b21] flex items-center justify-center text-2xl font-medium">
-                MK
+          {/* Document Grounding Visualization */}
+          <div className="space-y-4 my-auto">
+            <div className="p-3.5 rounded-[18px] bg-white/5 border border-white/10 text-xs font-mono space-y-2">
+              <div className="flex items-center justify-between text-[#25d366]">
+                <span>Chunk #0829 · Vector Cosine: 0.94</span>
+                <span className="bg-[#25d366]/20 text-[#25d366] px-1.5 py-0.5 rounded text-[10px]">
+                  99.2% Match
+                </span>
               </div>
-            </div>
-            <div className="text-center">
-              <p className="text-[18px] font-normal">Mira Karim</p>
-              <p className="text-[13px] text-white/60 mt-0.5">End-to-end encrypted audio</p>
+              <p className="text-white/80 font-sans text-[12px] leading-relaxed bg-[#25d366]/10 p-2 rounded border border-[#25d366]/30">
+                "Items may be exchanged within 14 business days of delivery if packaging is intact.
+                Receipt #FD is required."
+              </p>
+              <div className="text-[10px] text-white/50 text-right">Lines 42–49 verified</div>
             </div>
 
-            {/* Continuous Lively Audio Waveform Animation */}
-            <div className="flex items-center gap-1.5 h-10">
-              {[16, 32, 22, 38, 20, 30, 14, 34, 24, 18].map((h, i) => (
-                <motion.div
-                  key={i}
-                  animate={{
-                    height: [h * 0.4, h, h * 0.6, h * 0.9, h * 0.4]
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: i * 0.1
-                  }}
-                  className="w-1.5 bg-[#25d366] rounded-full"
-                />
-              ))}
+            {/* Generated Verified Draft */}
+            <div className="p-3.5 rounded-[18px] bg-[#d9fdd3] text-[#111b21] shadow-md text-xs space-y-1.5">
+              <div className="flex items-center justify-between font-semibold text-[#00803e] text-[11px]">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-[#25d366]" /> Verified AI Draft
+                </span>
+                <span>Ready to dispatch</span>
+              </div>
+              <p className="text-[12px] leading-snug">
+                "Yes! You can exchange your item within 14 days of delivery. Just have your order
+                receipt ready."
+              </p>
             </div>
           </div>
 
-          {/* Card Bottom Controls */}
-          <div className="flex items-center justify-around pt-4 border-t border-white/10">
-            <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
-              <Mic className="w-5 h-5 text-white" />
-            </div>
-            <div className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center text-white shadow-md hover:bg-red-600 transition-colors cursor-pointer">
-              <PhoneCall className="w-6 h-6 rotate-[135deg]" />
-            </div>
-            <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
-              <ShieldCheck className="w-5 h-5 text-[#25d366]" />
-            </div>
+          {/* Bottom Telemetry */}
+          <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/60">
+            <span>Confidence Gate: STRICT</span>
+            <span className="text-[#25d366] font-mono">0 Hallucinations</span>
           </div>
 
           {/* Detached Overlays (+180ms Stagger Pop + Ambient Float) */}
-          {/* Top-Right Detached Floating Card */}
+          {/* Top-Right Detached Citation Chip */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -182,16 +179,16 @@ export const AlternatingBenefits: React.FC = () => {
               className="bg-white text-[#1c1e21] rounded-[18px] p-3.5 border border-[#dedbd6] shadow-xl flex items-center gap-2.5"
             >
               <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] flex items-center justify-center text-xs font-semibold shadow-2xs">
-                TL
+                DOC
               </div>
               <div>
-                <p className="text-[13px] font-medium leading-none">Team Lead</p>
-                <p className="text-[11px] text-[#5e5e5e] mt-0.5">Joined voice stage</p>
+                <p className="text-[13px] font-medium leading-none">Exact Source Cited</p>
+                <p className="text-[11px] text-[#00803e] font-mono mt-0.5">Policy_v2.4.pdf #L42</p>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Bottom-Left Detached Waveform Pill */}
+          {/* Bottom-Left Detached Latency Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -205,71 +202,80 @@ export const AlternatingBenefits: React.FC = () => {
               className="bg-[#e6ffda] text-[#111b21] rounded-full px-4 py-2 border border-[#dedbd6] shadow-xl flex items-center gap-2"
             >
               <span className="w-2 h-2 rounded-full bg-[#25d366] animate-ping" />
-              <span className="text-[12px] font-medium">Ultra-low latency audio</span>
+              <span className="text-[12px] font-semibold">184ms Retrieval Latency</span>
             </motion.div>
           </motion.div>
         </div>
       </BenefitPair>
 
-      {/* Benefit Pair 2 (Section 6): Organized Spaces / Channels (Media Left) */}
+      {/* Benefit Pair 2 (Section 6): Official Meta Cloud API & Template Messaging (Media Left) */}
       <BenefitPair
+        id="broadcasts"
         reverse
-        heading="Transform teamwork with organized spaces"
-        body="Keep announcements, project channels, and customer queries structured without losing the personal touch of direct messaging."
-        linkText="See shared spaces"
-        linkHref="#spaces"
+        heading="Broadcast and notify with official Meta reliability"
+        body="Say goodbye to unofficial scrapers that get your phone numbers banned. Use Meta-approved templates for order updates, appointment reminders, and automated account verification."
+        linkText="Explore official templates"
+        linkHref="#broadcasts"
       >
-        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-white border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-xl select-none">
-          {/* Workspace Channels List Header */}
+        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-white border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-2xl select-none">
+          {/* Header */}
           <div>
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-              <h4 className="text-[17px] font-medium text-[#1c1e21]">All Channels</h4>
-              <span className="text-[12px] text-[#25d366] font-semibold">8 new</span>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#25d366]" />
+                <h4 className="text-[16px] font-medium text-[#1c1e21]">FlowDesk Official</h4>
+              </div>
+              <span className="text-[11px] font-mono text-[#00803e] bg-[#e6ffda] px-2 py-0.5 rounded-full font-medium">
+                Meta Verified
+              </span>
             </div>
 
-            <div className="mt-4 space-y-3">
-              {[
-                { name: "Product Launch 2026", time: "11:20 AM", unread: 3, active: true },
-                { name: "Executive Announcements", time: "09:45 AM", unread: 0 },
-                { name: "Enterprise Customer Desk", time: "Yesterday", unread: 12 },
-                { name: "Design System RFC", time: "Yesterday", unread: 0 },
-                { name: "Security Audit Logs", time: "Nov 20", unread: 0 }
-              ].map((c, i) => (
-                <div
-                  key={i}
-                  className={`p-3 rounded-[16px] flex items-center justify-between transition-colors ${
-                    c.active ? "bg-[#fcf5eb] border border-[#dedbd6]" : "hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-[#f0f4f9] text-[#1c1e21] flex items-center justify-center text-xs font-medium">
-                      #
-                    </div>
-                    <div>
-                      <p className="text-[14px] font-medium leading-snug">{c.name}</p>
-                      <p className="text-[12px] text-[#5e5e5e]">Active team discussion</p>
-                    </div>
+            {/* Template Card Mockup */}
+            <div className="mt-5 space-y-4">
+              <div className="p-4 rounded-[20px] bg-[#fcf5eb] border border-[#dedbd6] shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span className="font-mono text-[10px] uppercase tracking-wide">
+                    TEMPLATE: order_dispatch_v2
+                  </span>
+                  <span className="text-[#00803e] font-semibold">Approved</span>
+                </div>
+                <p className="text-[13px] leading-relaxed text-[#1c1e21]">
+                  {
+                    '"Hello {{customer_name}}, your order #FD-{{order_id}} is out for delivery with courier {{courier_name}}."'
+                  }
+                </p>
+                {/* Interactive Action Pills */}
+                <div className="pt-2 border-t border-[#dedbd6] flex flex-col gap-1.5 text-xs">
+                  <div className="w-full bg-white text-[#1c1e21] border border-[#dedbd6] rounded-full py-1.5 text-center font-medium shadow-2xs">
+                    🚚 Track Live Delivery
                   </div>
-                  <div className="text-right">
-                    <span className="text-[11px] text-gray-400">{c.time}</span>
-                    {c.unread > 0 && (
-                      <span className="block mt-1 w-5 h-5 rounded-full bg-[#25d366] text-[#111b21] text-[10px] font-bold text-center leading-5 ml-auto">
-                        {c.unread}
-                      </span>
-                    )}
+                  <div className="w-full bg-white text-[#1c1e21] border border-[#dedbd6] rounded-full py-1.5 text-center font-medium shadow-2xs">
+                    📅 Reschedule Drop-off
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Template Stats */}
+              <div className="p-3.5 rounded-[16px] bg-[#f0f4f9] text-xs space-y-2">
+                <div className="flex justify-between items-center text-gray-600">
+                  <span>Batch Throughput:</span>
+                  <span className="font-mono font-semibold text-[#1c1e21]">5,000 msg / min</span>
+                </div>
+                <div className="flex justify-between items-center text-gray-600">
+                  <span>Phone Reputation:</span>
+                  <span className="text-[#00803e] font-semibold">High (Green Tier)</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-            <span>Synchronized across organization</span>
+            <span>Meta Cloud API v20.0</span>
             <CheckCheck className="w-4 h-4 text-[#25d366]" />
           </div>
 
           {/* Detached Overlays (+180ms Stagger Pop + Ambient Float) */}
-          {/* Top-Left Detached Calendar Card */}
+          {/* Top-Left Detached Meta Tier Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -283,16 +289,16 @@ export const AlternatingBenefits: React.FC = () => {
               className="bg-[#111b21] text-white rounded-[18px] p-3.5 border border-[#33463f] shadow-xl flex items-center gap-3"
             >
               <div className="w-8 h-8 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center shadow-sm">
-                <Calendar className="w-4 h-4" />
+                <CheckCheck className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[13px] font-medium leading-none">Sprint Review</p>
-                <p className="text-[11px] text-white/70 mt-0.5">Today at 4:00 PM</p>
+                <p className="text-[13px] font-medium leading-none">Meta Cloud API</p>
+                <p className="text-[11px] text-white/70 mt-0.5">Tier 3 Verified Partner</p>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Bottom-Right Detached File Progress Card */}
+          {/* Bottom-Right Detached Delivery Rate Card */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -306,60 +312,78 @@ export const AlternatingBenefits: React.FC = () => {
               className="bg-white text-[#1c1e21] rounded-[18px] p-3.5 border border-[#dedbd6] shadow-xl flex items-center gap-3"
             >
               <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] flex items-center justify-center shadow-2xs">
-                <FileText className="w-4 h-4 text-[#00803e]" />
+                <Zap className="w-4 h-4 text-[#00803e]" />
               </div>
               <div>
-                <p className="text-[13px] font-medium leading-none">Q4_Report.pdf</p>
-                <p className="text-[11px] text-[#25d366] font-semibold mt-0.5">
-                  Verified & Grounded
-                </p>
+                <p className="text-[13px] font-medium leading-none">99.98% Delivery</p>
+                <p className="text-[11px] text-[#25d366] font-semibold mt-0.5">Zero Ban Risk</p>
               </div>
             </motion.div>
           </motion.div>
         </div>
       </BenefitPair>
 
-      {/* Benefit Pair 3 (Section 7): Expressive Tools */}
+      {/* Benefit Pair 3 (Section 7): Automated Tool Resolution & Workflows */}
       <BenefitPair
-        heading="Say what you feel with rich expressions"
-        body="Reactions, stickers, and ephemeral updates let your personality shine through every conversation without cluttering the thread."
-        linkText="Discover expressive tools"
-        linkHref="#stickers"
+        id="integrations"
+        heading="Resolve requests directly inside the chat"
+        body="Connect your inventory, CRM, and billing APIs. Customers can check shipping status, reschedule appointments, and pay invoices right in WhatsApp without switching apps."
+        linkText="Connect business integrations"
+        linkHref="#integrations"
       >
-        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#fcf5eb] border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-xl select-none">
-          {/* Messages with Rich Reactions */}
+        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#fcf5eb] border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-2xl select-none">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-[#dedbd6] pb-3">
+            <h4 className="text-[15px] font-medium text-[#1c1e21]">In-Chat Order Resolution</h4>
+            <span className="text-[11px] text-[#00803e] bg-[#e6ffda] px-2 py-0.5 rounded-full font-mono">
+              Tool: shipping_api
+            </span>
+          </div>
+
+          {/* Workflow Sequence */}
           <div className="space-y-4 my-auto">
-            <div className="bg-white rounded-[20px] p-4 border border-[#dedbd6] relative shadow-xs">
-              <p className="text-[15px] leading-relaxed">
-                "The presentation went amazing! Everyone loved the live prototype."
-              </p>
-              <div className="mt-3 flex items-center gap-1.5">
-                <span className="bg-[#f0f4f9] rounded-full px-2 py-0.5 text-xs">🚀 3</span>
-                <span className="bg-[#f0f4f9] rounded-full px-2 py-0.5 text-xs">🎉 5</span>
-                <span className="bg-[#e6ffda] text-[#111b21] rounded-full px-2 py-0.5 text-xs font-semibold">
-                  ❤️ 8
-                </span>
-              </div>
+            {/* Customer Prompt */}
+            <div className="bg-white rounded-[18px] p-3.5 border border-[#dedbd6] shadow-xs">
+              <span className="text-[10px] text-gray-400 block mb-1">Customer Query</span>
+              <p className="text-[13px] leading-snug">"Can you track shipment #FD-9921 for me?"</p>
             </div>
 
-            <div className="bg-[#d9fdd3] text-[#111b21] rounded-[20px] p-4 self-end ml-6 border border-[#c3ebb8] shadow-xs">
-              <p className="text-[15px] leading-relaxed">"Celebrating with team coffee! ☕🥳"</p>
-              <span className="text-[11px] text-gray-500 block text-right mt-1">11:42 AM</span>
+            {/* Resolved Tool Card */}
+            <div className="bg-[#111b21] text-white rounded-[20px] p-4 border border-[#33463f] shadow-lg space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5 text-[#25d366] font-medium">
+                  <Package className="w-4 h-4" /> Transit Status: ON THE WAY
+                </span>
+                <span className="text-white/60 font-mono text-[10px]">ETA: 16:30</span>
+              </div>
+
+              <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="w-3/4 h-full bg-[#25d366] rounded-full" />
+              </div>
+
+              <div className="text-[12px] text-white/80 space-y-1 pt-1">
+                <p>Courier: JNE Express · Driver: Budi S.</p>
+                <p className="text-white/60 text-[11px]">Last checkpoint: Hub Cilandak Selatan</p>
+              </div>
+
+              <div className="pt-2 border-t border-white/10 text-center">
+                <button
+                  type="button"
+                  className="w-full bg-[#25d366] text-[#111b21] py-1.5 rounded-full text-xs font-semibold"
+                >
+                  View Live Map Pin
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Reaction Bar */}
-          <div className="bg-white rounded-full p-2 border border-[#dedbd6] flex items-center justify-around text-lg shadow-sm">
-            <span className="hover:scale-125 transition-transform cursor-pointer">👍</span>
-            <span className="hover:scale-125 transition-transform cursor-pointer">❤️</span>
-            <span className="hover:scale-125 transition-transform cursor-pointer">😂</span>
-            <span className="hover:scale-125 transition-transform cursor-pointer">😮</span>
-            <span className="hover:scale-125 transition-transform cursor-pointer">🙏</span>
-            <Smile className="w-5 h-5 text-[#5e5e5e] hover:text-[#1c1e21] cursor-pointer" />
+          <div className="pt-3 border-t border-[#dedbd6] flex items-center justify-between text-xs text-gray-500">
+            <span>Automated without agent intervention</span>
+            <span className="font-mono text-[#00803e]">0 human hours</span>
           </div>
 
           {/* Detached Overlays (+180ms Stagger Pop + Ambient Float) */}
-          {/* Top-Right Detached Sticker Badge */}
+          {/* Top-Right Detached API Execution Chip */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -370,17 +394,17 @@ export const AlternatingBenefits: React.FC = () => {
             <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
-              className="bg-white text-[#1c1e21] rounded-[20px] p-4 border border-[#dedbd6] shadow-xl flex items-center gap-3"
+              className="bg-white text-[#1c1e21] rounded-[20px] p-3.5 border border-[#dedbd6] shadow-xl flex items-center gap-3"
             >
-              <span className="text-3xl animate-bounce">✨</span>
+              <span className="text-2xl">⚡</span>
               <div>
-                <p className="text-[13px] font-medium leading-none">Custom Reactions</p>
-                <p className="text-[11px] text-[#5e5e5e] mt-1">Instant emotion</p>
+                <p className="text-[13px] font-medium leading-none">Webhook Executed</p>
+                <p className="text-[11px] text-[#00803e] font-mono mt-0.5">42ms latency · 200 OK</p>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Bottom-Left Detached Floating Sticker */}
+          {/* Bottom-Left Detached Zero-Touch Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -393,61 +417,95 @@ export const AlternatingBenefits: React.FC = () => {
               transition={{ duration: 4.4, repeat: Infinity, ease: "easeInOut" }}
               className="bg-[#e6ffda] text-[#111b21] rounded-full px-4 py-2 border border-[#dedbd6] shadow-xl flex items-center gap-2"
             >
-              <Sparkles className="w-4 h-4 text-[#25d366]" />
-              <span className="text-[12px] font-medium">Lightweight & expressive</span>
+              <Zap className="w-4 h-4 text-[#25d366]" />
+              <span className="text-[12px] font-semibold">Zero-touch automated resolution</span>
             </motion.div>
           </motion.div>
         </div>
       </BenefitPair>
 
-      {/* Benefit Pair 4 (Section 8): Cross-Screen Synchrony (Media Left) */}
+      {/* Benefit Pair 4 (Section 8): Multi-Device Team Handoff & Omnichannel Presence (Media Left) */}
       <BenefitPair
         reverse
-        heading="Keep conversations flowing across every screen"
-        body="Pick up right where you left off on your phone, tablet, or browser with end-to-end synchronized state that never drops a beat."
-        linkText="Download on all platforms"
-        linkHref="#downloads"
+        heading="Collaborate without stepping on each other"
+        body="Live presence indicators show when a teammate is reading or replying to a chat. Lock threads, transfer conversations smoothly, and deliver a unified team voice."
+        linkText="Learn about agent collision guard"
+        linkHref="#inbox"
       >
-        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-xl select-none">
+        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-2xl select-none">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
-            <h4 className="text-[16px] font-medium">Connected Devices</h4>
-            <span className="text-[12px] text-[#25d366] font-semibold">4 Active</span>
+            <h4 className="text-[16px] font-medium">Team Presence</h4>
+            <span className="text-[12px] text-[#25d366] font-semibold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#25d366] animate-pulse" />
+              Live Sync
+            </span>
           </div>
 
-          {/* Devices Grid */}
+          {/* Agent Presence & Collision Banner */}
           <div className="space-y-4 my-auto">
-            {[
-              { icon: Laptop, name: 'MacBook Pro 16"', status: "Active now", sync: "100%" },
-              { icon: Smartphone, name: "iPhone 16 Pro", status: "Active 2m ago", sync: "100%" },
-              { icon: Laptop, name: "Windows Workstation", status: "Active 1h ago", sync: "100%" }
-            ].map((d, i) => (
-              <div
-                key={i}
-                className="p-3.5 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-between hover:bg-white/10 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#25d366]/20 text-[#25d366] flex items-center justify-center">
-                    <d.icon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[14px] font-medium leading-none">{d.name}</p>
-                    <p className="text-[12px] text-white/60 mt-1">{d.status}</p>
-                  </div>
-                </div>
-                <span className="text-[11px] font-mono text-[#25d366] font-semibold">{d.sync}</span>
+            {/* Collision Guard Warning Banner */}
+            <div className="p-3.5 rounded-[18px] bg-amber-500/15 border border-amber-500/40 text-amber-200 text-xs flex items-center gap-2.5">
+              <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+              <div>
+                <p className="font-semibold text-white">Collision Guard Active</p>
+                <p className="text-[11px] text-amber-200/80">
+                  Sarah M. is currently drafting a reply
+                </p>
               </div>
-            ))}
+            </div>
+
+            {/* Connected Workstations List */}
+            <div className="space-y-3">
+              {[
+                {
+                  icon: Laptop,
+                  name: "Sarah M. (Lead)",
+                  status: "Drafting response...",
+                  badge: "Active"
+                },
+                {
+                  icon: Smartphone,
+                  name: "Carlos R. (Support)",
+                  status: "Viewing thread",
+                  badge: "Sync"
+                },
+                {
+                  icon: Laptop,
+                  name: "David T. (Tier 2)",
+                  status: "Internal note added",
+                  badge: "Sync"
+                }
+              ].map((d, i) => (
+                <div
+                  key={i}
+                  className="p-3.5 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-between hover:bg-white/10 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[#25d366]/20 text-[#25d366] flex items-center justify-center">
+                      <d.icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-[13px] font-medium leading-none text-white">{d.name}</p>
+                      <p className="text-[11px] text-white/60 mt-1">{d.status}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono text-[#25d366] bg-[#25d366]/10 px-2 py-0.5 rounded-full">
+                    {d.badge}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="pt-3 border-t border-white/10 text-center">
             <p className="text-[12px] text-white/70">
-              End-to-end encryption maintained across all linked devices.
+              Zero collision conflicts across 100+ concurrent team agents.
             </p>
           </div>
 
           {/* Detached Overlays (+180ms Stagger Pop + Ambient Float) */}
-          {/* Top-Left Detached Sync Indicator */}
+          {/* Top-Left Detached Collision Protection Chip */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -464,13 +522,13 @@ export const AlternatingBenefits: React.FC = () => {
                 <CheckCheck className="w-4 h-4 text-[#25d366]" />
               </div>
               <div>
-                <p className="text-[13px] font-medium leading-none">Instant Handover</p>
-                <p className="text-[11px] text-[#5e5e5e] mt-0.5">0.02s sync latency</p>
+                <p className="text-[13px] font-medium leading-none">Collision Lock</p>
+                <p className="text-[11px] text-[#5e5e5e] mt-0.5">0 duplicate customer replies</p>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Bottom-Right Detached Battery/Sync Pill */}
+          {/* Bottom-Right Detached SLA Chip */}
           <motion.div
             initial={{ opacity: 0, scale: 0.85, y: 16 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -483,8 +541,8 @@ export const AlternatingBenefits: React.FC = () => {
               transition={{ duration: 4.6, repeat: Infinity, ease: "easeInOut" }}
               className="bg-[#25d366] text-[#111b21] rounded-full px-4 py-2 border border-[#111b21] shadow-xl flex items-center gap-2"
             >
-              <span className="w-2 h-2 rounded-full bg-[#111b21] animate-ping" />
-              <span className="text-[12px] font-bold">Zero battery drain sync</span>
+              <Clock className="w-3.5 h-3.5 text-[#111b21]" />
+              <span className="text-[12px] font-bold">&lt; 90s First Response SLA</span>
             </motion.div>
           </motion.div>
         </div>

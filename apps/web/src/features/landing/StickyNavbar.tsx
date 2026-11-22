@@ -20,22 +20,22 @@ export const StickyNavbar: React.FC<StickyNavbarProps> = ({ onOpenApp }) => {
         </a>
       </div>
 
-      {/* Center Links */}
+      {/* Center Links (Product Capabilities) */}
       <nav className="hidden md:flex items-center gap-8 text-[16px] font-normal text-[#1c1e21]">
-        <a href="#features" className="hover:text-[#00803e] transition-colors">
-          Features
+        <a href="#inbox" className="hover:text-[#00803e] transition-colors">
+          Team Inbox
         </a>
-        <a href="#privacy" className="hover:text-[#00803e] transition-colors">
-          Privacy
+        <a href="#knowledge" className="hover:text-[#00803e] transition-colors">
+          AI Knowledge
         </a>
-        <a href="#help" className="hover:text-[#00803e] transition-colors">
-          Help Center
+        <a href="#broadcasts" className="hover:text-[#00803e] transition-colors">
+          Meta Cloud API
         </a>
-        <a href="#blog" className="hover:text-[#00803e] transition-colors">
-          Blog
+        <a href="#security" className="hover:text-[#00803e] transition-colors">
+          Security
         </a>
-        <a href="#business" className="hover:text-[#00803e] transition-colors">
-          For Business
+        <a href="#integrations" className="hover:text-[#00803e] transition-colors">
+          Integrations
         </a>
       </nav>
 
@@ -48,7 +48,7 @@ export const StickyNavbar: React.FC<StickyNavbarProps> = ({ onOpenApp }) => {
           whileTap={{ scale: 0.98 }}
           className="wa-pill-outline hidden sm:inline-flex px-5 py-2.5 text-[14px]"
         >
-          <span>Web Login</span>
+          <span>Sign In</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </motion.a>
         <motion.a

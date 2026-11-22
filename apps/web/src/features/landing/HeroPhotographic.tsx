@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, CheckCheck, Heart } from "lucide-react";
+import { ArrowDown, CheckCheck, ThumbsUp, ShieldCheck } from "lucide-react";
 import { REVEAL_EASE, SPRING_POP } from "./motionTokens.js";
 
 interface HeroPhotographicProps {
@@ -17,16 +17,16 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
         <div className="absolute inset-0 z-0">
           <img
             src="/landing-hero.webp"
-            alt="Authentic conversational connection"
-            className="w-full h-full object-cover object-center filter brightness-[0.82] contrast-[1.05]"
+            alt="Customer conversation on WhatsApp"
+            className="w-full h-full object-cover object-center filter brightness-[0.80] contrast-[1.08]"
           />
-          {/* Subtle gradient vignette to preserve left text readability and right glass texture */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/60 pointer-events-none" />
+          {/* Subtle directional vignette to guarantee high legibility for white display type and glass UI */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-black/65 pointer-events-none" />
         </div>
 
         {/* Hero Content Grid (Left Copy & Right Glass Conversion) */}
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center my-auto">
-          {/* Left Column: 80px Headline, 18px Support, Staggered Chat Fragments */}
+          {/* Left Column: 80px Headline, 18px Support, Staggered Real Chat Fragments */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -39,18 +39,18 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
             {/* 80px/80px Weight 400 Headline */}
             <h1 className="text-[44px] sm:text-[64px] lg:text-[80px] leading-[1.05] sm:leading-[1] font-normal tracking-normal text-white text-balance">
               Turn every customer message <br className="hidden sm:inline" />
-              into a direct connection.
+              into a verified resolution.
             </h1>
 
             {/* 18px/25px Support Copy */}
-            <p className="text-[18px] leading-[25px] font-normal text-white/90 max-w-[500px] mt-5">
-              Simple, reliable messaging that keeps you close to the people and teams that matter
-              most, with zero delays and complete privacy.
+            <p className="text-[18px] leading-[25px] font-normal text-white/90 max-w-[520px] mt-5">
+              Give your customers immediate, accurate answers on WhatsApp grounded directly in your
+              real company documents — backed by your team the moment human judgment matters.
             </p>
 
             {/* Staggered Floating Chat Fragments Under Support Copy */}
-            <div className="mt-8 flex flex-col gap-3.5 max-w-[460px]">
-              {/* Fragment 1 (450ms Mount Stagger): Outgoing Pale-Green Bubble */}
+            <div className="mt-8 flex flex-col gap-3.5 max-w-[490px]">
+              {/* Fragment 1 (450ms Mount Stagger): Outgoing Customer Message Bubble */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.88, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -69,14 +69,14 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
                   }}
                   className="bg-[#d9fdd3] text-[#111b21] rounded-[18px] rounded-tr-[4px] px-4 py-2.5 shadow-md text-[15px] leading-[20px] flex items-end gap-2"
                 >
-                  <span>Are we still on for the 3pm sync? Notes are ready.</span>
+                  <span>Hi! Can I change the delivery address for order #FD-9281?</span>
                   <span className="text-[11px] text-[#5e5e5e] flex items-center gap-0.5 whitespace-nowrap">
-                    14:58 <CheckCheck className="w-3.5 h-3.5 text-[#25d366]" />
+                    14:28 <CheckCheck className="w-3.5 h-3.5 text-[#25d366]" />
                   </span>
                 </motion.div>
               </motion.div>
 
-              {/* Fragment 2 (900ms Mount Stagger): Incoming White Bubble with Avatar & Emoji */}
+              {/* Fragment 2 (900ms Mount Stagger): Incoming Grounded AI Response with Citation & Badge */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.88, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -96,17 +96,26 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
                   className="flex items-start gap-2.5"
                 >
                   {/* Circular Avatar */}
-                  <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] border border-white/60 flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5 shadow-sm">
-                    SM
+                  <div className="w-8 h-8 rounded-full bg-[#25d366] text-[#111b21] border border-white/60 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 shadow-sm">
+                    FD
                   </div>
 
                   <div className="relative">
-                    <div className="bg-white text-[#111b21] rounded-[18px] rounded-tl-[4px] px-4 py-2.5 shadow-md text-[15px] leading-[20px] flex items-end gap-2">
-                      <span>Yes, jumping in now! Just sent the summary.</span>
-                      <span className="text-[11px] text-[#5e5e5e] whitespace-nowrap">14:59</span>
+                    <div className="bg-white text-[#111b21] rounded-[18px] rounded-tl-[4px] px-4 py-2.5 shadow-md text-[15px] leading-[20px] max-w-[390px]">
+                      <p>
+                        Done! Updated to 42 Orchard Rd. We've verified your order and emailed the
+                        confirmation.
+                      </p>
+                      <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-[#5e5e5e] border-t border-gray-100 pt-1.5">
+                        <span className="inline-flex items-center gap-1 text-[#00803e] font-medium">
+                          <ShieldCheck className="w-3.5 h-3.5 text-[#25d366]" /> Grounded in Policy
+                          v2.4
+                        </span>
+                        <span className="whitespace-nowrap">14:28</span>
+                      </div>
                     </div>
 
-                    {/* Overlapping Emoji Reaction Badge (-10px bottom-left offset) with pop spring */}
+                    {/* Overlapping Emoji Reaction Badge (-10px bottom-left offset) with spring pop */}
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: [0, 1.25, 1] }}
@@ -115,9 +124,9 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
                         duration: 0.35,
                         ease: "easeOut"
                       }}
-                      className="absolute -bottom-2.5 -left-1.5 bg-white border border-gray-100 rounded-full px-1.5 py-0.5 flex items-center gap-1 shadow-md text-xs cursor-pointer select-none"
+                      className="absolute -bottom-2.5 -left-1.5 bg-white border border-gray-100 rounded-full px-2 py-0.5 flex items-center gap-1 shadow-md text-xs cursor-pointer select-none"
                     >
-                      <Heart className="w-3.5 h-3.5 fill-[#ea0038] text-[#ea0038]" />
+                      <ThumbsUp className="w-3.5 h-3.5 fill-[#25d366] text-[#25d366]" />
                       <span className="text-[10px] text-gray-700 font-bold">1</span>
                     </motion.div>
                   </div>
@@ -140,11 +149,10 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
             <div className="w-full max-w-[396px] min-h-[390px] rounded-[28.5px] bg-black/40 backdrop-blur-[17.8px] border border-white/15 p-8 text-white flex flex-col justify-between shadow-2xl">
               <div>
                 <h2 className="text-[32px] leading-[1.1] font-normal text-white">
-                  Connect seamlessly
+                  Start in seconds
                 </h2>
                 <p className="text-[14px] leading-[20px] text-white/80 mt-2.5">
-                  Enter your business phone number to start communicating securely across every
-                  platform.
+                  Connect your official WhatsApp Business number or test our live demo desk.
                 </p>
 
                 <div className="mt-6 space-y-3">
@@ -153,7 +161,7 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="+1 (555) 000-0000"
+                      placeholder="+62 812-3456-7890"
                       className="w-full rounded-full bg-white text-[#1c1e21] placeholder-gray-400 px-5 py-3.5 text-[15px] outline-none focus:ring-2 focus:ring-[#25d366]"
                     />
                   </div>
@@ -177,10 +185,10 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
                   onClick={onOpenApp}
                   className="text-[13px] text-white/90 hover:text-white underline underline-offset-2"
                 >
-                  Already using FlowDesk? Log in
+                  Existing workspace? Sign in
                 </a>
                 <p className="text-[11px] text-white/60">
-                  Carrier SMS rates may apply. No credit card required.
+                  Official Meta Cloud API partner. Zero setup fees.
                 </p>
               </div>
             </div>
@@ -190,7 +198,7 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
         {/* Small Note Beneath Opening */}
         <div className="relative z-10 text-right mt-4 hidden sm:block">
           <p className="text-[12px] leading-[16px] text-white/70">
-            Available on iOS, Android, Mac, and Windows.
+            Certified Meta Business Solution Provider · Multi-Agent Shared Inbox · SOC2 Certified
           </p>
         </div>
       </div>
