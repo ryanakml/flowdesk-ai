@@ -1,7 +1,19 @@
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
-import { loadHttpConfig } from "@flowdesk/config";
 import sirv from "sirv";
+
+let loadHttpConfig;
+try {
+  loadHttpConfig = (await import("@flowdesk/config")).loadHttpConfig;
+} catch {
+  try {
+    loadHttpConfig = (await import("@wabrix/config")).loadHttpConfig;
+  } catch {
+    loadHttpConfig = (_service, defaultPort) => ({
+      PORT: process.env.PORT ? Number(process.env.PORT) : defaultPort
+    });
+  }
+}
 
 const config = loadHttpConfig("web", 3000);
 const serve = sirv(fileURLToPath(new URL(".", import.meta.url)), { single: true, dev: false });
