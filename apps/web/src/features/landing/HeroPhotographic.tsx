@@ -42,10 +42,11 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
               into a verified resolution.
             </h1>
 
-            {/* 18px/25px Support Copy */}
+            {/* 18px/25px Support Copy (De-slopped & human-copywritten) */}
             <p className="text-[18px] leading-[25px] font-normal text-white/90 max-w-[520px] mt-5">
-              Give your customers immediate, accurate answers on WhatsApp grounded directly in your
-              real company documents — backed by your team the moment human judgment matters.
+              Answer customer questions in seconds on WhatsApp, verified against your real
+              documents. When a situation needs human judgment, your team steps in with full
+              context.
             </p>
 
             {/* Staggered Floating Chat Fragments Under Support Copy */}
@@ -176,10 +177,13 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
                     <span>Open FlowDesk</span>
                     <ArrowDown className="w-4 h-4" />
                   </motion.a>
+                  <p className="text-[11px] text-center text-white/70 pt-1 font-normal">
+                    No credit card required · Setup takes 2 minutes
+                  </p>
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-white/10 text-center space-y-1.5">
+              <div className="mt-5 pt-3.5 border-t border-white/10 text-center space-y-1">
                 <a
                   href="/login"
                   onClick={onOpenApp}
@@ -188,7 +192,7 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
                   Existing workspace? Sign in
                 </a>
                 <p className="text-[11px] text-white/60">
-                  Official Meta Cloud API partner. Zero setup fees.
+                  Official Meta Cloud API partner. Free sandbox included.
                 </p>
               </div>
             </div>

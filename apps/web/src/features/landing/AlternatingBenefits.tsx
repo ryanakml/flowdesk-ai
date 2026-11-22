@@ -103,8 +103,8 @@ export const AlternatingBenefits: React.FC = () => {
       {/* Benefit Pair 1 (Section 4): Deterministic AI Knowledge Grounding */}
       <BenefitPair
         id="knowledge"
-        heading="Answers grounded in truth, never guesswork"
-        body="Upload your policy documents, product manuals, and FAQ sheets. FlowDesk retrieves exact sentences and verifies every fact before generating a single word — with zero hallucinations."
+        heading="Answers verified against your documents, not guesses"
+        body="Upload your return policy, shipping guidelines, and price sheets. FlowDesk cites exact line numbers in your PDFs before answering, so your bot never invents discounts or promises you cannot keep."
         linkText="See how grounding works"
         linkHref="#knowledge"
       >
@@ -212,9 +212,9 @@ export const AlternatingBenefits: React.FC = () => {
       <BenefitPair
         id="broadcasts"
         reverse
-        heading="Broadcast and notify with official Meta reliability"
-        body="Say goodbye to unofficial scrapers that get your phone numbers banned. Use Meta-approved templates for order updates, appointment reminders, and automated account verification."
-        linkText="Explore official templates"
+        heading="Send 10,000 updates without getting your number banned"
+        body="Unofficial scrapers get flagged in days. FlowDesk routes through Meta Cloud API with pre-approved HSM templates, 99.98% delivery rate, and green-tier phone reputation."
+        linkText="See official template rules"
         linkHref="#broadcasts"
       >
         <div className="relative w-[325px] h-[647px] rounded-[25px] bg-white border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-2xl select-none">
@@ -326,9 +326,9 @@ export const AlternatingBenefits: React.FC = () => {
       {/* Benefit Pair 3 (Section 7): Automated Tool Resolution & Workflows */}
       <BenefitPair
         id="integrations"
-        heading="Resolve requests directly inside the chat"
-        body="Connect your inventory, CRM, and billing APIs. Customers can check shipping status, reschedule appointments, and pay invoices right in WhatsApp without switching apps."
-        linkText="Connect business integrations"
+        heading="Track orders and process requests directly in chat"
+        body="Connect FlowDesk to Shopify, your CRM, or internal APIs. Customers can track live courier checkpoints, update delivery addresses, and pay invoices right on WhatsApp."
+        linkText="Browse tool integrations"
         linkHref="#integrations"
       >
         <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#fcf5eb] border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-2xl select-none">
@@ -427,9 +427,9 @@ export const AlternatingBenefits: React.FC = () => {
       {/* Benefit Pair 4 (Section 8): Multi-Device Team Handoff & Omnichannel Presence (Media Left) */}
       <BenefitPair
         reverse
-        heading="Collaborate without stepping on each other"
-        body="Live presence indicators show when a teammate is reading or replying to a chat. Lock threads, transfer conversations smoothly, and deliver a unified team voice."
-        linkText="Learn about agent collision guard"
+        heading="Never send two different replies to the same customer"
+        body="Real-time presence indicators show who is viewing or drafting a response. Collision guard locks the thread the second an agent types, preventing awkward duplicate answers."
+        linkText="See collision protection in action"
         linkHref="#inbox"
       >
         <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-2xl select-none">
