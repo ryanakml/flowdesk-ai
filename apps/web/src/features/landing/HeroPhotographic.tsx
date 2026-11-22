@@ -181,7 +181,7 @@ export const HeroPhotographic: React.FC<HeroPhotographicProps> = ({ onOpenApp })
 
               <div className="mt-6 pt-4 border-t border-white/10 text-center space-y-1.5">
                 <a
-                  href="/inbox"
+                  href="/login"
                   onClick={onOpenApp}
                   className="text-[13px] text-white/90 hover:text-white underline underline-offset-2"
                 >

@@ -15,6 +15,7 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as ChannelsRouteImport } from './routes/channels'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as TeamRouteImport } from './routes/team'
 import { Route as ChannelsGuideRouteImport } from './routes/channels_.guide'
@@ -51,6 +52,11 @@ const InboxRoute = InboxRouteImport.update({
 const KnowledgeRoute = KnowledgeRouteImport.update({
   id: '/knowledge',
   path: '/knowledge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/channels': typeof ChannelsRoute
   '/inbox': typeof InboxRouteWithChildren
   '/knowledge': typeof KnowledgeRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/team': typeof TeamRoute
   '/channels/guide': typeof ChannelsGuideRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/channels': typeof ChannelsRoute
   '/inbox': typeof InboxRouteWithChildren
   '/knowledge': typeof KnowledgeRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/team': typeof TeamRoute
   '/channels/guide': typeof ChannelsGuideRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/channels': typeof ChannelsRoute
   '/inbox': typeof InboxRouteWithChildren
   '/knowledge': typeof KnowledgeRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/team': typeof TeamRoute
   '/channels_/guide': typeof ChannelsGuideRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/channels'
     | '/inbox'
     | '/knowledge'
+    | '/login'
     | '/profile'
     | '/team'
     | '/channels/guide'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/channels'
     | '/inbox'
     | '/knowledge'
+    | '/login'
     | '/profile'
     | '/team'
     | '/channels/guide'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/channels'
     | '/inbox'
     | '/knowledge'
+    | '/login'
     | '/profile'
     | '/team'
     | '/channels_/guide'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   ChannelsRoute: typeof ChannelsRoute
   InboxRoute: typeof InboxRouteWithChildren
   KnowledgeRoute: typeof KnowledgeRoute
+  LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   TeamRoute: typeof TeamRoute
   ChannelsGuideRoute: typeof ChannelsGuideRoute
@@ -240,6 +253,13 @@ declare module '@tanstack/react-router' {
       path: '/knowledge'
       fullPath: '/knowledge'
       preLoaderRoute: typeof KnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -311,6 +331,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChannelsRoute: ChannelsRoute,
   InboxRoute: InboxRouteWithChildren,
   KnowledgeRoute: KnowledgeRoute,
+  LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   TeamRoute: TeamRoute,
   ChannelsGuideRoute: ChannelsGuideRoute,
