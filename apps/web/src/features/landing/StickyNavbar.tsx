@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { ArrowDown, ChevronRight } from "lucide-react";
 
 interface StickyNavbarProps {
@@ -40,18 +41,26 @@ export const StickyNavbar: React.FC<StickyNavbarProps> = ({ onOpenApp }) => {
 
       {/* Right Action Pills */}
       <div className="flex items-center gap-3">
-        <a
+        <motion.a
           href="/inbox"
           onClick={onOpenApp}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           className="wa-pill-outline hidden sm:inline-flex px-5 py-2.5 text-[14px]"
         >
           <span>Web Login</span>
           <ChevronRight className="w-3.5 h-3.5" />
-        </a>
-        <a href="/inbox" onClick={onOpenApp} className="wa-pill-primary px-5 py-2.5 text-[14px]">
+        </motion.a>
+        <motion.a
+          href="/inbox"
+          onClick={onOpenApp}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="wa-pill-primary px-5 py-2.5 text-[14px]"
+        >
           <span>Open FlowDesk</span>
           <ArrowDown className="w-3.5 h-3.5" />
-        </a>
+        </motion.a>
       </div>
     </header>
   );

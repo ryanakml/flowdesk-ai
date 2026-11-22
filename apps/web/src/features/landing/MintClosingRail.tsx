@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Radio, Mic, Building2, Smartphone } from "lucide-react";
 import { REVEAL_EASE, VIEWPORT_DEFAULT } from "./motionTokens.js";
 
@@ -43,7 +43,6 @@ const CARDS: EditorialCardItem[] = [
 ];
 
 export const MintClosingRail: React.FC = () => {
-  const shouldReduceMotion = useReducedMotion();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const maxIndex = CARDS.length - 1;
@@ -59,13 +58,13 @@ export const MintClosingRail: React.FC = () => {
   const containerVariants = {
     hidden: {
       opacity: 0,
-      y: shouldReduceMotion ? 0 : 28
+      y: 28
     },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: shouldReduceMotion ? 0.05 : 0.55,
+        duration: 0.55,
         ease: REVEAL_EASE
       }
     }
@@ -103,10 +102,10 @@ export const MintClosingRail: React.FC = () => {
                   onClick={handlePrev}
                   disabled={currentIndex === 0}
                   aria-label="Previous card"
-                  className={`w-12 h-12 rounded-full border border-[#1c1e21] flex items-center justify-center transition-opacity duration-200 hover:bg-[#1c1e21] hover:text-white cursor-pointer ${
+                  className={`w-12 h-12 rounded-full border border-[#1c1e21] flex items-center justify-center transition-all duration-200 hover:bg-[#1c1e21] hover:text-white cursor-pointer active:scale-95 ${
                     currentIndex === 0
-                      ? "opacity-40 cursor-not-allowed hover:bg-transparent hover:text-inherit"
-                      : "opacity-100"
+                      ? "opacity-35 cursor-not-allowed hover:bg-transparent hover:text-inherit"
+                      : "opacity-100 shadow-xs"
                   }`}
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -117,14 +116,31 @@ export const MintClosingRail: React.FC = () => {
                   onClick={handleNext}
                   disabled={currentIndex === maxIndex}
                   aria-label="Next card"
-                  className={`w-12 h-12 rounded-full border border-[#1c1e21] flex items-center justify-center transition-opacity duration-200 hover:bg-[#1c1e21] hover:text-white cursor-pointer ${
+                  className={`w-12 h-12 rounded-full border border-[#1c1e21] flex items-center justify-center transition-all duration-200 hover:bg-[#1c1e21] hover:text-white cursor-pointer active:scale-95 ${
                     currentIndex === maxIndex
-                      ? "opacity-40 cursor-not-allowed hover:bg-transparent hover:text-inherit"
-                      : "opacity-100"
+                      ? "opacity-35 cursor-not-allowed hover:bg-transparent hover:text-inherit"
+                      : "opacity-100 shadow-xs"
                   }`}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
+
+                {/* Dots indicator */}
+                <div className="flex items-center gap-2 ml-4">
+                  {CARDS.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentIndex(idx)}
+                      className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                        currentIndex === idx
+                          ? "w-6 bg-[#1c1e21]"
+                          : "w-2 bg-[#1c1e21]/25 hover:bg-[#1c1e21]/50"
+                      }`}
+                      aria-label={`Go to slide ${idx + 1}`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -133,10 +149,10 @@ export const MintClosingRail: React.FC = () => {
               <div className="relative">
                 <motion.div
                   animate={{
-                    x: shouldReduceMotion ? 0 : -currentIndex * (340 + 24)
+                    x: -currentIndex * (340 + 24)
                   }}
                   transition={{
-                    duration: shouldReduceMotion ? 0.05 : 0.5,
+                    duration: 0.5,
                     ease: REVEAL_EASE
                   }}
                   className="flex gap-6 items-stretch"
@@ -144,12 +160,14 @@ export const MintClosingRail: React.FC = () => {
                   {CARDS.map((card) => {
                     const IconComp = card.icon;
                     return (
-                      <div
+                      <motion.div
                         key={card.id}
-                        className="w-[310px] sm:w-[380px] lg:w-[440px] min-h-[440px] lg:min-h-[497px] rounded-[25px] bg-white border border-[#dedbd6] p-8 sm:p-12 lg:p-[56px] flex flex-col justify-between shadow-none shrink-0"
+                        whileHover={{ y: -6 }}
+                        transition={{ duration: 0.2 }}
+                        className="w-[310px] sm:w-[380px] lg:w-[440px] min-h-[440px] lg:min-h-[497px] rounded-[25px] bg-white border border-[#dedbd6] p-8 sm:p-12 lg:p-[56px] flex flex-col justify-between shadow-lg shrink-0 cursor-default"
                       >
                         <div>
-                          <div className="w-12 h-12 rounded-full bg-[#fcf5eb] border border-[#dedbd6] flex items-center justify-center text-[#111b21] mb-8">
+                          <div className="w-12 h-12 rounded-full bg-[#fcf5eb] border border-[#dedbd6] flex items-center justify-center text-[#111b21] mb-8 shadow-xs">
                             <IconComp className="w-6 h-6 text-[#25d366]" />
                           </div>
 
@@ -171,7 +189,7 @@ export const MintClosingRail: React.FC = () => {
                             <ChevronRight className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </motion.div>

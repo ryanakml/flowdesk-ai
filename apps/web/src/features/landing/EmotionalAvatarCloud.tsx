@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { REVEAL_EASE, VIEWPORT_DEFAULT } from "./motionTokens.js";
 
 interface AvatarPill {
@@ -8,6 +8,7 @@ interface AvatarPill {
   message: string;
   avatarBg: string;
   driftDuration: number;
+  driftRange: number;
 }
 
 const TOP_PILLS: AvatarPill[] = [
@@ -16,28 +17,32 @@ const TOP_PILLS: AvatarPill[] = [
     name: "Maya",
     message: "Just landed at Terminal 2 ✈️",
     avatarBg: "#e6ffda",
-    driftDuration: 4.6
+    driftDuration: 3.4,
+    driftRange: -10
   },
   {
     id: "top-2",
     name: "Liam",
     message: "Sent over the project deck 📄",
     avatarBg: "#d9fdd3",
-    driftDuration: 5.2
+    driftDuration: 4.0,
+    driftRange: -12
   },
   {
     id: "top-3",
     name: "Elena",
     message: "Let's grab a coffee at 10 ☕",
     avatarBg: "#fef08a",
-    driftDuration: 4.8
+    driftDuration: 3.6,
+    driftRange: -9
   },
   {
     id: "top-4",
     name: "David",
     message: "Sound check is ready 🎙️",
     avatarBg: "#bfdbfe",
-    driftDuration: 5.4
+    driftDuration: 4.2,
+    driftRange: -11
   }
 ];
 
@@ -47,34 +52,36 @@ const BOTTOM_PILLS: AvatarPill[] = [
     name: "Sophia",
     message: "Team sync starting now 🔔",
     avatarBg: "#fed7aa",
-    driftDuration: 5.0
+    driftDuration: 3.8,
+    driftRange: -10
   },
   {
     id: "bot-2",
     name: "Marcus",
     message: "Contract signed and approved ✅",
     avatarBg: "#e6ffda",
-    driftDuration: 4.5
+    driftDuration: 3.5,
+    driftRange: -12
   },
   {
     id: "bot-3",
     name: "Aria",
     message: "Sending voice memo in 2 min 🎧",
     avatarBg: "#ddd6fe",
-    driftDuration: 5.3
+    driftDuration: 4.1,
+    driftRange: -9
   },
   {
     id: "bot-4",
     name: "Lucas",
     message: "See you all tomorrow! 👋",
     avatarBg: "#fbcfe8",
-    driftDuration: 4.7
+    driftDuration: 3.7,
+    driftRange: -11
   }
 ];
 
 export const EmotionalAvatarCloud: React.FC = () => {
-  const shouldReduceMotion = useReducedMotion();
-
   return (
     <section className="bg-[#fcf5eb] py-28 px-6 sm:px-12 lg:px-[60px] overflow-hidden">
       <div className="max-w-[1080px] mx-auto flex flex-col items-center">
@@ -83,32 +90,31 @@ export const EmotionalAvatarCloud: React.FC = () => {
           {TOP_PILLS.map((pill, idx) => (
             <motion.div
               key={pill.id}
-              initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={VIEWPORT_DEFAULT}
               transition={{
-                duration: shouldReduceMotion ? 0.05 : 0.48,
-                delay: shouldReduceMotion ? 0 : idx * 0.08,
+                duration: 0.48,
+                delay: idx * 0.08,
                 ease: REVEAL_EASE
               }}
             >
               <motion.div
-                animate={
-                  shouldReduceMotion
-                    ? {}
-                    : {
-                        y: [0, -5, 0]
-                      }
-                }
+                animate={{
+                  y: [0, pill.driftRange, 0],
+                  x: [0, idx % 2 === 0 ? 3 : -3, 0]
+                }}
                 transition={{
                   duration: pill.driftDuration,
                   repeat: Infinity,
-                  ease: "easeInOut"
+                  ease: "easeInOut",
+                  delay: idx * 0.3
                 }}
-                className="inline-flex items-center gap-2.5 bg-white border border-[#dedbd6] rounded-full px-4 py-2 shadow-none select-none"
+                whileHover={{ scale: 1.06, y: -4 }}
+                className="inline-flex items-center gap-2.5 bg-white border border-[#dedbd6] rounded-full px-4 py-2 shadow-sm select-none cursor-pointer transition-shadow hover:shadow-md"
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium text-[#111b21]"
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-[#111b21] shadow-2xs"
                   style={{ backgroundColor: pill.avatarBg }}
                 >
                   {pill.name[0]}
@@ -124,12 +130,12 @@ export const EmotionalAvatarCloud: React.FC = () => {
 
         {/* Phase 2 (+150ms): Centered 48px Statement Typography */}
         <motion.div
-          initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={VIEWPORT_DEFAULT}
           transition={{
-            duration: shouldReduceMotion ? 0.05 : 0.55,
-            delay: shouldReduceMotion ? 0 : 0.15,
+            duration: 0.55,
+            delay: 0.15,
             ease: REVEAL_EASE
           }}
           className="max-w-[880px] text-center my-6"
@@ -145,33 +151,31 @@ export const EmotionalAvatarCloud: React.FC = () => {
           {BOTTOM_PILLS.map((pill, idx) => (
             <motion.div
               key={pill.id}
-              initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={VIEWPORT_DEFAULT}
               transition={{
-                duration: shouldReduceMotion ? 0.05 : 0.48,
-                delay: shouldReduceMotion ? 0 : 0.35 + idx * 0.08,
+                duration: 0.48,
+                delay: 0.35 + idx * 0.08,
                 ease: REVEAL_EASE
               }}
             >
               <motion.div
-                animate={
-                  shouldReduceMotion
-                    ? {}
-                    : {
-                        y: [0, -5, 0]
-                      }
-                }
+                animate={{
+                  y: [0, pill.driftRange, 0],
+                  x: [0, idx % 2 === 0 ? -3 : 3, 0]
+                }}
                 transition={{
                   duration: pill.driftDuration,
                   repeat: Infinity,
                   ease: "easeInOut",
-                  delay: idx * 0.2
+                  delay: 0.4 + idx * 0.25
                 }}
-                className="inline-flex items-center gap-2.5 bg-white border border-[#dedbd6] rounded-full px-4 py-2 shadow-none select-none"
+                whileHover={{ scale: 1.06, y: -4 }}
+                className="inline-flex items-center gap-2.5 bg-white border border-[#dedbd6] rounded-full px-4 py-2 shadow-sm select-none cursor-pointer transition-shadow hover:shadow-md"
               >
                 <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium text-[#111b21]"
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-[#111b21] shadow-2xs"
                   style={{ backgroundColor: pill.avatarBg }}
                 >
                   {pill.name[0]}

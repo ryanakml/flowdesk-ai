@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ChevronRight,
   PhoneCall,
@@ -32,18 +32,16 @@ const BenefitPair: React.FC<BenefitSectionProps> = ({
   linkHref,
   children
 }) => {
-  const shouldReduceMotion = useReducedMotion();
-
   const baseVariants = {
     hidden: {
       opacity: 0,
-      y: shouldReduceMotion ? 0 : 32
+      y: 32
     },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: shouldReduceMotion ? 0.05 : 0.55,
+        duration: 0.55,
         ease: REVEAL_EASE
       }
     }
@@ -98,27 +96,6 @@ const BenefitPair: React.FC<BenefitSectionProps> = ({
 };
 
 export const AlternatingBenefits: React.FC = () => {
-  const shouldReduceMotion = useReducedMotion();
-
-  const popVariants = {
-    hidden: {
-      opacity: 0,
-      scale: shouldReduceMotion ? 1 : 0.92,
-      y: shouldReduceMotion ? 0 : 12
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: shouldReduceMotion
-        ? { duration: 0.05 }
-        : {
-            ...SPRING_POP,
-            delay: 0.18
-          }
-    }
-  };
-
   return (
     <section className="bg-[#fcf5eb] px-6 sm:px-12 lg:px-[60px]">
       {/* Benefit Pair 1 (Section 4): Voice & Calls */}
@@ -128,24 +105,26 @@ export const AlternatingBenefits: React.FC = () => {
         linkText="Explore voice features"
         linkHref="#voice"
       >
-        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-none select-none">
+        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-xl select-none">
           {/* Card Top Header */}
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center font-bold text-sm">
+              <div className="w-10 h-10 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center font-bold text-sm shadow-sm">
                 MK
               </div>
               <div>
                 <h4 className="text-[16px] font-medium leading-none">Mira K.</h4>
-                <span className="text-[12px] text-[#25d366] mt-1 block">Active Call · 12:45</span>
+                <span className="text-[12px] text-[#25d366] mt-1 block font-medium">
+                  Active Call · 12:45
+                </span>
               </div>
             </div>
             <PhoneCall className="w-5 h-5 text-[#25d366]" />
           </div>
 
-          {/* Central Call Visualization */}
+          {/* Central Call Visualization with animated waveform */}
           <div className="flex flex-col items-center justify-center space-y-4 my-auto">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#25d366] to-[#e6ffda] p-1 flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#25d366] to-[#e6ffda] p-1 flex items-center justify-center shadow-lg">
               <div className="w-full h-full rounded-full bg-[#111b21] flex items-center justify-center text-2xl font-medium">
                 MK
               </div>
@@ -154,13 +133,22 @@ export const AlternatingBenefits: React.FC = () => {
               <p className="text-[18px] font-normal">Mira Karim</p>
               <p className="text-[13px] text-white/60 mt-0.5">End-to-end encrypted audio</p>
             </div>
-            {/* Audio Waveform Bars */}
-            <div className="flex items-center gap-1.5 h-8">
-              {[14, 28, 20, 32, 16, 26, 12, 30, 22, 18].map((h, i) => (
-                <div
+
+            {/* Continuous Lively Audio Waveform Animation */}
+            <div className="flex items-center gap-1.5 h-10">
+              {[16, 32, 22, 38, 20, 30, 14, 34, 24, 18].map((h, i) => (
+                <motion.div
                   key={i}
-                  className="w-1 bg-[#25d366] rounded-full animate-pulse"
-                  style={{ height: `${h}px`, animationDelay: `${i * 120}ms` }}
+                  animate={{
+                    height: [h * 0.4, h, h * 0.6, h * 0.9, h * 0.4]
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: i * 0.1
+                  }}
+                  className="w-1.5 bg-[#25d366] rounded-full"
                 />
               ))}
             </div>
@@ -168,45 +156,57 @@ export const AlternatingBenefits: React.FC = () => {
 
           {/* Card Bottom Controls */}
           <div className="flex items-center justify-around pt-4 border-t border-white/10">
-            <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
               <Mic className="w-5 h-5 text-white" />
             </div>
-            <div className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center text-white">
+            <div className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center text-white shadow-md hover:bg-red-600 transition-colors cursor-pointer">
               <PhoneCall className="w-6 h-6 rotate-[135deg]" />
             </div>
-            <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
               <ShieldCheck className="w-5 h-5 text-[#25d366]" />
             </div>
           </div>
 
-          {/* Detached Overlays (+180ms Stagger Pop) */}
+          {/* Detached Overlays (+180ms Stagger Pop + Ambient Float) */}
           {/* Top-Right Detached Floating Card */}
           <motion.div
-            variants={popVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.85, y: 16 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={VIEWPORT_DEFAULT}
-            className="absolute -top-4 -right-8 sm:-right-12 bg-white text-[#1c1e21] rounded-[18px] p-3 border border-[#dedbd6] shadow-none flex items-center gap-2.5 z-20 pointer-events-none"
+            transition={{ ...SPRING_POP, delay: 0.25 }}
+            className="absolute -top-5 -right-8 sm:-right-12 z-20 pointer-events-none"
           >
-            <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] flex items-center justify-center text-xs font-semibold">
-              TL
-            </div>
-            <div>
-              <p className="text-[13px] font-medium leading-none">Team Lead</p>
-              <p className="text-[11px] text-[#5e5e5e] mt-0.5">Joined voice stage</p>
-            </div>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-white text-[#1c1e21] rounded-[18px] p-3.5 border border-[#dedbd6] shadow-xl flex items-center gap-2.5"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] flex items-center justify-center text-xs font-semibold shadow-2xs">
+                TL
+              </div>
+              <div>
+                <p className="text-[13px] font-medium leading-none">Team Lead</p>
+                <p className="text-[11px] text-[#5e5e5e] mt-0.5">Joined voice stage</p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Bottom-Left Detached Waveform Pill */}
           <motion.div
-            variants={popVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.85, y: 16 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={VIEWPORT_DEFAULT}
-            className="absolute -bottom-4 -left-6 sm:-left-10 bg-[#e6ffda] text-[#111b21] rounded-full px-4 py-2 border border-[#dedbd6] shadow-none flex items-center gap-2 z-20 pointer-events-none"
+            transition={{ ...SPRING_POP, delay: 0.35 }}
+            className="absolute -bottom-5 -left-6 sm:-left-10 z-20 pointer-events-none"
           >
-            <span className="w-2 h-2 rounded-full bg-[#25d366]" />
-            <span className="text-[12px] font-medium">Ultra-low latency audio</span>
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-[#e6ffda] text-[#111b21] rounded-full px-4 py-2 border border-[#dedbd6] shadow-xl flex items-center gap-2"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#25d366] animate-ping" />
+              <span className="text-[12px] font-medium">Ultra-low latency audio</span>
+            </motion.div>
           </motion.div>
         </div>
       </BenefitPair>
@@ -219,12 +219,12 @@ export const AlternatingBenefits: React.FC = () => {
         linkText="See shared spaces"
         linkHref="#spaces"
       >
-        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-white border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-none select-none">
+        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-white border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-xl select-none">
           {/* Workspace Channels List Header */}
           <div>
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <h4 className="text-[17px] font-medium text-[#1c1e21]">All Channels</h4>
-              <span className="text-[12px] text-[#25d366] font-medium">8 new</span>
+              <span className="text-[12px] text-[#25d366] font-semibold">8 new</span>
             </div>
 
             <div className="mt-4 space-y-3">
@@ -268,39 +268,53 @@ export const AlternatingBenefits: React.FC = () => {
             <CheckCheck className="w-4 h-4 text-[#25d366]" />
           </div>
 
-          {/* Detached Overlays (+180ms Stagger Pop) */}
+          {/* Detached Overlays (+180ms Stagger Pop + Ambient Float) */}
           {/* Top-Left Detached Calendar Card */}
           <motion.div
-            variants={popVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.85, y: 16 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={VIEWPORT_DEFAULT}
-            className="absolute -top-5 -left-8 sm:-left-12 bg-[#111b21] text-white rounded-[18px] p-3.5 border border-[#33463f] shadow-none flex items-center gap-3 z-20 pointer-events-none"
+            transition={{ ...SPRING_POP, delay: 0.25 }}
+            className="absolute -top-6 -left-8 sm:-left-12 z-20 pointer-events-none"
           >
-            <div className="w-8 h-8 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-[13px] font-medium leading-none">Sprint Review</p>
-              <p className="text-[11px] text-white/70 mt-0.5">Today at 4:00 PM</p>
-            </div>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4.4, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-[#111b21] text-white rounded-[18px] p-3.5 border border-[#33463f] shadow-xl flex items-center gap-3"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center shadow-sm">
+                <Calendar className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-[13px] font-medium leading-none">Sprint Review</p>
+                <p className="text-[11px] text-white/70 mt-0.5">Today at 4:00 PM</p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Bottom-Right Detached File Progress Card */}
           <motion.div
-            variants={popVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.85, y: 16 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={VIEWPORT_DEFAULT}
-            className="absolute -bottom-5 -right-8 sm:-right-12 bg-white text-[#1c1e21] rounded-[18px] p-3.5 border border-[#dedbd6] shadow-none flex items-center gap-3 z-20 pointer-events-none"
+            transition={{ ...SPRING_POP, delay: 0.35 }}
+            className="absolute -bottom-6 -right-8 sm:-right-12 z-20 pointer-events-none"
           >
-            <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] flex items-center justify-center">
-              <FileText className="w-4 h-4 text-[#00803e]" />
-            </div>
-            <div>
-              <p className="text-[13px] font-medium leading-none">Q4_Report.pdf</p>
-              <p className="text-[11px] text-[#25d366] font-medium mt-0.5">Verified & Grounded</p>
-            </div>
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 4.0, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-white text-[#1c1e21] rounded-[18px] p-3.5 border border-[#dedbd6] shadow-xl flex items-center gap-3"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] flex items-center justify-center shadow-2xs">
+                <FileText className="w-4 h-4 text-[#00803e]" />
+              </div>
+              <div>
+                <p className="text-[13px] font-medium leading-none">Q4_Report.pdf</p>
+                <p className="text-[11px] text-[#25d366] font-semibold mt-0.5">
+                  Verified & Grounded
+                </p>
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </BenefitPair>
@@ -312,64 +326,76 @@ export const AlternatingBenefits: React.FC = () => {
         linkText="Discover expressive tools"
         linkHref="#stickers"
       >
-        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#fcf5eb] border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-none select-none">
+        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#fcf5eb] border border-[#dedbd6] p-5 text-[#1c1e21] flex flex-col justify-between shadow-xl select-none">
           {/* Messages with Rich Reactions */}
           <div className="space-y-4 my-auto">
-            <div className="bg-white rounded-[20px] p-4 border border-[#dedbd6] relative">
+            <div className="bg-white rounded-[20px] p-4 border border-[#dedbd6] relative shadow-xs">
               <p className="text-[15px] leading-relaxed">
                 "The presentation went amazing! Everyone loved the live prototype."
               </p>
               <div className="mt-3 flex items-center gap-1.5">
                 <span className="bg-[#f0f4f9] rounded-full px-2 py-0.5 text-xs">🚀 3</span>
                 <span className="bg-[#f0f4f9] rounded-full px-2 py-0.5 text-xs">🎉 5</span>
-                <span className="bg-[#e6ffda] text-[#111b21] rounded-full px-2 py-0.5 text-xs font-medium">
+                <span className="bg-[#e6ffda] text-[#111b21] rounded-full px-2 py-0.5 text-xs font-semibold">
                   ❤️ 8
                 </span>
               </div>
             </div>
 
-            <div className="bg-[#d9fdd3] text-[#111b21] rounded-[20px] p-4 self-end ml-6 border border-[#c3ebb8]">
+            <div className="bg-[#d9fdd3] text-[#111b21] rounded-[20px] p-4 self-end ml-6 border border-[#c3ebb8] shadow-xs">
               <p className="text-[15px] leading-relaxed">"Celebrating with team coffee! ☕🥳"</p>
               <span className="text-[11px] text-gray-500 block text-right mt-1">11:42 AM</span>
             </div>
           </div>
 
           {/* Reaction Bar */}
-          <div className="bg-white rounded-full p-2 border border-[#dedbd6] flex items-center justify-around text-lg">
-            <span>👍</span>
-            <span>❤️</span>
-            <span>😂</span>
-            <span>😮</span>
-            <span>🙏</span>
-            <Smile className="w-5 h-5 text-[#5e5e5e]" />
+          <div className="bg-white rounded-full p-2 border border-[#dedbd6] flex items-center justify-around text-lg shadow-sm">
+            <span className="hover:scale-125 transition-transform cursor-pointer">👍</span>
+            <span className="hover:scale-125 transition-transform cursor-pointer">❤️</span>
+            <span className="hover:scale-125 transition-transform cursor-pointer">😂</span>
+            <span className="hover:scale-125 transition-transform cursor-pointer">😮</span>
+            <span className="hover:scale-125 transition-transform cursor-pointer">🙏</span>
+            <Smile className="w-5 h-5 text-[#5e5e5e] hover:text-[#1c1e21] cursor-pointer" />
           </div>
 
-          {/* Detached Overlays (+180ms Stagger Pop) */}
+          {/* Detached Overlays (+180ms Stagger Pop + Ambient Float) */}
           {/* Top-Right Detached Sticker Badge */}
           <motion.div
-            variants={popVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.85, y: 16 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={VIEWPORT_DEFAULT}
-            className="absolute -top-5 -right-8 sm:-right-12 bg-white text-[#1c1e21] rounded-[20px] p-4 border border-[#dedbd6] shadow-none flex items-center gap-3 z-20 pointer-events-none"
+            transition={{ ...SPRING_POP, delay: 0.25 }}
+            className="absolute -top-6 -right-8 sm:-right-12 z-20 pointer-events-none"
           >
-            <span className="text-3xl">✨</span>
-            <div>
-              <p className="text-[13px] font-medium leading-none">Custom Reactions</p>
-              <p className="text-[11px] text-[#5e5e5e] mt-1">Instant emotion</p>
-            </div>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-white text-[#1c1e21] rounded-[20px] p-4 border border-[#dedbd6] shadow-xl flex items-center gap-3"
+            >
+              <span className="text-3xl animate-bounce">✨</span>
+              <div>
+                <p className="text-[13px] font-medium leading-none">Custom Reactions</p>
+                <p className="text-[11px] text-[#5e5e5e] mt-1">Instant emotion</p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Bottom-Left Detached Floating Sticker */}
           <motion.div
-            variants={popVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.85, y: 16 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={VIEWPORT_DEFAULT}
-            className="absolute -bottom-5 -left-8 sm:-left-10 bg-[#e6ffda] text-[#111b21] rounded-full px-4 py-2 border border-[#dedbd6] shadow-none flex items-center gap-2 z-20 pointer-events-none"
+            transition={{ ...SPRING_POP, delay: 0.35 }}
+            className="absolute -bottom-6 -left-8 sm:-left-10 z-20 pointer-events-none"
           >
-            <Sparkles className="w-4 h-4 text-[#25d366]" />
-            <span className="text-[12px] font-medium">Lightweight & expressive</span>
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 4.4, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-[#e6ffda] text-[#111b21] rounded-full px-4 py-2 border border-[#dedbd6] shadow-xl flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-[#25d366]" />
+              <span className="text-[12px] font-medium">Lightweight & expressive</span>
+            </motion.div>
           </motion.div>
         </div>
       </BenefitPair>
@@ -382,11 +408,11 @@ export const AlternatingBenefits: React.FC = () => {
         linkText="Download on all platforms"
         linkHref="#downloads"
       >
-        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-none select-none">
+        <div className="relative w-[325px] h-[647px] rounded-[25px] bg-[#111b21] border border-[#dedbd6] p-6 text-white flex flex-col justify-between shadow-xl select-none">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <h4 className="text-[16px] font-medium">Connected Devices</h4>
-            <span className="text-[12px] text-[#25d366] font-medium">4 Active</span>
+            <span className="text-[12px] text-[#25d366] font-semibold">4 Active</span>
           </div>
 
           {/* Devices Grid */}
@@ -398,7 +424,7 @@ export const AlternatingBenefits: React.FC = () => {
             ].map((d, i) => (
               <div
                 key={i}
-                className="p-3.5 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-between"
+                className="p-3.5 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-between hover:bg-white/10 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-[#25d366]/20 text-[#25d366] flex items-center justify-center">
@@ -409,7 +435,7 @@ export const AlternatingBenefits: React.FC = () => {
                     <p className="text-[12px] text-white/60 mt-1">{d.status}</p>
                   </div>
                 </div>
-                <span className="text-[11px] font-mono text-[#25d366]">{d.sync}</span>
+                <span className="text-[11px] font-mono text-[#25d366] font-semibold">{d.sync}</span>
               </div>
             ))}
           </div>
@@ -420,34 +446,46 @@ export const AlternatingBenefits: React.FC = () => {
             </p>
           </div>
 
-          {/* Detached Overlays (+180ms Stagger Pop) */}
+          {/* Detached Overlays (+180ms Stagger Pop + Ambient Float) */}
           {/* Top-Left Detached Sync Indicator */}
           <motion.div
-            variants={popVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.85, y: 16 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={VIEWPORT_DEFAULT}
-            className="absolute -top-5 -left-8 sm:-left-12 bg-white text-[#1c1e21] rounded-[18px] p-3.5 border border-[#dedbd6] shadow-none flex items-center gap-3 z-20 pointer-events-none"
+            transition={{ ...SPRING_POP, delay: 0.25 }}
+            className="absolute -top-6 -left-8 sm:-left-12 z-20 pointer-events-none"
           >
-            <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] flex items-center justify-center">
-              <CheckCheck className="w-4 h-4 text-[#25d366]" />
-            </div>
-            <div>
-              <p className="text-[13px] font-medium leading-none">Instant Handover</p>
-              <p className="text-[11px] text-[#5e5e5e] mt-0.5">0.02s sync latency</p>
-            </div>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4.1, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-white text-[#1c1e21] rounded-[18px] p-3.5 border border-[#dedbd6] shadow-xl flex items-center gap-3"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#e6ffda] text-[#111b21] flex items-center justify-center shadow-2xs">
+                <CheckCheck className="w-4 h-4 text-[#25d366]" />
+              </div>
+              <div>
+                <p className="text-[13px] font-medium leading-none">Instant Handover</p>
+                <p className="text-[11px] text-[#5e5e5e] mt-0.5">0.02s sync latency</p>
+              </div>
+            </motion.div>
           </motion.div>
 
           {/* Bottom-Right Detached Battery/Sync Pill */}
           <motion.div
-            variants={popVariants}
-            initial="hidden"
-            whileInView="visible"
+            initial={{ opacity: 0, scale: 0.85, y: 16 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={VIEWPORT_DEFAULT}
-            className="absolute -bottom-5 -right-8 sm:-right-12 bg-[#25d366] text-[#111b21] rounded-full px-4 py-2 border border-[#111b21] shadow-none flex items-center gap-2 z-20 pointer-events-none"
+            transition={{ ...SPRING_POP, delay: 0.35 }}
+            className="absolute -bottom-6 -right-8 sm:-right-12 z-20 pointer-events-none"
           >
-            <span className="w-2 h-2 rounded-full bg-[#111b21]" />
-            <span className="text-[12px] font-semibold">Zero battery drain sync</span>
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 4.6, repeat: Infinity, ease: "easeInOut" }}
+              className="bg-[#25d366] text-[#111b21] rounded-full px-4 py-2 border border-[#111b21] shadow-xl flex items-center gap-2"
+            >
+              <span className="w-2 h-2 rounded-full bg-[#111b21] animate-ping" />
+              <span className="text-[12px] font-bold">Zero battery drain sync</span>
+            </motion.div>
           </motion.div>
         </div>
       </BenefitPair>

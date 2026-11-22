@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ChevronRight, Lock, Key, ShieldCheck, Database } from "lucide-react";
 import { REVEAL_EASE, VIEWPORT_DEFAULT } from "./motionTokens.js";
 
@@ -8,39 +8,35 @@ const BASE_PHRASE =
   "END-TO-END ENCRYPTED PROTOCOL · ZERO-KNOWLEDGE AUDIT TRAIL · SOVEREIGN KEY DERIVATION";
 
 export const NightBandReveal: React.FC = () => {
-  const shouldReduceMotion = useReducedMotion();
   const [scrambleText, setScrambleText] = useState(BASE_PHRASE);
 
   useEffect(() => {
-    if (shouldReduceMotion) return;
-
     let offset = 0;
     const interval = setInterval(() => {
       offset = (offset + 1) % BASE_PHRASE.length;
       const chars = BASE_PHRASE.split("").map((c, i) => {
         if (c === " " || c === "·") return c;
-        // Randomly scramble 15% of the characters around the rolling offset
-        if (Math.abs(i - offset) < 6 || Math.random() < 0.12) {
+        if (Math.abs(i - offset) < 6 || Math.random() < 0.15) {
           return CIPHER_SYMBOLS[Math.floor(Math.random() * CIPHER_SYMBOLS.length)];
         }
         return c;
       });
       setScrambleText(chars.join(""));
-    }, 90);
+    }, 75);
 
     return () => clearInterval(interval);
-  }, [shouldReduceMotion]);
+  }, []);
 
   const containerVariants = {
     hidden: {
       opacity: 0,
-      y: shouldReduceMotion ? 0 : 28
+      y: 28
     },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: shouldReduceMotion ? 0.05 : 0.55,
+        duration: 0.55,
         ease: REVEAL_EASE
       }
     }
@@ -60,21 +56,25 @@ export const NightBandReveal: React.FC = () => {
           <div className="lg:col-span-6 flex justify-center py-6">
             <div className="relative w-full max-w-[500px] flex items-center justify-center">
               {/* Wider Recessed Backing (rgba(0,0,0,0.25) / #0b141a) */}
-              <div className="absolute inset-0 bg-[#0b141a]/80 border border-[#33463f]/60 rounded-[30px] transform scale-105 pointer-events-none select-none" />
+              <div className="absolute inset-0 bg-[#0b141a]/90 border border-[#33463f]/60 rounded-[30px] transform scale-105 pointer-events-none select-none shadow-2xl" />
 
-              {/* Narrower Tall Dark Interface Card */}
-              <div className="relative z-10 w-full max-w-[420px] rounded-[25px] bg-[#111b21] border border-[#33463f] p-7 shadow-none overflow-hidden select-none">
+              {/* Narrower Tall Dark Interface Card with subtle float */}
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                className="relative z-10 w-full max-w-[420px] rounded-[25px] bg-[#111b21] border border-[#33463f] p-7 shadow-2xl overflow-hidden select-none"
+              >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-[#33463f] pb-4">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-[#25d366]/20 text-[#25d366] flex items-center justify-center">
-                      <Lock className="w-4 h-4" />
+                      <Lock className="w-4 h-4 animate-pulse" />
                     </div>
                     <div>
                       <h4 className="text-[15px] font-medium text-white leading-none">
                         Cryptographic Vault
                       </h4>
-                      <span className="text-[11px] text-[#25d366] mt-1 block">
+                      <span className="text-[11px] text-[#25d366] mt-1 block font-mono">
                         Noise Protocol · Curve25519
                       </span>
                     </div>
@@ -84,14 +84,14 @@ export const NightBandReveal: React.FC = () => {
 
                 {/* Telemetry rows */}
                 <div className="py-6 space-y-3 font-mono text-xs text-white/70">
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/40 border border-[#33463f]/50">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-[#33463f]/50">
                     <span className="flex items-center gap-2 text-white/50">
                       <Key className="w-3.5 h-3.5 text-[#25d366]" /> Ephemeral Keypair
                     </span>
-                    <span className="text-[#25d366]">0x7F4B…39CA</span>
+                    <span className="text-[#25d366] font-semibold">0x7F4B…39CA</span>
                   </div>
 
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/40 border border-[#33463f]/50">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-black/50 border border-[#33463f]/50">
                     <span className="flex items-center gap-2 text-white/50">
                       <Database className="w-3.5 h-3.5 text-[#25d366]" /> Payload Cipher
                     </span>
@@ -100,7 +100,7 @@ export const NightBandReveal: React.FC = () => {
                 </div>
 
                 {/* Continuous Cipher Strip Loop with Horizontal Edge-Fade Mask */}
-                <div className="relative my-2 py-3 bg-black/60 border-y border-[#33463f] overflow-hidden">
+                <div className="relative my-2 py-3 bg-black/70 border-y border-[#33463f] overflow-hidden">
                   <div
                     className="font-mono text-[13px] tracking-wider text-[#25d366] font-semibold whitespace-nowrap text-center select-none"
                     style={{
@@ -115,12 +115,11 @@ export const NightBandReveal: React.FC = () => {
                 </div>
 
                 {/* Bottom Verification Note */}
-                <div className="pt-4 mt-2 text-center">
-                  <p className="text-[12px] text-white/60">
-                    Zero raw messages or encryption keys touch intermediate servers.
-                  </p>
+                <div className="pt-4 mt-2 text-center flex items-center justify-center gap-2 text-[12px] text-white/60">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#25d366] animate-ping" />
+                  <span>Zero raw messages or encryption keys touch intermediate servers.</span>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
 
