@@ -8,3 +8,6 @@ docs/FLOWDESK_EXECUTION_BLUEPRINT.md
 docs/FLOWDESK_EXECUTION_BLUEPRINT_ID.md
 apps/web/src/routeTree.gen.ts
 .reference
+.agents
+skills
+.taste-skill

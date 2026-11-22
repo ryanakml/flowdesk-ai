@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { Badge } from "@flowdesk/ui";
 
 interface FAQItem {
   question: string;
@@ -55,66 +54,64 @@ export function TechnicalFAQ() {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-4xl">
-      <div className="text-center mb-10">
-        <Badge variant="outline" className="mb-3 font-mono text-xs">
-          TECHNICAL & OPERATIONAL FAQ
-        </Badge>
-        <h3 className="text-2xl font-bold tracking-tight sm:text-4xl text-foreground">
-          Clear answers for{" "}
-          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            technical leaders.
-          </span>
-        </h3>
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-          Direct engineering details on how FlowDesk handles data security, Meta compliance, and
-          model guardrails.
-        </p>
-      </div>
+    <div className="mx-auto w-full max-w-6xl">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Heading and Category Stand Alone */}
+        <div className="lg:col-span-5 max-w-md">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="size-2 bg-[#0007cb]" />
+            <span className="font-mono text-xs uppercase tracking-wider text-[#111111] dark:text-[#f4f4f5]">
+              TECHNICAL QUESTIONS & FAQS
+            </span>
+          </div>
+          <h3 className="text-3xl sm:text-4xl font-normal tracking-[-0.0296em] text-[#111111] dark:text-[#f4f4f5] leading-[1.1]">
+            <span className="text-[#a0a0a0]">Questions engineers ask before</span>
+            <br />
+            deploying to production.
+          </h3>
+          <p className="mt-4 font-serif text-sm sm:text-base text-[#585858] dark:text-[#a0a0a0] leading-relaxed">
+            Concrete answers on zero data training, Meta Cloud API window enforcement, and database
+            tenant isolation.
+          </p>
+        </div>
 
-      <div className="space-y-3">
-        {faqs.map((faq, idx) => {
-          const isOpen = openIndex === idx;
-          return (
-            <div
-              key={faq.question}
-              className={`rounded-xl border transition-all ${
-                isOpen
-                  ? "border-primary/50 bg-card/80 shadow-md ring-1 ring-primary/30"
-                  : "border-border/70 bg-card/40 hover:border-border hover:bg-muted/30"
-              }`}
-            >
-              <button
-                onClick={() => toggle(idx)}
-                className="flex w-full items-start justify-between p-4 sm:p-5 text-left"
+        {/* Right Column: 696px Stack of FAQ Rows with Clay Separators */}
+        <div className="lg:col-span-7 border-t border-b border-[#d3cec6] dark:border-[#383e48]">
+          {faqs.map((faq, index) => {
+            const isOpen = openIndex === index;
+            return (
+              <div
+                key={index}
+                className="border-b last:border-b-0 border-[#d3cec6] dark:border-[#383e48]"
               >
-                <div className="pr-4">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-primary font-bold">
-                    {faq.category}
-                  </span>
-                  <h4 className="mt-1 text-sm sm:text-base font-semibold text-foreground">
-                    {faq.question}
-                  </h4>
-                </div>
-                <div
-                  className={`mt-1 flex size-6 shrink-0 items-center justify-center rounded-md border border-border/80 bg-background/80 transition-transform ${
-                    isOpen ? "rotate-180 border-primary/50 text-primary" : "text-muted-foreground"
-                  }`}
+                <button
+                  onClick={() => toggle(index)}
+                  className="flex w-full items-baseline justify-between py-5 text-left transition-opacity hover:opacity-80"
                 >
-                  <ChevronDown className="size-4" />
-                </div>
-              </button>
+                  <div className="pr-4">
+                    <span className="font-mono text-[10px] text-[#0007cb] block mb-1 uppercase tracking-wider font-semibold">
+                      {faq.category}
+                    </span>
+                    <h4 className="text-base sm:text-lg font-normal text-[#111111] dark:text-[#f4f4f5] tracking-tight">
+                      {faq.question}
+                    </h4>
+                  </div>
+                  <ChevronDown
+                    className={`size-4 text-[#707070] shrink-0 transition-transform duration-200 ${
+                      isOpen ? "rotate-180 text-[#0007cb]" : ""
+                    }`}
+                  />
+                </button>
 
-              {isOpen && (
-                <div className="border-t border-border/40 px-4 pb-5 pt-3 sm:px-5">
-                  <p className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
-                    {faq.answer}
-                  </p>
-                </div>
-              )}
-            </div>
-          );
-        })}
+                {isOpen && (
+                  <div className="pb-5 pt-1 text-xs sm:text-sm leading-relaxed text-[#585858] dark:text-[#a0a0a0] font-sans animate-in fade-in duration-200 max-w-2xl">
+                    <p>{faq.answer}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
