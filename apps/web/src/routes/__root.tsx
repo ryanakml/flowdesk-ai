@@ -79,7 +79,8 @@ function RootComponent() {
   // Synchronize document title on route transitions
   useEffect(() => {
     let title = "FlowDesk";
-    if (pathname.startsWith("/inbox")) title = "FlowDesk — Inbox";
+    if (pathname.startsWith("/login")) title = "FlowDesk — Sign In";
+    else if (pathname.startsWith("/inbox")) title = "FlowDesk — Inbox";
     else if (pathname.startsWith("/analytics")) title = "FlowDesk — Analytics";
     else if (pathname.startsWith("/knowledge")) title = "FlowDesk — AI Knowledge";
     else if (pathname === "/channels/guide") title = "FlowDesk — WhatsApp Setup Guide";
@@ -116,9 +117,9 @@ function RootComponent() {
     );
   }
 
-  // The root route is public. Protected routes continue through the existing
+  // The root route and login route are public. Protected routes continue through the existing
   // session gate below, so landing-page visitors never get bounced to SSO.
-  if (pathname === "/" && !inviteToken) {
+  if ((pathname === "/" || pathname === "/login") && !inviteToken) {
     return <Outlet />;
   }
 

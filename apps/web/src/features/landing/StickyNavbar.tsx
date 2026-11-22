@@ -42,7 +42,7 @@ export const StickyNavbar: React.FC<StickyNavbarProps> = ({ onOpenApp }) => {
       {/* Right Action Pills */}
       <div className="flex items-center gap-3">
         <motion.a
-          href="/inbox"
+          href="/login"
           onClick={onOpenApp}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}

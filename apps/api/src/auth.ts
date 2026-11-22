@@ -133,10 +133,17 @@ export function createAuthRouter(options: AuthRouterOptions): Router {
   // GET /api/v1/auth/login or /api/v1/auth/authorize
   router.get(["/login", "/authorize"], async (request: Request, response: Response, next) => {
     try {
-      const returnTo =
-        typeof request.query["returnTo"] === "string" && request.query["returnTo"].startsWith("/")
-          ? request.query["returnTo"]
-          : "/";
+      const candidateReturnTo =
+        typeof request.query["returnTo"] === "string" ? request.query["returnTo"].trim() : "";
+      let returnTo = "/inbox";
+      if (
+        candidateReturnTo &&
+        candidateReturnTo.startsWith("/") &&
+        !candidateReturnTo.startsWith("//") &&
+        !candidateReturnTo.startsWith("/\\")
+      ) {
+        returnTo = candidateReturnTo === "/" ? "/inbox" : candidateReturnTo;
+      }
 
       let prompt: string | undefined;
       const rawPrompt =
