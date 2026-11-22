@@ -23,6 +23,59 @@
 }
 
 @layer utilities {
+  /* Intercom Humanist Systems and Ephemera tokens */
+  .bg-warm-canvas {
+    background-color: #faf9f6;
+  }
+  .dark .bg-warm-canvas {
+    background-color: #121417;
+  }
+  .bg-chalk {
+    background-color: #f1eee9;
+  }
+  .dark .bg-chalk {
+    background-color: #181b20;
+  }
+  .border-linen {
+    border-color: #dedbd6;
+  }
+  .dark .border-linen {
+    border-color: #2b3038;
+  }
+  .border-subtle {
+    border-color: #e7e7e7;
+  }
+  .dark .border-subtle {
+    border-color: #242830;
+  }
+  .border-clay {
+    border-color: #d3cec6;
+  }
+  .dark .border-clay {
+    border-color: #383e48;
+  }
+  .text-ink {
+    color: #111111;
+  }
+  .dark .text-ink {
+    color: #f4f4f5;
+  }
+  .text-pale-type {
+    color: #a0a0a0;
+  }
+  .bg-electric-blue {
+    background-color: #0007cb;
+  }
+  .text-electric-blue {
+    color: #0007cb;
+  }
+  .bg-signal-orange {
+    background-color: #ff5600;
+  }
+  .text-signal-orange {
+    color: #ff5600;
+  }
+
   .analytics-metric-card[data-tone="success"] {
     background: linear-gradient(125deg, var(--surface-success), var(--card) 80%);
     border-color: var(--border-success);

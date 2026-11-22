@@ -1,5 +1,4 @@
 import { Check, Minus, X } from "lucide-react";
-import { Badge } from "@flowdesk/ui";
 
 interface Criterion {
   feature: string;
@@ -61,86 +60,100 @@ const criteria: Criterion[] = [
   }
 ];
 
-function RenderStatus({ status, label }: { status: "full" | "partial" | "none"; label: string }) {
-  if (status === "full") {
-    return (
-      <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-400">
-        <span className="rounded-full bg-emerald-500/20 p-0.5 text-emerald-400">
-          <Check className="size-3.5" />
-        </span>
-        <span>{label}</span>
-      </div>
-    );
-  }
-  if (status === "partial") {
-    return (
-      <div className="flex items-center gap-1.5 text-xs text-amber-400">
-        <span className="rounded-full bg-amber-500/20 p-0.5 text-amber-400">
-          <Minus className="size-3.5" />
-        </span>
-        <span>{label}</span>
-      </div>
-    );
-  }
-  return (
-    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-      <span className="rounded-full bg-destructive/20 p-0.5 text-destructive">
-        <X className="size-3.5" />
-      </span>
-      <span>{label}</span>
-    </div>
-  );
-}
-
 export function ComplianceMatrix() {
   return (
-    <div className="relative mx-auto w-full max-w-6xl rounded-2xl border border-white/10 bg-card/40 p-4 shadow-2xl backdrop-blur-xl sm:p-8">
-      <div className="mx-auto max-w-3xl text-center mb-10">
-        <Badge variant="outline" className="mb-3 font-mono text-xs">
-          ARCHITECTURE MATRIX • RISK EVALUATION
-        </Badge>
-        <h3 className="text-2xl font-bold tracking-tight sm:text-4xl text-foreground">
-          Why enterprise operations choose{" "}
-          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            FlowDesk.
+    <div className="mx-auto w-full max-w-6xl">
+      {/* Chapter Lead */}
+      <div className="max-w-3xl mb-10">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="size-2 bg-[#0007cb]" />
+          <span className="font-mono text-xs uppercase tracking-wider text-[#111111] dark:text-[#f4f4f5]">
+            AUDITED ENTERPRISE MATRIX • RISK EVALUATION
           </span>
+        </div>
+        <h3 className="text-3xl sm:text-5xl font-normal tracking-[-0.0296em] text-[#111111] dark:text-[#f4f4f5] leading-[1.05]">
+          <span className="text-[#a0a0a0]">Architectural contrast:</span>
+          <br />
+          FlowDesk vs legacy customer stacks.
         </h3>
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-          Do not stake your business phone numbers on browser automation scripts or bloated CRM
-          add-ons with hallucinating chatbots.
+        <p className="mt-4 font-serif text-base sm:text-lg text-[#585858] dark:text-[#a0a0a0] leading-relaxed max-w-2xl">
+          Why enterprise teams migrate away from brittle browser QR-code scrapers and generic
+          helpdesk add-ons.
         </p>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border/80 bg-background/80 shadow-xs">
-        <table className="w-full text-left text-xs sm:text-sm">
+      {/* Comparison Table */}
+      <div className="overflow-x-auto border border-[#dedbd6] dark:border-[#2b3038] bg-white dark:bg-[#121417]">
+        <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-border/60 bg-muted/40 font-mono text-xs">
-              <th className="p-4 font-semibold text-foreground">CAPABILITY & COMPLIANCE</th>
-              <th className="p-4 font-bold text-primary bg-primary/5 border-x border-primary/20">
-                FLOWDESK (OFFICIAL)
+            <tr className="border-b border-[#dedbd6] dark:border-[#2b3038] bg-[#faf9f6] dark:bg-[#181b20] font-mono text-[11px] text-[#707070]">
+              <th className="p-4 uppercase tracking-wider font-semibold text-[#111111] dark:text-[#f4f4f5] w-[40%]">
+                CAPABILITY CRITERION
               </th>
-              <th className="p-4 font-medium text-muted-foreground">LEGACY CRM ADD-ONS</th>
-              <th className="p-4 font-medium text-muted-foreground">UNOFFICIAL SCRAPERS</th>
+              <th className="p-4 uppercase tracking-wider font-semibold text-[#0007cb] bg-[#0007cb]/5 w-[25%] border-r border-l border-[#dedbd6] dark:border-[#2b3038]">
+                ● FLOWDESK (OFFICIAL CLOUD API)
+              </th>
+              <th className="p-4 uppercase tracking-wider font-semibold text-[#585858] dark:text-[#a0a0a0] w-[18%]">
+                LEGACY CRM ADD-ONS
+              </th>
+              <th className="p-4 uppercase tracking-wider font-semibold text-[#ff5600] w-[17%]">
+                UNOFFICIAL WEB SCRAPERS
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/40">
+          <tbody className="divide-y divide-[#dedbd6] dark:divide-[#2b3038]">
             {criteria.map((item, index) => (
               <tr
-                key={item.feature}
-                className={index % 2 === 0 ? "bg-background/40" : "bg-muted/10"}
+                key={index}
+                className="hover:bg-[#faf9f6] dark:hover:bg-[#15181e] transition-colors"
               >
-                <td className="p-4">
-                  <p className="font-semibold text-foreground">{item.feature}</p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">{item.description}</p>
+                {/* Criterion Details */}
+                <td className="p-4 align-top">
+                  <p className="font-semibold text-[#111111] dark:text-[#f4f4f5] text-xs">
+                    {item.feature}
+                  </p>
+                  <p className="mt-1 text-[11px] text-[#707070] font-serif leading-relaxed">
+                    {item.description}
+                  </p>
                 </td>
-                <td className="p-4 bg-primary/5 border-x border-primary/20 font-medium">
-                  <RenderStatus status={item.flowdesk.status} label={item.flowdesk.label} />
+
+                {/* FlowDesk (Highlighted Column) */}
+                <td className="p-4 align-top bg-[#0007cb]/5 border-r border-l border-[#dedbd6] dark:border-[#2b3038]">
+                  <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-[#0007cb]">
+                    <Check className="size-4 shrink-0" />
+                    <span>{item.flowdesk.label}</span>
+                  </div>
                 </td>
-                <td className="p-4">
-                  <RenderStatus status={item.legacyCrm.status} label={item.legacyCrm.label} />
+
+                {/* Legacy CRM */}
+                <td className="p-4 align-top font-mono text-xs text-[#585858] dark:text-[#a0a0a0]">
+                  <div className="flex items-center gap-1.5">
+                    {item.legacyCrm.status === "full" && (
+                      <Check className="size-3.5 text-emerald-500 shrink-0" />
+                    )}
+                    {item.legacyCrm.status === "partial" && (
+                      <Minus className="size-3.5 text-amber-500 shrink-0" />
+                    )}
+                    {item.legacyCrm.status === "none" && (
+                      <X className="size-3.5 text-rose-500 shrink-0" />
+                    )}
+                    <span>{item.legacyCrm.label}</span>
+                  </div>
                 </td>
-                <td className="p-4">
-                  <RenderStatus status={item.scrapers.status} label={item.scrapers.label} />
+
+                {/* Unofficial Web Scrapers */}
+                <td className="p-4 align-top font-mono text-xs text-[#707070]">
+                  <div className="flex items-center gap-1.5">
+                    {item.scrapers.status === "none" && (
+                      <X className="size-3.5 text-[#ff5600] shrink-0" />
+                    )}
+                    {item.scrapers.status === "partial" && (
+                      <Minus className="size-3.5 text-amber-500 shrink-0" />
+                    )}
+                    <span className={item.scrapers.status === "none" ? "text-[#ff5600]" : ""}>
+                      {item.scrapers.label}
+                    </span>
+                  </div>
                 </td>
               </tr>
             ))}

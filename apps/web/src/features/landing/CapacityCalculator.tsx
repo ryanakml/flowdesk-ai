@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Clock, DollarSign, Sparkles, Zap } from "lucide-react";
-import { Badge } from "@flowdesk/ui";
 
 export function CapacityCalculator() {
   const [conversations, setConversations] = useState<number>(15000);
@@ -19,33 +18,41 @@ export function CapacityCalculator() {
   const annualCostSavings = monthlyCostSavings * 12;
 
   return (
-    <div className="relative mx-auto w-full max-w-6xl rounded-2xl border border-white/10 bg-card/40 p-4 shadow-2xl backdrop-blur-xl sm:p-8">
-      <div className="mx-auto max-w-3xl text-center">
-        <Badge variant="outline" className="mb-3 font-mono text-xs">
-          INTERACTIVE CAPACITY & ROI BENCHMARK
-        </Badge>
-        <h3 className="text-2xl font-bold tracking-tight sm:text-4xl text-foreground">
-          Quantify the operational impact on{" "}
-          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            your support team.
+    <div className="relative mx-auto w-full max-w-6xl border border-[#dedbd6] dark:border-[#2b3038] bg-[#faf9f6] dark:bg-[#181b20] p-6 sm:p-10 shadow-xs">
+      {/* 8px Corner Registration Marks */}
+      <span className="absolute top-2 left-2 size-2 bg-[#d3cec6] dark:bg-[#383e48]" />
+      <span className="absolute top-2 right-2 size-2 bg-[#d3cec6] dark:bg-[#383e48]" />
+      <span className="absolute bottom-2 left-2 size-2 bg-[#d3cec6] dark:bg-[#383e48]" />
+      <span className="absolute bottom-2 right-2 size-2 bg-[#d3cec6] dark:bg-[#383e48]" />
+
+      <div className="max-w-3xl mb-10">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="size-2 bg-[#0007cb]" />
+          <span className="font-mono text-xs uppercase tracking-wider text-[#111111] dark:text-[#f4f4f5]">
+            COMPACT COMMERCIAL ESTIMATOR • ROI BENCHMARK
           </span>
+        </div>
+        <h3 className="text-3xl sm:text-5xl font-normal tracking-[-0.0296em] text-[#111111] dark:text-[#f4f4f5] leading-[1.05]">
+          <span className="text-[#a0a0a0]">Quantify the operational deflection on</span>
+          <br />
+          your customer support team.
         </h3>
-        <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-          Adjust your current WhatsApp volume and team size to see real-world time recovery,
-          first-response acceleration, and deflection metrics.
+        <p className="mt-4 font-serif text-base sm:text-lg text-[#585858] dark:text-[#a0a0a0] leading-relaxed max-w-2xl">
+          Adjust your current monthly WhatsApp message volume and team size to calculate verified
+          operator hours recovered, first-response acceleration, and deflection economics.
         </p>
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-12 items-center">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
         {/* Sliders Input Panel (5 cols) */}
-        <div className="space-y-6 rounded-xl border border-border/80 bg-background/80 p-5 lg:col-span-5">
+        <div className="space-y-6 border border-[#dedbd6] dark:border-[#2b3038] bg-white dark:bg-[#121417] p-6 lg:col-span-5 shadow-xs">
           {/* Slider 1: Conversations */}
           <div>
-            <div className="flex items-center justify-between text-xs font-semibold">
-              <span className="text-foreground">Monthly WhatsApp Messages</span>
-              <span className="font-mono text-primary text-sm font-bold">
-                {conversations.toLocaleString()} /mo
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-[#111111] dark:text-[#f4f4f5] uppercase">
+                MONTHLY WHATSAPP MESSAGES
               </span>
+              <span className="text-[#0007cb] font-bold">{conversations.toLocaleString()} /mo</span>
             </div>
             <input
               type="range"
@@ -54,9 +61,9 @@ export function CapacityCalculator() {
               step={1000}
               value={conversations}
               onChange={(e) => setConversations(Number(e.target.value))}
-              className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
+              className="mt-3 h-1.5 w-full cursor-pointer appearance-none bg-[#dedbd6] dark:bg-[#383e48] accent-[#111111] dark:accent-[#f4f4f5]"
             />
-            <div className="mt-1.5 flex justify-between font-mono text-[10px] text-muted-foreground">
+            <div className="mt-1.5 flex justify-between font-mono text-[10px] text-[#a0a0a0]">
               <span>2,000</span>
               <span>25,000</span>
               <span>50,000</span>
@@ -66,9 +73,11 @@ export function CapacityCalculator() {
 
           {/* Slider 2: Agents */}
           <div>
-            <div className="flex items-center justify-between text-xs font-semibold">
-              <span className="text-foreground">Support Agents on Team</span>
-              <span className="font-mono text-primary text-sm font-bold">{agents} Reps</span>
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-[#111111] dark:text-[#f4f4f5] uppercase">
+                SUPPORT AGENTS ON TEAM
+              </span>
+              <span className="text-[#0007cb] font-bold">{agents} REPS</span>
             </div>
             <input
               type="range"
@@ -77,9 +86,9 @@ export function CapacityCalculator() {
               step={1}
               value={agents}
               onChange={(e) => setAgents(Number(e.target.value))}
-              className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-lg bg-muted accent-primary"
+              className="mt-3 h-1.5 w-full cursor-pointer appearance-none bg-[#dedbd6] dark:bg-[#383e48] accent-[#111111] dark:accent-[#f4f4f5]"
             />
-            <div className="mt-1.5 flex justify-between font-mono text-[10px] text-muted-foreground">
+            <div className="mt-1.5 flex justify-between font-mono text-[10px] text-[#a0a0a0]">
               <span>2 reps</span>
               <span>10 reps</span>
               <span>25 reps</span>
@@ -88,69 +97,69 @@ export function CapacityCalculator() {
           </div>
 
           {/* Benchmark Explanation Note */}
-          <div className="rounded-lg border border-border/60 bg-muted/20 p-3 text-xs leading-relaxed text-muted-foreground">
-            <span className="font-semibold text-foreground">Conservative Benchmark:</span> Assumes
-            58% tier-1 FAQ deflection with grounded AI drafts and 4.5 minutes saved per approved
-            reply.
+          <div className="border border-[#dedbd6] dark:border-[#2b3038] bg-[#faf9f6] dark:bg-[#181b20] p-3.5 text-xs leading-relaxed text-[#585858] dark:text-[#a0a0a0] font-serif">
+            <span className="font-semibold text-[#111111] dark:text-[#f4f4f5] font-sans">
+              Conservative Benchmark:
+            </span>{" "}
+            Assumes 58% tier-1 inquiry deflection with grounded RAG drafts and 4.5 minutes saved per
+            verified customer reply.
           </div>
         </div>
 
         {/* Calculated Results Panel (7 cols) */}
-        <div className="grid grid-cols-2 gap-3 lg:col-span-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:col-span-7">
           {/* Card 1: Hours Saved Monthly */}
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 shadow-xs">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-primary font-mono">
+          <div className="border border-[#dedbd6] dark:border-[#2b3038] bg-white dark:bg-[#121417] p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-mono text-[#0007cb]">
               <Clock className="size-3.5" />
               <span>TIME RECOVERED</span>
             </div>
-            <p className="mt-2 font-mono text-2xl sm:text-3xl font-extrabold text-foreground">
+            <p className="mt-4 font-mono text-3xl sm:text-4xl font-normal text-[#111111] dark:text-[#f4f4f5] tracking-tight">
               {totalMonthlyHoursSaved.toLocaleString()} hrs
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs text-[#707070]">
               ~{hoursSavedPerAgent} hours saved per agent every month
             </p>
           </div>
 
           {/* Card 2: Annual Cost Deflection */}
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 shadow-xs">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-500 font-mono">
+          <div className="border border-[#0007cb]/30 bg-[#0007cb]/5 p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-mono text-[#0007cb]">
               <DollarSign className="size-3.5" />
               <span>ANNUAL COST RECOVERY</span>
             </div>
-            <p className="mt-2 font-mono text-2xl sm:text-3xl font-extrabold text-emerald-400">
+            <p className="mt-4 font-mono text-3xl sm:text-4xl font-normal text-[#0007cb] tracking-tight">
               ${annualCostSavings.toLocaleString()}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              ${monthlyCostSavings.toLocaleString()} /mo in reclaimed operator productivity
+            <p className="mt-2 text-xs text-[#585858] dark:text-[#a0a0a0]">
+              ${monthlyCostSavings.toLocaleString()}/mo in reclaimed operator productivity
             </p>
           </div>
 
           {/* Card 3: Inquiries Deflected */}
-          <div className="rounded-xl border border-border/80 bg-background/80 p-4 shadow-xs">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground font-mono">
-              <Sparkles className="size-3.5 text-primary" />
+          <div className="border border-[#dedbd6] dark:border-[#2b3038] bg-white dark:bg-[#121417] p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-mono text-[#707070]">
+              <Sparkles className="size-3.5 text-[#0007cb]" />
               <span>TIER-1 DEFLECTION</span>
             </div>
-            <p className="mt-2 font-mono text-2xl sm:text-3xl font-extrabold text-foreground">
+            <p className="mt-4 font-mono text-3xl sm:text-4xl font-normal text-[#111111] dark:text-[#f4f4f5] tracking-tight">
               {totalMonthlyTicketsDeflected.toLocaleString()}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs text-[#707070]">
               Repetitive tickets drafted with verified source citations
             </p>
           </div>
 
           {/* Card 4: First Response Acceleration */}
-          <div className="rounded-xl border border-border/80 bg-background/80 p-4 shadow-xs">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground font-mono">
-              <Zap className="size-3.5 text-amber-500" />
+          <div className="border border-[#dedbd6] dark:border-[#2b3038] bg-white dark:bg-[#121417] p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-mono text-[#707070]">
+              <Zap className="size-3.5 text-[#ff5600]" />
               <span>FIRST RESPONSE SPEED</span>
             </div>
-            <p className="mt-2 font-mono text-2xl sm:text-3xl font-extrabold text-foreground">
+            <p className="mt-4 font-mono text-3xl sm:text-4xl font-normal text-[#111111] dark:text-[#f4f4f5] tracking-tight">
               &lt; 15 sec
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Down from 38+ minutes manual queue delay
-            </p>
+            <p className="mt-2 text-xs text-[#707070]">Down from 38+ minutes manual queue delay</p>
           </div>
         </div>
       </div>
