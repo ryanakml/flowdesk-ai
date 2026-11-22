@@ -16,7 +16,20 @@ try {
 }
 
 const config = loadHttpConfig("web", 3000);
-const serve = sirv(fileURLToPath(new URL(".", import.meta.url)), { single: true, dev: false });
+const serve = sirv(fileURLToPath(new URL(".", import.meta.url)), {
+  single: true,
+  dev: false,
+  setHeaders(res, pathname) {
+    if (pathname.startsWith("/assets/")) {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    } else {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    }
+  }
+});
+
 const server = createServer((request, response) => {
   response.setHeader("X-Content-Type-Options", "nosniff");
   response.setHeader("X-Frame-Options", "DENY");
@@ -26,6 +39,14 @@ const server = createServer((request, response) => {
     "Content-Security-Policy",
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
   );
+
+  const url = request.url ? request.url.split("?")[0] : "";
+  if (!url.startsWith("/assets/") && (url === "/" || !url.includes(".") || url.endsWith(".html"))) {
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.setHeader("Pragma", "no-cache");
+    response.setHeader("Expires", "0");
+  }
+
   if (request.url === "/livez" || request.url === "/readyz") {
     response.writeHead(200, { "content-type": "application/json" });
     response.end(JSON.stringify({ status: "ok", service: "web" }));

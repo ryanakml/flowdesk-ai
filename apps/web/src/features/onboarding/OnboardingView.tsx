@@ -14,9 +14,9 @@ export function OnboardingView() {
   const newOrgSlugId = useId();
 
   return (
-    <div className="app-container min-h-screen bg-[#fcf5eb] flex flex-col justify-between items-center py-8 px-4 sm:px-6 relative select-none">
+    <div className="app-container min-h-screen bg-[#fcf5eb] flex flex-col justify-between items-center py-6 px-4 sm:px-8 relative select-none">
       {/* Top Navigation Header */}
-      <header className="top-nav w-full max-w-[1080px] flex items-center justify-between z-10 py-2">
+      <header className="top-nav w-full max-w-[1140px] flex items-center justify-between z-10 py-3">
         <div className="brand-section flex items-center gap-2">
           <a href="/" className="logo-badge inline-flex items-center gap-2 group text-[#111b21]">
             <div className="flex items-center gap-1.5 text-[20px] font-normal tracking-tight">
@@ -27,7 +27,7 @@ export function OnboardingView() {
         </div>
 
         <div className="user-controls flex items-center gap-3">
-          <div className="user-badge flex items-center gap-2 bg-white/80 border border-[#dedbd6] rounded-full px-3 py-1 shadow-2xs">
+          <div className="user-badge flex items-center gap-2 bg-white/90 border border-[#dedbd6] rounded-full px-3 py-1 shadow-2xs">
             <span className="user-avatar w-6 h-6 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center text-xs font-bold shrink-0">
               {sessionUser?.displayName?.charAt(0)?.toUpperCase() ??
                 sessionUser?.email?.charAt(0)?.toUpperCase() ??
@@ -43,7 +43,7 @@ export function OnboardingView() {
             onClick={() => {
               void handleLogout();
             }}
-            className="btn btn-secondary btn-sm inline-flex items-center gap-1.5 text-xs text-[#5e5e5e] hover:text-red-600 transition-colors py-1 px-2.5 rounded-full hover:bg-black/5 cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs text-[#5e5e5e] hover:text-red-600 transition-colors py-1.5 px-3 rounded-full hover:bg-black/5 cursor-pointer border border-[#dedbd6] bg-white/80"
           >
             <LogOut className="w-3.5 h-3.5" />
             <span>Sign out</span>
@@ -52,20 +52,25 @@ export function OnboardingView() {
       </header>
 
       {/* Main Onboarding Card */}
-      <main className="main-content w-full max-w-[460px] my-auto py-8 z-10">
+      <main className="main-content w-full max-w-[480px] my-auto py-6 z-10">
         {errorMsg && (
           <div className="toast-banner toast-error mb-4 p-3.5 rounded-[16px] bg-red-50 border border-red-200 text-xs text-red-700 leading-relaxed text-left flex items-center gap-2">
             <span>{errorMsg}</span>
           </div>
         )}
 
-        <div className="glass-card onboarding-wrap bg-white border border-[#dedbd6] rounded-[24px] p-8 sm:p-10 shadow-sm text-left">
-          {/* Header Icon */}
-          <div className="empty-icon-wrap w-12 h-12 rounded-[16px] bg-[#fcf5eb] border border-[#dedbd6] flex items-center justify-center text-[#111b21] mb-5 shadow-2xs">
-            <Building2 className="w-6 h-6 text-[#111b21]" />
+        <div className="glass-card bg-white border border-[#dedbd6] rounded-[24px] p-8 sm:p-11 shadow-sm text-left">
+          {/* Top Step Pill & Header Icon */}
+          <div className="flex items-center justify-between mb-5">
+            <div className="empty-icon-wrap w-12 h-12 rounded-[16px] bg-[#fcf5eb] border border-[#dedbd6] flex items-center justify-center text-[#111b21] shadow-2xs">
+              <Building2 className="w-6 h-6 text-[#111b21]" />
+            </div>
+            <span className="text-[11px] font-semibold text-[#00803e] bg-[#e6ffda] border border-[#25d366]/30 px-3 py-1 rounded-full uppercase tracking-wider">
+              Step 1 • Workspace Setup
+            </span>
           </div>
 
-          <h2 className="empty-title text-[26px] font-normal tracking-tight text-[#111b21] leading-tight mb-2">
+          <h2 className="empty-title text-[28px] font-normal tracking-tight text-[#111b21] leading-tight mb-2">
             Create your organization
           </h2>
           <p className="empty-desc text-[14px] text-[#5e5e5e] font-normal leading-relaxed mb-6">
@@ -142,10 +147,11 @@ export function OnboardingView() {
               />
             </div>
 
+            {/* Signature Emerald Action Pill */}
             <button
               type="submit"
               disabled={bootstrapping || !newOrgName.trim() || !newOrgSlug.trim()}
-              className="btn btn-primary wa-pill-primary w-full py-3.5 mt-2 text-[14px] font-medium flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 mt-2 text-[14px] font-semibold text-[#111b21] bg-[#25d366] hover:bg-[#20ba59] active:scale-[0.99] border border-[#111b21]/20 rounded-full flex items-center justify-center gap-2 cursor-pointer shadow-xs hover:shadow-sm transition-all disabled:opacity-40 disabled:hover:bg-[#25d366] disabled:cursor-not-allowed"
             >
               {bootstrapping ? (
                 <>
@@ -170,7 +176,7 @@ export function OnboardingView() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-[1080px] text-center text-xs text-[#5e5e5e] py-4 z-10">
+      <footer className="w-full max-w-[1140px] text-center text-xs text-[#5e5e5e] py-4 z-10">
         2026 © FlowDesk Systems Inc. All rights reserved.
       </footer>
     </div>
