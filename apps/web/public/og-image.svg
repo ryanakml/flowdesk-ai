@@ -1,35 +1,77 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#090D16"/>
-  
-  <!-- Subtle Background Gradients -->
-  <circle cx="200" cy="150" r="300" fill="#10B981" fill-opacity="0.08" filter="blur(80px)"/>
-  <circle cx="1000" cy="450" r="350" fill="#0EA5E9" fill-opacity="0.08" filter="blur(80px)"/>
-  
-  <defs>
-    <linearGradient id="ogGrad" x1="100" y1="180" x2="220" y2="300" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#10B981" />
-      <stop offset="100%" stop-color="#0EA5E9" />
-    </linearGradient>
-    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#FFFFFF" />
-      <stop offset="100%" stop-color="#94A3B8" />
-    </linearGradient>
-  </defs>
-  
-  <!-- Brand Icon -->
-  <g transform="translate(120, 170)">
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M60 10C32.3858 10 10 32.3858 10 60C10 70.4875 13.225 80.2125 18.75 88.2875L11.25 108.75L32.4 101.6C40.2 106.788 49.725 110 60 110C87.6142 110 110 87.6142 110 60C110 32.3858 87.6142 10 60 10ZM38.75 35C38.75 32.2386 40.9886 30 43.75 30H76.25C79.0114 30 81.25 32.2386 81.25 35C81.25 37.7614 79.0114 40 76.25 40H53.75V50H71.25C74.0114 50 76.25 52.2386 76.25 55C76.25 57.7614 74.0114 60 71.25 60H53.75V85C53.75 87.7614 51.5114 90 48.75 90C45.9886 90 43.75 87.7614 43.75 85V60H43.75C40.9886 60 38.75 57.7614 38.75 55V35Z" fill="url(#ogGrad)"/>
-  </g>
-  
-  <!-- Brand Name -->
-  <text x="270" y="248" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="800" font-size="64" letter-spacing="-1.5" fill="#FFFFFF">Flow<tspan fill="#10B981">Desk</tspan></text>
-  
-  <!-- Tagline & Description -->
-  <text x="120" y="360" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="700" font-size="44" fill="url(#textGrad)">Enterprise WhatsApp Automation &amp; Team Inbox</text>
-  <text x="120" y="420" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="400" font-size="24" fill="#94A3B8">AI-First Customer Operations • Meta Cloud API • Strict RAG Safety Guardrails</text>
+  <!-- Deep Night Canvas -->
+  <rect width="1200" height="630" fill="#111B21"/>
 
-  <!-- Footer Meta Badge -->
-  <rect x="120" y="475" width="280" height="42" rx="21" fill="#1E293B" stroke="#334155"/>
-  <circle cx="146" cy="496" r="6" fill="#10B981"/>
-  <text x="164" y="503" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="600" font-size="16" fill="#F8FAFC">Official WhatsApp SaaS</text>
+  <!-- Ambient Emerald Radial Glow -->
+  <circle cx="1020" cy="120" r="420" fill="#25D366" fill-opacity="0.07" filter="blur(90px)"/>
+
+  <!-- Top-Left Brand Identity: Squircle + FlowDesk • -->
+  <g transform="translate(80, 70)">
+    <rect width="42" height="42" rx="10" fill="#1C2826" stroke="#33463F"/>
+    <path d="M12 10h14a1.5 1.5 0 0 1 0 3H15v4h8a1.5 1.5 0 0 1 0 3H15v7a1.5 1.5 0 0 1-3 0v-17z" fill="#FFFFFF"/>
+    <circle cx="31" cy="31" r="3.5" fill="#25D366"/>
+  </g>
+  <text x="134" y="101" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="30" fill="#FFFFFF">FlowDesk</text>
+  <circle cx="272" cy="98" r="4.5" fill="#25D366"/>
+
+  <!-- Category Kicker -->
+  <text x="80" y="188" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#25D366">ENTERPRISE WHATSAPP AUTOMATION · OFFICIAL META CLOUD API</text>
+
+  <!-- Editorial Headline (Weight 400) -->
+  <text x="80" y="254" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="400" font-size="46" letter-spacing="-0.5" fill="#FFFFFF">Turn every customer message</text>
+  <text x="80" y="312" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="400" font-size="46" letter-spacing="-0.5" fill="#FFFFFF">into a verified resolution.</text>
+
+  <!-- Subtitle -->
+  <text x="80" y="380" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="400" font-size="20" fill="#A0AAB2">Accelerate customer support with AI knowledge-grounded responses,</text>
+  <text x="80" y="412" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif" font-weight="400" font-size="20" fill="#A0AAB2">multi-agent team inbox, and sovereign cryptographic isolation.</text>
+
+  <!-- Capability Badges -->
+  <g transform="translate(80, 480)">
+    <!-- Badge 1 -->
+    <rect x="0" y="0" width="168" height="34" rx="17" fill="#142026" stroke="#33463F"/>
+    <text x="14" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="13" fill="#E6FFDA">✓ Policy Grounded AI</text>
+    <!-- Badge 2 -->
+    <rect x="180" y="0" width="160" height="34" rx="17" fill="#142026" stroke="#33463F"/>
+    <text x="194" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="13" fill="#E6FFDA">✓ Multi-Agent Inbox</text>
+    <!-- Badge 3 -->
+    <rect x="352" y="0" width="158" height="34" rx="17" fill="#142026" stroke="#33463F"/>
+    <text x="366" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="13" fill="#E6FFDA">✓ Meta Cloud Tier 3</text>
+  </g>
+
+  <!-- Right Column: Simulated WhatsApp UI Preview Card -->
+  <g transform="translate(730, 75)">
+    <!-- Card Frame -->
+    <rect width="390" height="475" rx="24" fill="#0B141A" stroke="#33463F" stroke-width="1.5"/>
+
+    <!-- Header Inside Card -->
+    <rect x="18" y="18" width="354" height="50" rx="14" fill="#142026" stroke="#283832"/>
+    <circle cx="38" cy="43" r="6" fill="#25D366"/>
+    <text x="54" y="48" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="600" font-size="14" fill="#FFFFFF">Apex Logistics • Team Inbox</text>
+
+    <!-- Message 1: Outgoing Customer Bubble -->
+    <rect x="55" y="90" width="315" height="75" rx="14" fill="#D9FDD3"/>
+    <text x="70" y="116" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" fill="#111B21">Can I change the delivery address</text>
+    <text x="70" y="138" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" fill="#111B21">for my order #FD-9281?</text>
+    <text x="312" y="152" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="11" fill="#50645A">14:28 ✓✓</text>
+
+    <!-- Message 2: Incoming Grounded AI Bubble -->
+    <rect x="20" y="185" width="330" height="135" rx="14" fill="#FFFFFF"/>
+    <text x="35" y="211" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" fill="#111B21">Done! Updated to 42 Orchard Rd.</text>
+    <text x="35" y="233" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" fill="#111B21">We've verified your order and</text>
+    <text x="35" y="255" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="14" fill="#111B21">emailed your confirmation.</text>
+
+    <!-- Citation Badge -->
+    <rect x="34" y="273" width="302" height="30" rx="8" fill="#F0FDF4" stroke="#BBF7D0"/>
+    <text x="46" y="293" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="11" fill="#166534">🛡 Grounded in Policy v2.4 (184ms)</text>
+
+    <!-- Collision Lock Banner -->
+    <rect x="18" y="345" width="354" height="50" rx="12" fill="#1C2826" stroke="#33463F"/>
+    <circle cx="36" cy="370" r="4.5" fill="#25D366"/>
+    <text x="48" y="365" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="11" fill="#C8D7D2">Sarah M. is reviewing this thread</text>
+    <text x="48" y="381" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="11" font-weight="600" fill="#25D366">Heartbeat lock active · Zero collisions</text>
+
+    <!-- SLA Metric Footer -->
+    <text x="28" y="428" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-size="11" fill="#64737D">AVERAGE RESOLUTION TIME</text>
+    <text x="28" y="452" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" font-weight="600" font-size="14" fill="#E6FFDA">&lt; 45 seconds · 99.98% delivery rate</text>
+  </g>
 </svg>
