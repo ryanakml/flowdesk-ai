@@ -6,6 +6,7 @@ import { AppShell } from "../components/layout/AppShell.js";
 import { LoginView } from "../features/auth/LoginView.js";
 import { OnboardingView } from "../features/onboarding/OnboardingView.js";
 import { InvitationView } from "../features/invitations/InvitationView.js";
+import { LoadingScreen } from "../components/LoadingScreen.js";
 
 import { Card } from "../components/ui/card.js";
 import { Button } from "@flowdesk/ui";
@@ -95,26 +96,7 @@ function RootComponent() {
 
   // 1. Loading State
   if (loading) {
-    return (
-      <div className="login-wrap">
-        <div className="glass-card login-card" role="status" aria-live="polite">
-          <div className="login-icon">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="16" />
-            </svg>
-          </div>
-          <h2 className="login-title">Loading FlowDesk…</h2>
-          <p className="login-subtitle">Verifying secure tenant session</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // The root route and login route are public. Protected routes continue through the existing

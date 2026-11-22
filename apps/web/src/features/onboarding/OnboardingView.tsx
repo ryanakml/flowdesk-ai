@@ -1,7 +1,6 @@
 import * as React from "react";
 import { useState, useId } from "react";
-import { Building2, ArrowRight, LogOut, Loader2, Sparkles, ShieldCheck } from "lucide-react";
-import { FlowDeskIcon } from "../../components/layout/AppSidebar.js";
+import { Building2, ArrowRight, LogOut, Loader2, ShieldCheck } from "lucide-react";
 import { useAuth } from "../auth/context.js";
 
 export function OnboardingView() {

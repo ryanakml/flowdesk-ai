@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Mail, ArrowRight, LogOut, Loader2, ShieldCheck } from "lucide-react";
-import { FlowDeskIcon } from "../../components/layout/AppSidebar.js";
 import { useAuth } from "../auth/context.js";
 
 export function InvitationView() {
