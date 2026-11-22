@@ -1200,12 +1200,12 @@ export function InboxWorkspace({
               />
             </Panel>
 
-            <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize focus:outline-none" />
+            <PanelResizeHandle className="w-1.5 bg-[#dedbd6]/50 hover:bg-[#25d366]/60 transition-colors cursor-col-resize focus:outline-none flex items-center justify-center group" />
 
             {/* Center Panel: Stream & Composer */}
             <Panel
               id="inbox-thread"
-              defaultSize={contextCollapsed ? "76%" : "52%"}
+              defaultSize={contextCollapsed ? "74%" : "50%"}
               minSize="36%"
               maxSize={contextCollapsed ? "80%" : "60%"}
               className="h-full min-h-0 min-w-0 overflow-hidden"
@@ -1214,7 +1214,7 @@ export function InboxWorkspace({
             </Panel>
 
             {!contextCollapsed && (
-              <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize focus:outline-none" />
+              <PanelResizeHandle className="w-1.5 bg-[#dedbd6]/50 hover:bg-[#25d366]/60 transition-colors cursor-col-resize focus:outline-none flex items-center justify-center group" />
             )}
 
             {/* Right Panel: Customer & Operational Context */}
