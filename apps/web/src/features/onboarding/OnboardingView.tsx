@@ -30,7 +30,9 @@ export function OnboardingView() {
         <div className="user-controls flex items-center gap-3">
           <div className="user-badge flex items-center gap-2 bg-white/80 border border-[#dedbd6] rounded-full px-3 py-1 shadow-2xs">
             <span className="user-avatar w-6 h-6 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center text-xs font-bold shrink-0">
-              {sessionUser?.displayName?.charAt(0)?.toUpperCase() ?? sessionUser?.email?.charAt(0)?.toUpperCase() ?? "U"}
+              {sessionUser?.displayName?.charAt(0)?.toUpperCase() ??
+                sessionUser?.email?.charAt(0)?.toUpperCase() ??
+                "U"}
             </span>
             <span className="text-xs text-[#111b21] font-medium max-w-[140px] truncate">
               {sessionUser?.displayName || sessionUser?.email}
@@ -84,10 +86,7 @@ export function OnboardingView() {
             className="flex flex-col gap-4.5 w-full text-left"
           >
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor={newOrgNameId}
-                className="text-[13px] font-medium text-[#111b21]"
-              >
+              <label htmlFor={newOrgNameId} className="text-[13px] font-medium text-[#111b21]">
                 Organization Name
               </label>
               <input
@@ -115,10 +114,7 @@ export function OnboardingView() {
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label
-                  htmlFor={newOrgSlugId}
-                  className="text-[13px] font-medium text-[#111b21]"
-                >
+                <label htmlFor={newOrgSlugId} className="text-[13px] font-medium text-[#111b21]">
                   Organization Slug (URL identifier)
                 </label>
                 {newOrgSlug && (

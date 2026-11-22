@@ -22,7 +22,9 @@ export function InvitationView() {
         <div className="user-controls flex items-center gap-3">
           <div className="user-badge flex items-center gap-2 bg-white/80 border border-[#dedbd6] rounded-full px-3 py-1 shadow-2xs">
             <span className="user-avatar w-6 h-6 rounded-full bg-[#25d366] text-[#111b21] flex items-center justify-center text-xs font-bold shrink-0">
-              {sessionUser?.displayName?.charAt(0)?.toUpperCase() ?? sessionUser?.email?.charAt(0)?.toUpperCase() ?? "U"}
+              {sessionUser?.displayName?.charAt(0)?.toUpperCase() ??
+                sessionUser?.email?.charAt(0)?.toUpperCase() ??
+                "U"}
             </span>
             <span className="text-xs text-[#111b21] font-medium max-w-[140px] truncate">
               {sessionUser?.displayName || sessionUser?.email}
