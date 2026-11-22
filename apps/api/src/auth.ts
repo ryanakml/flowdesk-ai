@@ -295,6 +295,7 @@ export function createAuthRouter(options: AuthRouterOptions): Router {
         destination.startsWith("http://") || destination.startsWith("https://")
           ? destination
           : `${options.config.APP_BASE_URL || "http://localhost:3000"}${destination.startsWith("/") ? destination : `/${destination}`}`;
+      response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
       return response.redirect(302, redirectUrl);
     } catch (error) {
       return next(error);
