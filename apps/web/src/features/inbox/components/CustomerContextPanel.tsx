@@ -4,7 +4,7 @@ import type {
   ConversationDetailResponse
 } from "@flowdesk/contracts";
 import { Skeleton } from "@flowdesk/ui";
-import { User, Clock, Tag } from "lucide-react";
+import { User, Clock, Tag, FileText, Bot } from "lucide-react";
 import { BotConfiguration } from "./BotConfiguration.js";
 
 function formatDate(isoString: string): string {
@@ -51,84 +51,99 @@ export function CustomerContextPanel({
 }: CustomerContextPanelProps) {
   if (loading) {
     return (
-      <div className="scrollbar-hidden h-full overflow-y-auto p-4 space-y-4 bg-background border-l border-border">
-        <Skeleton className="h-4 w-2/3" />
-        <Skeleton className="h-3 w-1/2" />
-        <Skeleton className="h-16 w-full rounded" />
+      <div className="scrollbar-hidden h-full overflow-y-auto p-4 space-y-4 bg-white border-l border-[#dedbd6]">
+        <Skeleton className="h-5 w-2/3 rounded-md" />
+        <Skeleton className="h-3.5 w-1/2 rounded-md" />
+        <Skeleton className="h-20 w-full rounded-[12px]" />
       </div>
     );
   }
 
   if (!conv) {
     return (
-      <div className="h-full flex items-center justify-center text-muted-foreground text-sm p-4 bg-background border-l border-border">
-        <p>Select a conversation</p>
+      <div className="h-full flex flex-col items-center justify-center text-[#5e5e5e] text-xs p-6 bg-white border-l border-[#dedbd6] text-center">
+        <User className="w-8 h-8 text-[#dedbd6] mb-2" />
+        <p className="font-medium text-[#111b21]">No conversation selected</p>
+        <p className="text-[11px] text-[#5e5e5e] mt-0.5">
+          Select a customer to view operational context.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="scrollbar-hidden h-full min-w-0 overflow-y-auto bg-background border-l border-border [overflow-wrap:anywhere] [&_input]:min-w-0">
-      {/* Customer Profile */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary text-sm font-semibold flex items-center justify-center flex-shrink-0">
+    <div className="scrollbar-hidden h-full min-w-0 overflow-y-auto bg-white border-l border-[#dedbd6] [overflow-wrap:anywhere] [&_input]:min-w-0 divide-y divide-[#dedbd6]/50">
+      {/* Customer Profile Header */}
+      <div className="p-4 bg-[#fafafa]/50">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-white border border-[#dedbd6] text-[#111b21] text-xs font-semibold flex items-center justify-center flex-shrink-0 shadow-2xs">
             {(conv.customerName ?? conv.customerPhone).slice(0, 2).toUpperCase()}
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-semibold text-[#111b21] truncate tracking-tight">
               {conv.customerName ?? `+${conv.customerPhone}`}
             </p>
             {conv.customerName && (
-              <p className="text-xs text-muted-foreground truncate">+{conv.customerPhone}</p>
+              <p className="text-[11.5px] text-[#5e5e5e] font-mono truncate">
+                +{conv.customerPhone}
+              </p>
             )}
           </div>
         </div>
       </div>
 
       {/* Conversation Attributes */}
-      <div className="p-4 border-b border-border space-y-2.5">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Conversation
+      <div className="p-4 space-y-2.5">
+        <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider">
+          Conversation Attributes
         </h4>
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Status</span>
-          <span className="text-xs font-medium capitalize text-foreground">{conv.status}</span>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-[#5e5e5e]">Status</span>
+          <span className="font-semibold capitalize text-[#111b21]">{conv.status}</span>
+        </div>
+
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-[#5e5e5e]">Priority</span>
+          <span className="font-semibold capitalize text-[#111b21]">{conv.priority}</span>
         </div>
 
         {conv.assignedToUserId ? (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Assigned to</span>
-            <div className="flex items-center gap-1">
-              <User className="w-3 h-3 text-muted-foreground" />
-              <span className="text-xs text-foreground">Agent</span>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[#5e5e5e]">Assigned to</span>
+            <div className="flex items-center gap-1.5 font-medium text-[#111b21]">
+              <User className="w-3.5 h-3.5 text-[#5e5e5e]" />
+              <span>Assigned Agent</span>
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Assigned to</span>
-            <span className="text-xs text-muted-foreground italic">Unassigned</span>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-[#5e5e5e]">Assigned to</span>
+            <span className="text-[#5e5e5e] italic">Unassigned</span>
           </div>
         )}
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Created</span>
-          <div className="flex items-center gap-1">
-            <Clock className="w-3 h-3 text-muted-foreground" />
-            <span className="text-xs text-foreground">{formatDate(conv.createdAt)}</span>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-[#5e5e5e]">Created</span>
+          <div className="flex items-center gap-1.5 text-[#111b21] font-mono text-[11px]">
+            <Clock className="w-3 h-3 text-[#5e5e5e]" />
+            <span>{formatDate(conv.createdAt)}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Last message</span>
-          <span className="text-xs text-foreground">{formatDate(conv.lastMessageAt)}</span>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-[#5e5e5e]">Last message</span>
+          <span className="text-[#111b21] font-mono text-[11px]">
+            {formatDate(conv.lastMessageAt)}
+          </span>
         </div>
       </div>
 
-      <div className="space-y-2 border-b border-border p-4">
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Automation
+      {/* Automation & 24h Window */}
+      <div className="p-4 space-y-2.5">
+        <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider flex items-center gap-1.5">
+          <Bot className="w-3.5 h-3.5 text-[#00803e]" />
+          <span>Automation & Policy</span>
         </h4>
         <BotConfiguration
           key={organizationId}
@@ -137,40 +152,33 @@ export function CustomerContextPanel({
           fetcher={fetcher}
         />
         {conv.botPaused && (
-          <p className="text-xs text-muted-foreground">Bot paused for this conversation.</p>
+          <p className="text-[11px] text-[#5e5e5e] bg-zinc-50 border border-[#dedbd6] p-2 rounded-[8px]">
+            Bot paused for this conversation.
+          </p>
         )}
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Service window</span>
+        <div className="flex items-center justify-between text-xs pt-1">
+          <span className="text-[#5e5e5e]">WhatsApp Window</span>
           <span
             className={
               conv.serviceWindow?.isOpen === false
-                ? "font-medium text-warning-foreground"
-                : "font-medium text-success"
+                ? "font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full text-[10.5px]"
+                : "font-semibold text-[#00803e] bg-[#e6ffda] border border-[#25d366]/30 px-2 py-0.5 rounded-full text-[10.5px]"
             }
           >
             {conv.serviceWindow
               ? conv.serviceWindow.isOpen
-                ? "Open"
-                : "Expired"
-              : "Not available"}
+                ? "Open (Active)"
+                : "Expired (Template Only)"
+              : "Standard"}
           </span>
         </div>
-        {conv.serviceWindow?.isOpen === false && (
-          <div className="space-y-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-xs">
-            <p className="font-medium text-foreground">24-hour window expired</p>
-            <p className="text-muted-foreground">
-              Free-form messages are unavailable until the customer messages again or an approved
-              template is sent.
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Tags */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-1.5 mb-2">
-          <Tag className="w-3.5 h-3.5 text-muted-foreground" />
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+      <div className="p-4">
+        <div className="flex items-center gap-1.5 mb-2.5">
+          <Tag className="w-3.5 h-3.5 text-[#5e5e5e]" />
+          <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider">
             Tags
           </h4>
         </div>
@@ -185,10 +193,10 @@ export function CustomerContextPanel({
                     key={t.id}
                     type="button"
                     onClick={() => onToggleTag?.(t.id, applied)}
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-all cursor-pointer shadow-2xs ${
                       applied
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                        ? "bg-[#111b21] text-white border-[#111b21]"
+                        : "bg-white text-[#5e5e5e] border-[#dedbd6] hover:bg-[#fcf5eb] hover:text-[#111b21]"
                     }`}
                   >
                     {t.name}
@@ -198,7 +206,7 @@ export function CustomerContextPanel({
             : tags.map((tag: NonNullable<ConversationDetailResponse["tags"]>[number]) => (
                 <span
                   key={tag.id}
-                  className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-muted text-foreground"
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#fcf5eb] border border-[#dedbd6] text-[#111b21]"
                 >
                   {tag.name}
                 </span>
@@ -206,23 +214,30 @@ export function CustomerContextPanel({
         </div>
       </div>
 
-      {/* Citations Context */}
+      {/* AI Citations Context */}
       {copilotDraft &&
         copilotDraft.status === "drafted" &&
+        copilotDraft.citations &&
         copilotDraft.citations.length > 0 &&
         showCitations && (
-          <div className="p-4 border-b border-border">
-            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              AI Citations
+          <div className="p-4 space-y-2">
+            <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider flex items-center gap-1.5">
+              <Bot className="w-3.5 h-3.5 text-emerald-600" />
+              <span>AI Citations ({copilotDraft.citations.length})</span>
             </h4>
             <ul className="space-y-2">
               {copilotDraft.citations.map((cit, idx) => (
-                <li key={cit.chunkId} className="text-xs">
-                  <p className="font-medium text-foreground">
+                <li
+                  key={cit.chunkId}
+                  className="text-xs p-2.5 rounded-[10px] bg-[#fcf5eb]/60 border border-[#dedbd6]"
+                >
+                  <p className="font-semibold text-[#111b21]">
                     {idx + 1}. {cit.documentTitle}
                   </p>
-                  <p className="text-muted-foreground line-clamp-2 mt-0.5">{cit.snippet}</p>
-                  <p className="text-muted-foreground/70 mt-0.5">
+                  <p className="text-[#5e5e5e] line-clamp-2 mt-0.5 text-[11.5px] leading-relaxed">
+                    {cit.snippet}
+                  </p>
+                  <p className="text-emerald-700 font-mono text-[10.5px] mt-1 font-medium">
                     {Math.round(cit.score * 100)}% match
                   </p>
                 </li>
@@ -231,11 +246,15 @@ export function CustomerContextPanel({
           </div>
         )}
 
-      {/* Private Notes */}
+      {/* Internal Private Notes */}
       <div className="p-4">
-        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Internal Notes {notes.length > 0 && `(${notes.length})`}
-        </h4>
+        <div className="flex items-center justify-between mb-2.5">
+          <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-amber-600" />
+            <span>Internal Notes {notes.length > 0 && `(${notes.length})`}</span>
+          </h4>
+        </div>
+
         {onAddNote && (
           <form
             className="mb-3 flex gap-1.5"
@@ -252,27 +271,30 @@ export function CustomerContextPanel({
             <input
               name="noteInput"
               placeholder="Add private note..."
-              className="flex-1 h-7 px-2 text-xs rounded border border-input bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="flex-1 h-8 px-2.5 text-xs rounded-[8px] border border-[#dedbd6] bg-[#fcf5eb]/30 text-[#111b21] placeholder:text-[#5e5e5e]/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#25d366]"
             />
             <button
               type="submit"
-              className="px-2 py-1 text-xs rounded border border-border bg-muted hover:bg-muted/80 text-foreground"
+              className="px-3 py-1 text-xs font-semibold rounded-[8px] border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-[#111b21] shadow-2xs transition-colors cursor-pointer"
             >
               Add
             </button>
           </form>
         )}
-        {notes.length > 0 && (
-          <ol className="space-y-1.5">
+
+        {notes.length > 0 ? (
+          <ol className="space-y-2">
             {notes.map((note: NonNullable<ConversationDetailResponse["notes"]>[number]) => (
               <li
                 key={note.id}
-                className="text-xs text-foreground bg-warning/10 rounded p-2 border border-warning/30"
+                className="text-xs text-amber-900 bg-amber-50/80 rounded-[12px] p-3 border border-amber-200/70 shadow-2xs leading-relaxed"
               >
                 {note.body}
               </li>
             ))}
           </ol>
+        ) : (
+          <p className="text-[11.5px] text-[#5e5e5e] italic">No internal notes yet.</p>
         )}
       </div>
     </div>

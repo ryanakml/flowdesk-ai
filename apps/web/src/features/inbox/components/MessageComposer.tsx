@@ -1,6 +1,6 @@
 import { useRef, useId } from "react";
 import { cn, Button } from "@flowdesk/ui";
-import { Send, Paperclip, Layout, Sparkles } from "lucide-react";
+import { Send, Paperclip, Layout, Sparkles, AlertCircle } from "lucide-react";
 
 type ConnectionState = "connecting" | "connected" | "reconnecting" | "offline";
 
@@ -44,10 +44,11 @@ export function MessageComposer({
   if (isOffline) {
     return (
       <div
-        className="composer-disabled-banner px-4 py-3 bg-muted/50 border-t border-border text-sm text-muted-foreground"
+        className="composer-disabled-banner px-4 py-3 bg-[#fcf5eb] border-t border-[#dedbd6] text-xs text-[#5e5e5e] flex items-center gap-2"
         data-testid="composer-offline"
       >
-        You are offline. Check your connection.
+        <AlertCircle className="w-4 h-4 text-amber-600" />
+        <span>You are offline. Check your connection.</span>
       </div>
     );
   }
@@ -55,10 +56,11 @@ export function MessageComposer({
   if (!canSend) {
     return (
       <div
-        className="composer-disabled-banner px-4 py-3 bg-muted/50 border-t border-border text-sm text-muted-foreground"
+        className="composer-disabled-banner px-4 py-3 bg-[#fcf5eb] border-t border-[#dedbd6] text-xs text-[#5e5e5e] flex items-center gap-2"
         data-testid="composer-disabled"
       >
-        You need the Agent or Administrator role to send WhatsApp messages.
+        <AlertCircle className="w-4 h-4 text-amber-600" />
+        <span>You need the Agent or Administrator role to send WhatsApp messages.</span>
       </div>
     );
   }
@@ -66,10 +68,11 @@ export function MessageComposer({
   if (isClosed) {
     return (
       <div
-        className="composer-disabled-banner px-4 py-3 bg-muted/50 border-t border-border text-sm text-muted-foreground"
+        className="composer-disabled-banner px-4 py-3 bg-[#fcf5eb] border-t border-[#dedbd6] text-xs text-[#5e5e5e] flex items-center gap-2"
         data-testid="composer-closed"
       >
-        This conversation is closed. Reopen it to send a reply.
+        <AlertCircle className="w-4 h-4 text-zinc-500" />
+        <span>This conversation is closed. Reopen it to send a reply.</span>
       </div>
     );
   }
@@ -77,35 +80,55 @@ export function MessageComposer({
   if (isWindowExpired) {
     return (
       <footer
-        className="border-t border-border bg-background"
+        className="border-t border-[#dedbd6] bg-white p-3 sm:p-4 shadow-2xs"
         data-testid="composer-window-expired"
       >
-        <form
-          className="flex flex-col gap-2 px-3 py-2"
-          onSubmit={(event) => event.preventDefault()}
-        >
+        <form className="flex flex-col gap-2.5" onSubmit={(event) => event.preventDefault()}>
+          <div className="p-3 rounded-[12px] bg-amber-50 border border-amber-200/80 text-xs text-amber-800 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-900">24-hour service window expired</p>
+              <p className="text-amber-700 mt-0.5 leading-relaxed">
+                Free-form replies are restricted by Meta policy. Send an approved template message
+                to restart the conversation.
+              </p>
+            </div>
+          </div>
+
           <textarea
-            className="min-h-[64px] w-full resize-none rounded-md border border-input bg-muted/30 px-3 py-2 text-sm text-muted-foreground"
+            className="min-h-[64px] w-full resize-none rounded-[12px] border border-[#dedbd6] bg-[#fcf5eb]/30 px-3 py-2 text-xs text-[#5e5e5e] cursor-not-allowed"
             placeholder="Messaging unavailable — 24h window expired"
             disabled
             aria-label="Reply message"
           />
+
           <div className="flex items-center justify-end gap-2">
-            <Button
+            <button
               type="button"
-              variant="outline"
-              size="sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#25d366] hover:bg-[#20ba59] text-[#111b21] border border-[#111b21]/20 shadow-2xs transition-colors cursor-pointer"
               onClick={onOpenTemplate}
               data-testid="btn-open-template-composer"
             >
-              <Layout className="size-3.5" />
-              Select WhatsApp Template
-            </Button>
-            <Button type="button" size="sm" disabled aria-label="Generate Draft">
+              <Layout className="w-3.5 h-3.5" />
+              <span>Select WhatsApp Template</span>
+            </button>
+            <Button
+              type="button"
+              size="sm"
+              disabled
+              aria-label="Generate Draft"
+              className="rounded-full"
+            >
               <Sparkles className="size-3.5" />
               Draft
             </Button>
-            <Button type="button" size="sm" disabled data-testid="composer-send-btn">
+            <Button
+              type="button"
+              size="sm"
+              disabled
+              data-testid="composer-send-btn"
+              className="rounded-full"
+            >
               <Send className="size-3.5" />
               Send
             </Button>
@@ -116,9 +139,9 @@ export function MessageComposer({
   }
 
   return (
-    <footer className="thread-composer-wrapper border-t border-border bg-background">
+    <footer className="thread-composer-wrapper border-t border-[#dedbd6] bg-white p-3 sm:p-4 shadow-2xs">
       <form
-        className="thread-composer px-3 py-2 flex flex-col"
+        className="thread-composer flex flex-col gap-2"
         onSubmit={(e) => {
           e.preventDefault();
           onSend();
@@ -131,9 +154,9 @@ export function MessageComposer({
         <textarea
           id={textareaId}
           className={cn(
-            "composer-textarea w-full resize-none rounded-md border border-input bg-background px-3 py-2",
-            "text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring",
-            "min-h-[64px] max-h-[160px]"
+            "composer-textarea w-full resize-none rounded-[14px] border border-[#dedbd6] bg-[#fcf5eb]/30 px-3.5 py-2.5",
+            "text-[13.5px] text-[#111b21] placeholder:text-[#5e5e5e]/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#25d366]/40 focus:border-[#25d366] transition-all",
+            "min-h-[72px] max-h-[180px]"
           )}
           rows={2}
           placeholder="Type a WhatsApp reply... (Cmd+Enter to send)"
@@ -150,7 +173,7 @@ export function MessageComposer({
           data-testid="composer-input"
         />
 
-        <div className="composer-actions flex items-center gap-2 mt-2">
+        <div className="composer-actions flex items-center justify-between gap-2 pt-1">
           {/* Hidden file input */}
           <input
             ref={mediaInputRef}
@@ -162,60 +185,57 @@ export function MessageComposer({
             aria-label="Attach media"
           />
 
-          {/* Attach button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => mediaInputRef.current?.click()}
-            disabled={mediaState !== null}
-            aria-label="Attach"
-            data-testid="btn-attach-media"
-            className="h-8 text-xs px-2.5"
-          >
-            <Paperclip className="w-3.5 h-3.5" />
-            {mediaState ? (mediaState === "scanning" ? "Scanning…" : "Sending…") : "Attach"}
-          </Button>
+          {/* Left tools: Attach & Template */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => mediaInputRef.current?.click()}
+              disabled={mediaState !== null}
+              aria-label="Attach"
+              data-testid="btn-attach-media"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-xs font-medium text-[#111b21] shadow-2xs transition-colors disabled:opacity-40 cursor-pointer"
+            >
+              <Paperclip className="w-3.5 h-3.5 text-[#5e5e5e]" />
+              <span>
+                {mediaState ? (mediaState === "scanning" ? "Scanning…" : "Sending…") : "Attach"}
+              </span>
+            </button>
 
-          {/* Template button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onOpenTemplate}
-            data-testid="btn-open-template-composer"
-            title="Send WhatsApp Template"
-            className="h-8 text-xs px-2.5"
-          >
-            <Layout className="w-3.5 h-3.5" />
-            Template
-          </Button>
+            <button
+              type="button"
+              onClick={onOpenTemplate}
+              data-testid="btn-open-template-composer"
+              title="Send WhatsApp Template"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-xs font-medium text-[#111b21] shadow-2xs transition-colors cursor-pointer"
+            >
+              <Layout className="w-3.5 h-3.5 text-[#5e5e5e]" />
+              <span>Template</span>
+            </button>
+          </div>
 
-          <div className="flex-1" />
+          {/* Right tools: AI Draft & Send */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onGenerateDraft}
+              disabled={isSending}
+              data-testid="composer-generate-draft-btn"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 hover:bg-purple-100 border border-purple-200 text-xs font-medium text-purple-700 shadow-2xs transition-colors cursor-pointer disabled:opacity-40"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+              <span>AI Draft</span>
+            </button>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onGenerateDraft}
-            disabled={isSending}
-            data-testid="composer-generate-draft-btn"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Draft
-          </Button>
-
-          {/* Send button */}
-          <Button
-            type="submit"
-            size="sm"
-            disabled={!composerText.trim() || isSending}
-            data-testid="composer-send-btn"
-            className="h-8 text-xs px-3"
-          >
-            <Send className="w-3.5 h-3.5" />
-            {isSending ? "Sending…" : "Send"}
-          </Button>
+            <button
+              type="submit"
+              disabled={!composerText.trim() || isSending}
+              data-testid="composer-send-btn"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-[#25d366] hover:bg-[#20ba59] active:scale-[0.98] text-[#111b21] border border-[#111b21]/20 shadow-xs transition-all disabled:opacity-40 disabled:hover:bg-[#25d366] cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{isSending ? "Sending…" : "Send"}</span>
+            </button>
+          </div>
         </div>
       </form>
     </footer>
