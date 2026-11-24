@@ -54,14 +54,29 @@ export function ConversationItem({
       onClick={onClick}
       onKeyDown={onKeyDown}
       className={cn(
-        "inbox-conv-item w-full text-left px-3.5 py-3 flex items-start gap-3 transition-all",
-        "border-b border-[#dedbd6]/60 hover:bg-[#fcf5eb]/50 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer group",
-        isSelected && "selected bg-[#fcf5eb] border-l-[3px] border-l-[#25d366] shadow-2xs"
+        "inbox-conv-item relative w-full text-left px-3.5 py-3 flex items-start gap-3 transition-all",
+        "border-b border-black/[0.05] hover:bg-[#f6f6f8]/70 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer group",
+        isSelected
+          ? "selected bg-[#f6f6f8] shadow-lemni-tile border-l-[3px] border-l-[#25d366]"
+          : "bg-white"
       )}
     >
+      {/* Priority Indicator Line (Lemni au style) */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full transition-opacity",
+          conv.priority === "urgent" && "bg-red-500 opacity-100",
+          conv.priority === "high" && "bg-amber-500 opacity-100",
+          conv.priority === "medium" && "bg-slate-300 opacity-0 group-hover:opacity-100",
+          conv.priority === "low" && "bg-transparent opacity-0",
+          isSelected && "opacity-0" // Let the selected emerald border take precedence
+        )}
+      />
+
       {/* Avatar with Signature WhatsApp Dot */}
       <div className="relative flex-shrink-0 mt-0.5" aria-hidden="true">
-        <div className="w-9 h-9 rounded-full bg-white border border-[#dedbd6] text-[#111b21] text-xs font-semibold flex items-center justify-center shadow-2xs group-hover:border-[#25d366]/40 transition-colors">
+        <div className="w-9 h-9 rounded-full bg-[#f1f3f4] border border-black/[0.08] text-[#0d0d12] text-xs font-semibold flex items-center justify-center shadow-2xs group-hover:border-[#25d366]/50 transition-colors">
           {initials}
         </div>
         <span
@@ -73,30 +88,30 @@ export function ConversationItem({
       {/* Info & Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-1.5 mb-0.5">
-          <span className="text-[13px] font-semibold text-[#111b21] truncate tracking-tight">
+          <span className="text-[13px] font-semibold text-[#0d0d12] truncate tracking-tight">
             {conv.customerName ?? `+${conv.customerPhone}`}
           </span>
-          <span className="text-[11px] text-[#5e5e5e] font-mono flex-shrink-0">
+          <span className="text-[11px] text-[#56576a] font-mono flex-shrink-0">
             {formatTime(conv.lastMessageAt)}
           </span>
         </div>
 
         {conv.customerName && (
-          <p className="text-[11.5px] text-[#5e5e5e]/80 truncate font-mono mb-1">
+          <p className="text-[11px] text-[#56576a]/80 truncate font-mono mb-1">
             +{conv.customerPhone}
           </p>
         )}
 
         {/* Waiting Reason or Context Snippet */}
         {conv.waitingReason && (
-          <p className="text-[11.5px] text-[#5e5e5e] line-clamp-1 leading-snug mb-1.5">
+          <p className="text-[11.5px] text-[#56576a] line-clamp-1 leading-snug mb-1.5">
             {conv.waitingReason}
           </p>
         )}
 
         {/* Badges Row */}
         <div className="flex items-center gap-1.5 flex-wrap text-xs mt-1">
-          <span className="text-muted-foreground text-[10.5px] font-medium">WhatsApp</span>
+          <span className="text-[#56576a] text-[10.5px] font-medium">WhatsApp</span>
 
           <span
             className={cn(
@@ -126,7 +141,7 @@ export function ConversationItem({
           )}
 
           {conv.assignedToUserId === sessionUserId && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-[#111b21] text-white">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-[#0d0d12] text-white">
               Me
             </span>
           )}

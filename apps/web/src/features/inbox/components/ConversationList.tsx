@@ -94,13 +94,13 @@ export function ConversationList({
   });
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-white border-r border-[#dedbd6]">
+    <div className="flex flex-col h-full overflow-hidden bg-white border-r border-black/[0.06]">
       {/* Header Bar */}
-      <div className="flex-shrink-0 px-3.5 pt-3.5 pb-2.5 border-b border-[#dedbd6]">
+      <div className="flex-shrink-0 px-3.5 pt-3.5 pb-2.5 border-b border-black/[0.06] bg-[#f6f6f8]/80">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-2">
-            <h2 className="text-[14px] font-semibold tracking-tight text-[#111b21]">{heading}</h2>
-            <span className="text-[11px] font-medium text-[#5e5e5e] bg-[#fcf5eb] border border-[#dedbd6] px-2 py-0.5 rounded-full shadow-2xs font-mono">
+            <h2 className="text-[14px] font-semibold tracking-tight text-[#0d0d12]">{heading}</h2>
+            <span className="text-[11px] font-medium text-[#56576a] bg-white border border-black/[0.08] px-2 py-0.5 rounded-full shadow-2xs font-mono">
               {filteredConversations.length}
             </span>
           </div>
@@ -108,7 +108,7 @@ export function ConversationList({
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              className="px-2 py-1 rounded-full border border-[#dedbd6] hover:bg-[#fcf5eb] text-[11px] font-medium text-[#5e5e5e] hover:text-[#111b21] transition-colors shadow-2xs"
+              className="px-2 py-0.5 rounded-full border border-black/[0.08] bg-white hover:bg-[#f6f6f8] text-[11px] font-medium text-[#56576a] hover:text-[#0d0d12] transition-colors shadow-2xs"
               onClick={onLocaleToggle}
               aria-label={`Switch language: ${locale.toUpperCase()}`}
               data-testid="locale-toggle"
@@ -117,7 +117,7 @@ export function ConversationList({
             </button>
             <button
               type="button"
-              className="p-1.5 rounded-full border border-[#dedbd6] hover:bg-[#fcf5eb] text-[#5e5e5e] hover:text-[#111b21] transition-colors shadow-2xs"
+              className="p-1 rounded-full border border-black/[0.08] bg-white hover:bg-[#f6f6f8] text-[#56576a] hover:text-[#0d0d12] transition-colors shadow-2xs"
               onClick={onRefresh}
               title="Refresh inbox"
               aria-label="Refresh conversations"
@@ -127,12 +127,12 @@ export function ConversationList({
           </div>
         </div>
 
-        {/* Search Input with Shortcut Badge */}
+        {/* Search Input with Shortcut Badge & Lemni Shadow */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#5e5e5e] pointer-events-none" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#56576a] pointer-events-none" />
           <input
             type="text"
-            className="w-full h-8.5 pl-8.5 pr-8 text-xs rounded-[10px] border border-[#dedbd6] bg-[#fcf5eb]/40 text-[#111b21] placeholder:text-[#5e5e5e]/60 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#25d366] transition-all cursor-text"
+            className="w-full h-8.5 pl-8.5 pr-8 text-xs rounded-[10px] border border-black/[0.08] bg-white text-[#0d0d12] placeholder:text-[#56576a]/60 shadow-lemni-input focus:outline-none focus:ring-1 focus:ring-[#25d366] transition-all cursor-text"
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -142,22 +142,22 @@ export function ConversationList({
             <button
               type="button"
               onClick={() => onSearchChange("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-black/5 text-[#5e5e5e] hover:text-[#111b21]"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded hover:bg-black/5 text-[#56576a] hover:text-[#0d0d12]"
               aria-label="Clear search"
             >
               <X className="w-3 h-3" />
             </button>
           ) : (
-            <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden sm:inline-block text-[10px] text-[#5e5e5e]/70 bg-white border border-[#dedbd6] px-1.5 py-0.5 rounded font-mono shadow-2xs">
+            <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 hidden sm:inline-block text-[10px] text-[#56576a]/70 bg-[#f6f6f8] border border-black/[0.08] px-1.5 py-0.5 rounded font-mono shadow-2xs">
               ⌘K
             </kbd>
           )}
         </div>
       </div>
 
-      {/* Status Filter Tabs (Sleek Linear Pill Bar) */}
+      {/* Status Filter Tabs (Sleek Lemni Pill Bar) */}
       <div
-        className="scrollbar-hidden flex-shrink-0 px-3 py-2 border-b border-[#dedbd6] flex gap-1.5 overflow-x-auto bg-[#fafafa]/50"
+        className="scrollbar-hidden flex-shrink-0 px-3 py-2 border-b border-black/[0.06] flex gap-1.5 overflow-x-auto bg-[#fafafa]/80"
         role="tablist"
         aria-label="Status filters"
       >
@@ -170,10 +170,10 @@ export function ConversationList({
               type="button"
               role="tab"
               aria-selected={isSelected}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                 isSelected
-                  ? "bg-[#111b21] text-white"
-                  : "bg-white text-[#5e5e5e] border border-[#dedbd6] hover:bg-[#fcf5eb] hover:text-[#111b21]"
+                  ? "bg-[#0d0d12] text-white shadow-lemni-btn"
+                  : "bg-white text-[#56576a] border border-black/[0.08] hover:bg-[#f6f6f8] hover:text-[#0d0d12] shadow-2xs"
               }`}
               onClick={() => onStatusFilterChange(tab)}
             >
@@ -181,7 +181,7 @@ export function ConversationList({
               {count > 0 && (
                 <span
                   className={`text-[9.5px] px-1 rounded-full font-mono ${
-                    isSelected ? "bg-white/20 text-white" : "bg-black/5 text-[#5e5e5e]"
+                    isSelected ? "bg-white/20 text-white" : "bg-black/5 text-[#56576a]"
                   }`}
                 >
                   {count}
@@ -193,9 +193,9 @@ export function ConversationList({
       </div>
 
       {/* Quick Filters (Assignee & Queues) */}
-      <div className="flex-shrink-0 px-3 py-2 border-b border-[#dedbd6] flex flex-col gap-1.5 bg-white">
+      <div className="flex-shrink-0 px-3 py-2 border-b border-black/[0.06] flex flex-col gap-1.5 bg-white">
         {/* Assignee Segmented Switcher */}
-        <div className="grid grid-cols-3 gap-1 p-0.5 rounded-[8px] bg-[#fcf5eb] border border-[#dedbd6]">
+        <div className="grid grid-cols-3 gap-1 p-0.5 rounded-[8px] bg-[#f1f3f4] border border-black/[0.06]">
           {(
             [
               { id: "all", label: "All" },
@@ -211,8 +211,8 @@ export function ConversationList({
                 onClick={() => onAssigneeFilterChange(item.id)}
                 className={`py-1 text-[11px] font-medium rounded-[6px] transition-all cursor-pointer ${
                   active
-                    ? "bg-white text-[#111b21] shadow-2xs font-semibold"
-                    : "text-[#5e5e5e] hover:text-[#111b21]"
+                    ? "bg-white text-[#0d0d12] shadow-lemni-btn font-semibold"
+                    : "text-[#56576a] hover:text-[#0d0d12]"
                 }`}
               >
                 {item.label}
@@ -237,7 +237,7 @@ export function ConversationList({
         {resources.queues.length > 0 && (
           <div className="relative">
             <select
-              className="w-full h-7 px-2.5 text-[11px] rounded-[8px] border border-[#dedbd6] bg-white text-[#111b21] focus:outline-none focus:ring-1 focus:ring-[#25d366] cursor-pointer"
+              className="w-full h-7 px-2.5 text-[11px] rounded-[8px] border border-black/[0.08] bg-white text-[#0d0d12] focus:outline-none focus:ring-1 focus:ring-[#25d366] cursor-pointer shadow-2xs"
               value={queueFilter}
               onChange={(e) => onQueueFilterChange(e.target.value)}
               aria-label="Filter by queue"

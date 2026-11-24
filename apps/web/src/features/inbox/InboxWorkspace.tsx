@@ -561,6 +561,13 @@ export function InboxWorkspace({
 
     setMessages((prev) => [...prev, optimisticMessage]);
     setComposerText("");
+    if (selectedConversationId && typeof window !== "undefined" && window.localStorage) {
+      try {
+        localStorage.removeItem(`flowdesk.draft.${selectedConversationId}`);
+      } catch {
+        // Ignore storage errors
+      }
+    }
     setIsSending(true);
     setActionError(null);
 
@@ -821,13 +828,36 @@ export function InboxWorkspace({
     }
   };
 
-  // Reset copilot draft on conversation change
+  // Reset copilot draft & restore cached draft on conversation change (Lemni style)
   useEffect(() => {
     setCopilotDraft(null);
     setCopilotEditingRunId(null);
     setCopilotError(null);
     setShowCitations(false);
+    if (selectedConversationId && typeof window !== "undefined" && window.localStorage) {
+      try {
+        const cached = localStorage.getItem(`flowdesk.draft.${selectedConversationId}`);
+        setComposerText(cached ?? "");
+      } catch {
+        setComposerText("");
+      }
+    }
   }, [selectedConversationId]);
+
+  const handleComposerChange = (text: string) => {
+    setComposerText(text);
+    if (selectedConversationId && typeof window !== "undefined" && window.localStorage) {
+      try {
+        if (text.trim()) {
+          localStorage.setItem(`flowdesk.draft.${selectedConversationId}`, text);
+        } else {
+          localStorage.removeItem(`flowdesk.draft.${selectedConversationId}`);
+        }
+      } catch {
+        // Ignore quota errors
+      }
+    }
+  };
 
   const onSelectConv = (id: string) => {
     setSelectedConversationId(id);
@@ -925,7 +955,7 @@ export function InboxWorkspace({
           composerText={composerText}
           isSending={isSending}
           mediaState={mediaState}
-          onComposerChange={setComposerText}
+          onComposerChange={handleComposerChange}
           onSend={() => void handleSendMessage()}
           onGenerateDraft={() => void handleGenerateDraft()}
           onOpenTemplate={() => void handleOpenTemplateModal()}
@@ -1200,7 +1230,10 @@ export function InboxWorkspace({
               />
             </Panel>
 
-            <PanelResizeHandle className="w-1.5 bg-[#dedbd6]/50 hover:bg-[#25d366]/60 transition-colors cursor-col-resize focus:outline-none flex items-center justify-center group" />
+            <PanelResizeHandle className="w-2 relative z-10 flex items-center justify-center cursor-col-resize focus:outline-none group -mx-0.5">
+              <div className="w-[1px] h-full bg-black/[0.06] group-hover:bg-[#25d366] transition-colors" />
+              <div className="absolute top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-full bg-black/20 group-hover:bg-[#25d366] opacity-0 group-hover:opacity-100 transition-opacity shadow-2xs" />
+            </PanelResizeHandle>
 
             {/* Center Panel: Stream & Composer */}
             <Panel
@@ -1214,7 +1247,10 @@ export function InboxWorkspace({
             </Panel>
 
             {!contextCollapsed && (
-              <PanelResizeHandle className="w-1.5 bg-[#dedbd6]/50 hover:bg-[#25d366]/60 transition-colors cursor-col-resize focus:outline-none flex items-center justify-center group" />
+              <PanelResizeHandle className="w-2 relative z-10 flex items-center justify-center cursor-col-resize focus:outline-none group -mx-0.5">
+                <div className="w-[1px] h-full bg-black/[0.06] group-hover:bg-[#25d366] transition-colors" />
+                <div className="absolute top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-full bg-black/20 group-hover:bg-[#25d366] opacity-0 group-hover:opacity-100 transition-opacity shadow-2xs" />
+              </PanelResizeHandle>
             )}
 
             {/* Right Panel: Customer & Operational Context */}

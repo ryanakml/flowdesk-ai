@@ -139,7 +139,7 @@ export function MessageComposer({
   }
 
   return (
-    <footer className="thread-composer-wrapper border-t border-[#dedbd6] bg-white p-3 sm:p-4 shadow-2xs">
+    <footer className="thread-composer-wrapper border-t border-black/[0.06] bg-[#f6f6f8]/80 p-3 sm:p-4 backdrop-blur-xs">
       <form
         className="thread-composer flex flex-col gap-2"
         onSubmit={(e) => {
@@ -154,8 +154,8 @@ export function MessageComposer({
         <textarea
           id={textareaId}
           className={cn(
-            "composer-textarea w-full resize-none rounded-[14px] border border-[#dedbd6] bg-[#fcf5eb]/30 px-3.5 py-2.5",
-            "text-[13.5px] text-[#111b21] placeholder:text-[#5e5e5e]/60 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#25d366]/40 focus:border-[#25d366] transition-all",
+            "composer-textarea w-full resize-none rounded-[12px] border border-black/[0.08] bg-white px-3.5 py-2.5",
+            "text-[13px] text-[#0d0d12] placeholder:text-[#56576a]/60 shadow-lemni-input focus:outline-none focus:ring-1 focus:ring-[#25d366] transition-all",
             "min-h-[72px] max-h-[180px]"
           )}
           rows={2}
@@ -173,7 +173,7 @@ export function MessageComposer({
           data-testid="composer-input"
         />
 
-        <div className="composer-actions flex items-center justify-between gap-2 pt-1">
+        <div className="composer-actions flex items-center justify-between gap-2 pt-0.5">
           {/* Hidden file input */}
           <input
             ref={mediaInputRef}
@@ -185,7 +185,7 @@ export function MessageComposer({
             aria-label="Attach media"
           />
 
-          {/* Left tools: Attach & Template */}
+          {/* Left tools: Attach & Template (Lemni attached action pills) */}
           <div className="flex items-center gap-1.5">
             <button
               type="button"
@@ -193,9 +193,9 @@ export function MessageComposer({
               disabled={mediaState !== null}
               aria-label="Attach"
               data-testid="btn-attach-media"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-xs font-medium text-[#111b21] shadow-2xs transition-colors disabled:opacity-40 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-black/[0.08] bg-white hover:bg-[#f6f6f8] text-xs font-medium text-[#0d0d12] shadow-lemni-btn transition-all disabled:opacity-40 cursor-pointer"
             >
-              <Paperclip className="w-3.5 h-3.5 text-[#5e5e5e]" />
+              <Paperclip className="w-3.5 h-3.5 text-[#56576a]" />
               <span>
                 {mediaState ? (mediaState === "scanning" ? "Scanning…" : "Sending…") : "Attach"}
               </span>
@@ -206,9 +206,9 @@ export function MessageComposer({
               onClick={onOpenTemplate}
               data-testid="btn-open-template-composer"
               title="Send WhatsApp Template"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-xs font-medium text-[#111b21] shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-black/[0.08] bg-white hover:bg-[#f6f6f8] text-xs font-medium text-[#0d0d12] shadow-lemni-btn transition-all cursor-pointer"
             >
-              <Layout className="w-3.5 h-3.5 text-[#5e5e5e]" />
+              <Layout className="w-3.5 h-3.5 text-[#56576a]" />
               <span>Template</span>
             </button>
           </div>
@@ -220,7 +220,7 @@ export function MessageComposer({
               onClick={onGenerateDraft}
               disabled={isSending}
               data-testid="composer-generate-draft-btn"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 hover:bg-purple-100 border border-purple-200 text-xs font-medium text-purple-700 shadow-2xs transition-colors cursor-pointer disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 hover:bg-purple-100/80 border border-purple-200/80 text-xs font-medium text-purple-700 shadow-2xs transition-all cursor-pointer disabled:opacity-40"
             >
               <Sparkles className="w-3.5 h-3.5 text-purple-600" />
               <span>AI Draft</span>
@@ -230,7 +230,7 @@ export function MessageComposer({
               type="submit"
               disabled={!composerText.trim() || isSending}
               data-testid="composer-send-btn"
-              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-[#25d366] hover:bg-[#20ba59] active:scale-[0.98] text-[#111b21] border border-[#111b21]/20 shadow-xs transition-all disabled:opacity-40 disabled:hover:bg-[#25d366] cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-[#25d366] hover:bg-[#20ba59] active:scale-[0.98] text-[#0d0d12] shadow-lemni-btn transition-all disabled:opacity-40 disabled:hover:bg-[#25d366] cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
               <span>{isSending ? "Sending…" : "Send"}</span>
