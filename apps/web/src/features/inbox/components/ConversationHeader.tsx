@@ -33,10 +33,10 @@ export function ConversationHeader({
 
   return (
     <header className="flex shrink-0 items-center justify-between border-b border-black/[0.06] bg-[#f6f6f8]/85 backdrop-blur-md px-4 py-2.5 h-[56px] shadow-2xs z-10">
-      {/* Customer Identity & Breadcrumb Navigation */}
+      {/* Customer Identity */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="relative flex-shrink-0" aria-hidden="true">
-          <div className="w-8.5 h-8.5 rounded-full bg-white border border-black/[0.08] text-[#0d0d12] text-xs font-semibold flex items-center justify-center shadow-2xs">
+          <div className="w-9 h-9 rounded-full bg-white border border-black/[0.08] text-[#0d0d12] text-xs font-semibold flex items-center justify-center shadow-2xs">
             {initials}
           </div>
           <span
@@ -46,28 +46,21 @@ export function ConversationHeader({
         </div>
 
         <div className="min-w-0 flex-1">
-          {/* Breadcrumbs (Lemni dyn style) */}
-          <div className="flex items-center gap-1.5 text-[11px] text-[#56576a]">
-            <span>Inbox</span>
-            <span aria-hidden="true" className="text-black/20">
-              ›
-            </span>
-            <span className="font-semibold text-[#0d0d12] truncate max-w-[200px]">
-              {conv.customerName ?? `+${conv.customerPhone}`}
-            </span>
-            <span aria-hidden="true" className="text-black/20">
-              ›
-            </span>
-            <span className="font-sans text-[10.5px]">WhatsApp Official</span>
-          </div>
+          <h3 className="truncate text-[13.5px] font-semibold text-[#0d0d12] tracking-tight leading-snug">
+            {conv.customerName ?? `+${conv.customerPhone}`}
+          </h3>
 
           <div className="flex items-center gap-2 mt-0.5">
-            <h3 className="truncate text-[13px] font-semibold text-[#0d0d12] tracking-tight">
-              {conv.customerName ? `+${conv.customerPhone}` : conv.customerPhone}
-            </h3>
+            {conv.customerName && (
+              <span className="text-[11px] text-[#56576a] font-mono">+{conv.customerPhone}</span>
+            )}
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#56576a] bg-black/[0.04] px-1.5 py-0.5 rounded">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#25d366]" />
+              WhatsApp Official
+            </span>
             <span
               className={cn(
-                "capitalize text-[9.5px] font-semibold px-2 py-0.2 rounded-full border",
+                "capitalize text-[9.5px] font-semibold px-2 py-0.5 rounded-full border",
                 conv.status === "new" && "bg-blue-50 text-blue-700 border-blue-200/80",
                 conv.status === "open" && "bg-[#e6ffda] text-[#00803e] border-[#25d366]/30",
                 conv.status === "pending" && "bg-amber-50 text-amber-700 border-amber-200/80",

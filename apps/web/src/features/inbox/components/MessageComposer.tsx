@@ -44,7 +44,7 @@ export function MessageComposer({
   if (isOffline) {
     return (
       <div
-        className="composer-disabled-banner px-4 py-3 bg-[#fcf5eb] border-t border-[#dedbd6] text-xs text-[#5e5e5e] flex items-center gap-2"
+        className="composer-disabled-banner px-4 py-2.5 bg-[#f6f6f8] border-t border-black/[0.06] text-xs text-[#56576a] flex items-center gap-2 dark:bg-[#111317] dark:border-white/[0.06] dark:text-zinc-400"
         data-testid="composer-offline"
       >
         <AlertCircle className="w-4 h-4 text-amber-600" />
@@ -56,7 +56,7 @@ export function MessageComposer({
   if (!canSend) {
     return (
       <div
-        className="composer-disabled-banner px-4 py-3 bg-[#fcf5eb] border-t border-[#dedbd6] text-xs text-[#5e5e5e] flex items-center gap-2"
+        className="composer-disabled-banner px-4 py-2.5 bg-[#f6f6f8] border-t border-black/[0.06] text-xs text-[#56576a] flex items-center gap-2 dark:bg-[#111317] dark:border-white/[0.06] dark:text-zinc-400"
         data-testid="composer-disabled"
       >
         <AlertCircle className="w-4 h-4 text-amber-600" />
@@ -68,7 +68,7 @@ export function MessageComposer({
   if (isClosed) {
     return (
       <div
-        className="composer-disabled-banner px-4 py-3 bg-[#fcf5eb] border-t border-[#dedbd6] text-xs text-[#5e5e5e] flex items-center gap-2"
+        className="composer-disabled-banner px-4 py-2.5 bg-[#f6f6f8] border-t border-black/[0.06] text-xs text-[#56576a] flex items-center gap-2 dark:bg-[#111317] dark:border-white/[0.06] dark:text-zinc-400"
         data-testid="composer-closed"
       >
         <AlertCircle className="w-4 h-4 text-zinc-500" />
@@ -80,44 +80,42 @@ export function MessageComposer({
   if (isWindowExpired) {
     return (
       <footer
-        className="border-t border-[#dedbd6] bg-white p-3 sm:p-4 shadow-2xs"
+        className="border-t border-black/[0.06] bg-[#f6f6f8]/80 p-3 sm:p-4 backdrop-blur-xs"
         data-testid="composer-window-expired"
       >
-        <form className="flex flex-col gap-2.5" onSubmit={(event) => event.preventDefault()}>
-          <div className="p-3 rounded-[12px] bg-amber-50 border border-amber-200/80 text-xs text-amber-800 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-amber-900">24-hour service window expired</p>
-              <p className="text-amber-700 mt-0.5 leading-relaxed">
-                Free-form replies are restricted by Meta policy. Send an approved template message
-                to restart the conversation.
-              </p>
+        <form className="flex flex-col gap-2" onSubmit={(event) => event.preventDefault()}>
+          <div className="p-2.5 rounded-[10px] bg-amber-500/[0.08] border border-amber-500/20 text-xs text-amber-900 dark:text-amber-300 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="truncate font-medium text-[11.5px]">
+                24-hour service window expired. Free-form replies restricted by Meta.
+              </span>
             </div>
-          </div>
-
-          <textarea
-            className="min-h-[64px] w-full resize-none rounded-[12px] border border-[#dedbd6] bg-[#fcf5eb]/30 px-3 py-2 text-xs text-[#5e5e5e] cursor-not-allowed"
-            placeholder="Messaging unavailable — 24h window expired"
-            disabled
-            aria-label="Reply message"
-          />
-
-          <div className="flex items-center justify-end gap-2">
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#25d366] hover:bg-[#20ba59] text-[#111b21] border border-[#111b21]/20 shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#0d0d12] hover:bg-[#202028] text-white shadow-lemni-btn transition-all cursor-pointer whitespace-nowrap dark:bg-white dark:text-[#0d0d12]"
               onClick={onOpenTemplate}
               data-testid="btn-open-template-composer"
             >
               <Layout className="w-3.5 h-3.5" />
               <span>Select WhatsApp Template</span>
             </button>
+          </div>
+
+          <textarea
+            className="min-h-[56px] w-full resize-none rounded-[12px] border border-black/[0.06] bg-white/50 px-3 py-2 text-xs text-[#8e8e93] cursor-not-allowed shadow-2xs dark:bg-white/[0.02] dark:border-white/[0.06]"
+            placeholder="Messaging unavailable — 24h window expired"
+            disabled
+            aria-label="Reply message"
+          />
+
+          <div className="flex items-center justify-end gap-2">
             <Button
               type="button"
               size="sm"
               disabled
               aria-label="Generate Draft"
-              className="rounded-full"
+              className="rounded-full opacity-40"
             >
               <Sparkles className="size-3.5" />
               Draft
@@ -127,7 +125,7 @@ export function MessageComposer({
               size="sm"
               disabled
               data-testid="composer-send-btn"
-              className="rounded-full"
+              className="rounded-full opacity-40"
             >
               <Send className="size-3.5" />
               Send

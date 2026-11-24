@@ -28,7 +28,7 @@ export function MessageTimeline({
 
   return (
     <div
-      className="scrollbar-hidden min-h-0 min-w-0 flex-1 basis-0 space-y-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5 bg-[#fafafa]/50"
+      className="scrollbar-hidden min-h-0 min-w-0 flex-1 basis-0 space-y-1 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-5 bg-white dark:bg-[#111317]"
       role="log"
       aria-live="polite"
       aria-label="Message history"
@@ -36,7 +36,7 @@ export function MessageTimeline({
     >
       {/* End-to-end Encryption Notice */}
       <div className="flex justify-center mb-4">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fcf5eb] border border-[#dedbd6] text-[11px] text-[#5e5e5e] shadow-2xs">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f6f6f8] border border-black/[0.06] text-[11px] text-[#56576a] shadow-2xs dark:bg-white/[0.04] dark:border-white/[0.06] dark:text-zinc-400">
           <ShieldCheck className="w-3.5 h-3.5 text-[#25d366]" />
           <span>Messages are routed through official WhatsApp Business Cloud API.</span>
         </div>
@@ -51,22 +51,22 @@ export function MessageTimeline({
               />
             </div>
           ))}
-          <p className="text-center text-xs text-[#5e5e5e] font-medium">
+          <p className="text-center text-xs text-[#56576a] font-medium">
             Loading message history...
           </p>
         </div>
       ) : messages.length === 0 ? (
         <div
-          className="flex flex-col items-center justify-center h-48 text-[#5e5e5e] text-center"
+          className="flex flex-col items-center justify-center h-48 text-[#56576a] text-center"
           data-testid="timeline-empty"
         >
-          <div className="w-10 h-10 rounded-full bg-[#fcf5eb] border border-[#dedbd6] flex items-center justify-center mb-2.5 text-[#5e5e5e]">
+          <div className="w-10 h-10 rounded-full bg-[#f6f6f8] border border-black/[0.06] flex items-center justify-center mb-2.5 text-[#56576a] dark:bg-white/[0.04] dark:border-white/[0.06]">
             <MessageSquare className="w-4 h-4" />
           </div>
-          <p className="text-sm font-medium text-[#111b21]">
+          <p className="text-sm font-medium text-[#0d0d12] dark:text-zinc-100">
             No messages in this conversation yet.
           </p>
-          <p className="text-xs text-[#5e5e5e] mt-0.5">
+          <p className="text-xs text-[#56576a] mt-0.5">
             Send a message below to start the conversation.
           </p>
         </div>

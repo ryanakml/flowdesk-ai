@@ -19,7 +19,7 @@ function renderStatusCheckmark(msg: Message) {
     case "queued":
       return (
         <span
-          className="msg-check queued text-xs text-[#5e5e5e] inline-flex items-center"
+          className="msg-check queued text-xs text-white/70 inline-flex items-center"
           title="Queued for dispatch"
           aria-label="Queued"
         >
@@ -29,7 +29,7 @@ function renderStatusCheckmark(msg: Message) {
     case "sent":
       return (
         <span
-          className="msg-check sent text-xs text-[#5e5e5e] inline-flex items-center"
+          className="msg-check sent text-xs text-white/70 inline-flex items-center"
           title="Sent to WhatsApp"
           aria-label="Sent"
         >
@@ -39,7 +39,7 @@ function renderStatusCheckmark(msg: Message) {
     case "delivered":
       return (
         <span
-          className="msg-check delivered text-xs text-[#5e5e5e] inline-flex items-center"
+          className="msg-check delivered text-xs text-white/70 inline-flex items-center"
           title="Delivered to customer"
           aria-label="Delivered"
         >
@@ -49,21 +49,21 @@ function renderStatusCheckmark(msg: Message) {
     case "read":
       return (
         <span
-          className="msg-check read text-xs text-[#00803e] inline-flex items-center"
+          className="msg-check read text-xs text-[#25d366] inline-flex items-center"
           title="Read by customer"
           aria-label="Read"
         >
-          <CheckCheck className="w-3.5 h-3.5 text-[#00803e]" />
+          <CheckCheck className="w-3.5 h-3.5 text-[#25d366]" />
         </span>
       );
     case "failed":
       return (
         <span
-          className="msg-check failed text-xs text-red-600 inline-flex items-center"
+          className="msg-check failed text-xs text-red-500 inline-flex items-center"
           title={`Failed: ${msg.errorDetail ?? "Unknown error"}`}
           aria-label="Failed"
         >
-          <AlertTriangle className="w-3 h-3 text-red-600" />
+          <AlertTriangle className="w-3 h-3 text-red-500" />
         </span>
       );
     default:
@@ -100,7 +100,7 @@ export function MessageBubble({
   if (isSystem) {
     return (
       <div className="flex justify-center my-3" data-testid={`msg-bubble-${msg.id}`}>
-        <span className="px-3 py-1 rounded-full bg-[#fcf5eb] border border-[#dedbd6] text-[#5e5e5e] text-[11px] font-medium shadow-2xs">
+        <span className="px-3 py-1 rounded-full bg-black/[0.04] border border-black/[0.08] text-[#56576a] text-[11px] font-medium shadow-2xs dark:bg-white/[0.06] dark:border-white/[0.08] dark:text-zinc-300">
           {msg.content}
         </span>
       </div>
@@ -124,8 +124,8 @@ export function MessageBubble({
       >
         {/* Bot Origin Pill */}
         {isBot && !grouped && (
-          <div className="flex items-center gap-1 mb-1 px-2 py-0.5 rounded-full bg-[#e6ffda] border border-[#25d366]/30 text-[10px] font-semibold text-[#00803e] shadow-2xs">
-            <Sparkles className="w-2.5 h-2.5" />
+          <div className="flex items-center gap-1.5 mb-1 px-2.5 py-0.5 rounded-full bg-black/[0.04] border border-black/[0.08] text-[10px] font-semibold text-[#0d0d12] shadow-2xs dark:bg-white/[0.06] dark:border-white/[0.08] dark:text-zinc-200">
+            <Sparkles className="w-2.5 h-2.5 text-purple-600" />
             <span>AI Copilot • Auto-response</span>
           </div>
         )}
@@ -133,14 +133,14 @@ export function MessageBubble({
         {/* Message Bubble Body */}
         <div
           className={cn(
-            "message-bubble w-fit min-w-0 max-w-full px-4 py-2.5 rounded-[16px] text-[13.5px] leading-relaxed shadow-2xs",
+            "message-bubble w-fit min-w-0 max-w-full px-4 py-2.5 rounded-[16px] text-[13.5px] leading-relaxed shadow-lemni-tile",
             isInbound
               ? cn(
-                  "bg-white text-[#111b21] border border-[#dedbd6]/80 rounded-tl-[4px]",
+                  "bg-white text-[#0d0d12] border border-black/[0.08] rounded-tl-[4px] dark:bg-[#15171c] dark:text-zinc-100 dark:border-white/[0.08]",
                   grouped && "rounded-tl-[16px]"
                 )
               : cn(
-                  "bg-[#e7f8ee] text-[#111b21] border border-[#25d366]/30 rounded-tr-[4px]",
+                  "bg-[#0d0d12] text-white rounded-tr-[4px] dark:bg-[#1f2229] dark:border dark:border-white/[0.08]",
                   grouped && "rounded-tr-[16px]"
                 )
           )}
@@ -152,7 +152,7 @@ export function MessageBubble({
           <div
             className={cn(
               "message-meta flex items-center gap-1.5 mt-1 text-[10.5px] font-mono",
-              isInbound ? "text-[#5e5e5e]" : "text-[#00803e]"
+              isInbound ? "text-[#56576a] dark:text-zinc-400" : "text-white/70"
             )}
           >
             <span className="message-time">{formatTime(msg.createdAt)}</span>

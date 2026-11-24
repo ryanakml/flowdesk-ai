@@ -258,7 +258,7 @@ export function ConversationList({
           <div className="flex gap-1">
             <select
               id="saved-filter-select"
-              className="flex-1 h-7 px-2 text-[11px] rounded-[8px] border border-[#dedbd6] bg-white text-[#111b21] focus:outline-none focus:ring-1 focus:ring-[#25d366]"
+              className="flex-1 h-7 px-2 text-[11px] rounded-[8px] border border-black/[0.08] bg-white text-[#0d0d12] shadow-lemni-input focus:outline-none focus:ring-1 focus:ring-[#25d366]"
               value={selectedSavedFilterId}
               onChange={(e) => onSavedFilterSelect(e.target.value)}
             >
@@ -285,7 +285,7 @@ export function ConversationList({
         {/* Save current filter input (compact) */}
         <div className="flex gap-1">
           <input
-            className="flex-1 h-6.5 px-2 text-[11px] rounded-[6px] border border-[#dedbd6] bg-[#fcf5eb]/30 text-[#111b21] placeholder:text-[#5e5e5e]/50 focus:outline-none focus:ring-1 focus:ring-[#25d366]"
+            className="flex-1 h-6.5 px-2 text-[11px] rounded-[6px] border border-black/[0.08] bg-white text-[#0d0d12] placeholder:text-[#56576a]/50 shadow-lemni-input focus:outline-none focus:ring-1 focus:ring-[#25d366]"
             value={filterName}
             onChange={(e) => onFilterNameChange(e.target.value)}
             placeholder="Save filter view..."
@@ -293,7 +293,7 @@ export function ConversationList({
           />
           <button
             type="button"
-            className="px-2 py-0.5 text-[11px] font-medium rounded-[6px] border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-[#111b21] transition-colors disabled:opacity-40 cursor-pointer shadow-2xs"
+            className="px-2 py-0.5 text-[11px] font-medium rounded-[6px] border border-black/[0.08] bg-white hover:bg-[#f6f6f8] text-[#0d0d12] transition-colors disabled:opacity-40 cursor-pointer shadow-lemni-btn"
             disabled={!filterName.trim()}
             onClick={onSaveFilter}
             aria-label="Save filter"
@@ -305,7 +305,7 @@ export function ConversationList({
 
       {/* Conversation List */}
       <div
-        className="scrollbar-hidden flex-1 overflow-y-auto divide-y divide-[#dedbd6]/30"
+        className="scrollbar-hidden flex-1 overflow-y-auto divide-y divide-black/[0.06]"
         role="listbox"
         aria-label="Conversations"
       >
@@ -327,11 +327,11 @@ export function ConversationList({
             className="flex flex-col items-center justify-center h-48 px-4 text-center"
             data-testid="inbox-empty"
           >
-            <div className="w-10 h-10 rounded-full bg-[#fcf5eb] border border-[#dedbd6] flex items-center justify-center mb-2.5 text-[#5e5e5e]">
+            <div className="w-10 h-10 rounded-full bg-[#f6f6f8] border border-black/[0.06] flex items-center justify-center mb-2.5 text-[#56576a]">
               <Layers className="w-4 h-4" />
             </div>
-            <p className="text-[13px] font-medium text-[#111b21]">No conversations found</p>
-            <p className="text-[11px] text-[#5e5e5e] mt-0.5">
+            <p className="text-[13px] font-medium text-[#0d0d12]">No conversations found</p>
+            <p className="text-[11px] text-[#56576a] mt-0.5">
               Try adjusting your search query or status filter.
             </p>
           </div>
