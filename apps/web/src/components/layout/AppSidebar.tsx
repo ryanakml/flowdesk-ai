@@ -110,7 +110,7 @@ export function AppSidebar({ collapsed = false, onNavigate, className = "" }: Ap
             return (
               <div key={group.heading} className="space-y-1.5">
                 {!collapsed && (
-                  <h3 className="px-3 text-xs font-medium text-muted-foreground/70">
+                  <h3 className="px-3 text-[10.5px] font-semibold tracking-wider text-[#8e8e93] uppercase">
                     {group.heading}
                   </h3>
                 )}

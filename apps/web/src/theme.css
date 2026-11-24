@@ -71,45 +71,45 @@
       inset 1px 1px 1px 0px rgba(255, 255, 255, 0.06);
   }
 
-  /* Intercom Humanist Systems and Ephemera tokens */
+  /* Crisp Modern Lemni & Linear Standard Canvas Tokens */
   .bg-warm-canvas {
-    background-color: #faf9f6;
+    background-color: #f6f6f8;
   }
   .dark .bg-warm-canvas {
-    background-color: #121417;
+    background-color: #0f1013;
   }
   .bg-chalk {
-    background-color: #f1eee9;
+    background-color: #f1f3f4;
   }
   .dark .bg-chalk {
-    background-color: #181b20;
+    background-color: #131519;
   }
   .border-linen {
-    border-color: #dedbd6;
+    border-color: rgba(0, 0, 0, 0.07);
   }
   .dark .border-linen {
-    border-color: #2b3038;
+    border-color: rgba(255, 255, 255, 0.07);
   }
   .border-subtle {
-    border-color: #e7e7e7;
+    border-color: rgba(0, 0, 0, 0.05);
   }
   .dark .border-subtle {
-    border-color: #242830;
+    border-color: rgba(255, 255, 255, 0.05);
   }
   .border-clay {
-    border-color: #d3cec6;
+    border-color: rgba(0, 0, 0, 0.09);
   }
   .dark .border-clay {
-    border-color: #383e48;
+    border-color: rgba(255, 255, 255, 0.09);
   }
   .text-ink {
-    color: #111111;
+    color: #0d0d12;
   }
   .dark .text-ink {
-    color: #f4f4f5;
+    color: #f4f4f6;
   }
   .text-pale-type {
-    color: #a0a0a0;
+    color: #56576a;
   }
   .bg-electric-blue {
     background-color: #0007cb;
@@ -124,12 +124,12 @@
     color: #ff5600;
   }
 
-  /* WhatsApp Reference Design System Tokens (#fcf5eb, #111b21, #e6ffda, #25d366) */
+  /* WhatsApp Reference Design System Tokens (#f6f6f8, #0d0d12, #e6ffda, #25d366) */
   .bg-wa-canvas {
-    background-color: #fcf5eb;
+    background-color: #f6f6f8;
   }
   .bg-wa-night {
-    background-color: #111b21;
+    background-color: #0d0d12;
   }
   .bg-wa-mint {
     background-color: #e6ffda;

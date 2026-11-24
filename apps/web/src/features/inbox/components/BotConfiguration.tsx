@@ -121,7 +121,7 @@ export function BotConfiguration({
                     !canManage || savingMode || savingEmergencyStop || botConfig.emergencyDisabled
                   }
                   onChange={(e) => setSelectedMode(e.target.value as "off" | "draft" | "auto")}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  className="flex h-8 w-full rounded-[8px] border border-black/[0.08] bg-white px-3 py-1 text-xs text-[#0d0d12] shadow-lemni-input focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer dark:bg-[#15171c] dark:border-white/[0.08] dark:text-zinc-100"
                 >
                   <option value="off">Off</option>
                   <option value="draft">Draft</option>
@@ -143,7 +143,7 @@ export function BotConfiguration({
               )}
 
               {canManage && (
-                <div className="flex flex-col gap-2 pt-2">
+                <div className="flex flex-col gap-2 pt-1">
                   <Button
                     type="button"
                     disabled={
@@ -154,18 +154,21 @@ export function BotConfiguration({
                     }
                     onClick={() => void saveMode()}
                     size="sm"
-                    className="w-full cursor-pointer"
+                    className="w-full h-8 rounded-full text-xs font-semibold bg-[#0d0d12] hover:bg-[#202028] text-white shadow-lemni-btn cursor-pointer dark:bg-white dark:text-[#0d0d12]"
                   >
                     {savingMode ? "Saving…" : `Save ${selectedMode.toUpperCase()} mode`}
                   </Button>
                   <Button
                     type="button"
-                    variant={botConfig.emergencyDisabled ? "default" : "destructive"}
                     data-testid="automation-emergency-stop"
                     disabled={savingEmergencyStop || savingMode}
                     onClick={() => void toggleEmergencyStop()}
                     size="sm"
-                    className="w-full cursor-pointer"
+                    className={
+                      botConfig.emergencyDisabled
+                        ? "w-full h-8 rounded-full text-xs font-semibold bg-[#0d0d12] text-white hover:bg-[#202028] shadow-lemni-btn cursor-pointer dark:bg-white dark:text-[#0d0d12]"
+                        : "w-full h-8 rounded-full text-xs font-semibold border border-red-200 text-red-600 bg-red-50/50 hover:bg-red-100/70 hover:text-red-700 shadow-2xs cursor-pointer dark:border-red-900/60 dark:bg-red-950/20 dark:text-red-400"
+                    }
                   >
                     {savingEmergencyStop
                       ? "Updating…"

@@ -94,46 +94,50 @@ export function CustomerContextPanel({
 
       {/* Conversation Attributes */}
       <div className="p-4 space-y-2.5">
-        <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider">
+        <h4 className="text-[10.5px] font-semibold text-[#8e8e93] uppercase tracking-wider">
           Conversation Attributes
         </h4>
 
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[#5e5e5e]">Status</span>
-          <span className="font-semibold capitalize text-[#111b21]">{conv.status}</span>
+          <span className="text-[#56576a]">Status</span>
+          <span className="font-semibold capitalize text-[#0d0d12] dark:text-zinc-100">
+            {conv.status}
+          </span>
         </div>
 
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[#5e5e5e]">Priority</span>
-          <span className="font-semibold capitalize text-[#111b21]">{conv.priority}</span>
+          <span className="text-[#56576a]">Priority</span>
+          <span className="font-semibold capitalize text-[#0d0d12] dark:text-zinc-100">
+            {conv.priority}
+          </span>
         </div>
 
         {conv.assignedToUserId ? (
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#5e5e5e]">Assigned to</span>
-            <div className="flex items-center gap-1.5 font-medium text-[#111b21]">
-              <User className="w-3.5 h-3.5 text-[#5e5e5e]" />
+            <span className="text-[#56576a]">Assigned to</span>
+            <div className="flex items-center gap-1.5 font-medium text-[#0d0d12] dark:text-zinc-100">
+              <User className="w-3.5 h-3.5 text-[#56576a]" />
               <span>Assigned Agent</span>
             </div>
           </div>
         ) : (
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[#5e5e5e]">Assigned to</span>
-            <span className="text-[#5e5e5e] italic">Unassigned</span>
+            <span className="text-[#56576a]">Assigned to</span>
+            <span className="text-[#56576a] italic">Unassigned</span>
           </div>
         )}
 
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[#5e5e5e]">Created</span>
-          <div className="flex items-center gap-1.5 text-[#111b21] font-mono text-[11px]">
-            <Clock className="w-3 h-3 text-[#5e5e5e]" />
+          <span className="text-[#56576a]">Created</span>
+          <div className="flex items-center gap-1.5 text-[#0d0d12] dark:text-zinc-200 font-mono text-[11px]">
+            <Clock className="w-3 h-3 text-[#56576a]" />
             <span>{formatDate(conv.createdAt)}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[#5e5e5e]">Last message</span>
-          <span className="text-[#111b21] font-mono text-[11px]">
+          <span className="text-[#56576a]">Last message</span>
+          <span className="text-[#0d0d12] dark:text-zinc-200 font-mono text-[11px]">
             {formatDate(conv.lastMessageAt)}
           </span>
         </div>
@@ -141,8 +145,8 @@ export function CustomerContextPanel({
 
       {/* Automation & 24h Window */}
       <div className="p-4 space-y-2.5">
-        <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider flex items-center gap-1.5">
-          <Bot className="w-3.5 h-3.5 text-[#00803e]" />
+        <h4 className="text-[10.5px] font-semibold text-[#8e8e93] uppercase tracking-wider flex items-center gap-1.5">
+          <Bot className="w-3.5 h-3.5 text-[#25d366]" />
           <span>Automation & Policy</span>
         </h4>
         <BotConfiguration
@@ -152,17 +156,17 @@ export function CustomerContextPanel({
           fetcher={fetcher}
         />
         {conv.botPaused && (
-          <p className="text-[11px] text-[#5e5e5e] bg-zinc-50 border border-[#dedbd6] p-2 rounded-[8px]">
+          <p className="text-[11px] text-[#56576a] bg-zinc-50 border border-black/[0.08] p-2 rounded-[8px] dark:bg-zinc-900/50 dark:border-white/[0.08]">
             Bot paused for this conversation.
           </p>
         )}
         <div className="flex items-center justify-between text-xs pt-1">
-          <span className="text-[#5e5e5e]">WhatsApp Window</span>
+          <span className="text-[#56576a]">WhatsApp Window</span>
           <span
             className={
               conv.serviceWindow?.isOpen === false
-                ? "font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full text-[10.5px]"
-                : "font-semibold text-[#00803e] bg-[#e6ffda] border border-[#25d366]/30 px-2 py-0.5 rounded-full text-[10.5px]"
+                ? "font-semibold text-amber-700 bg-amber-500/[0.08] border border-amber-500/20 px-2.5 py-0.5 rounded-full text-[10.5px] dark:text-amber-300"
+                : "font-semibold text-[#00803e] bg-[#e6ffda] border border-[#25d366]/30 px-2.5 py-0.5 rounded-full text-[10.5px]"
             }
           >
             {conv.serviceWindow
@@ -177,8 +181,8 @@ export function CustomerContextPanel({
       {/* Tags */}
       <div className="p-4">
         <div className="flex items-center gap-1.5 mb-2.5">
-          <Tag className="w-3.5 h-3.5 text-[#5e5e5e]" />
-          <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider">
+          <Tag className="w-3.5 h-3.5 text-[#56576a]" />
+          <h4 className="text-[10.5px] font-semibold text-[#8e8e93] uppercase tracking-wider">
             Tags
           </h4>
         </div>
@@ -195,8 +199,8 @@ export function CustomerContextPanel({
                     onClick={() => onToggleTag?.(t.id, applied)}
                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border transition-all cursor-pointer shadow-2xs ${
                       applied
-                        ? "bg-[#111b21] text-white border-[#111b21]"
-                        : "bg-white text-[#5e5e5e] border-[#dedbd6] hover:bg-[#fcf5eb] hover:text-[#111b21]"
+                        ? "bg-[#0d0d12] text-white border-[#0d0d12] dark:bg-white dark:text-[#0d0d12]"
+                        : "bg-white text-[#56576a] border-black/[0.08] hover:bg-[#f6f6f8] hover:text-[#0d0d12] dark:bg-[#15171c] dark:border-white/[0.08] dark:text-zinc-300 dark:hover:bg-[#1f2229]"
                     }`}
                   >
                     {t.name}
@@ -206,7 +210,7 @@ export function CustomerContextPanel({
             : tags.map((tag: NonNullable<ConversationDetailResponse["tags"]>[number]) => (
                 <span
                   key={tag.id}
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#fcf5eb] border border-[#dedbd6] text-[#111b21]"
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#f6f6f8] border border-black/[0.08] text-[#0d0d12] dark:bg-white/[0.04] dark:border-white/[0.08] dark:text-zinc-200"
                 >
                   {tag.name}
                 </span>
@@ -221,7 +225,7 @@ export function CustomerContextPanel({
         copilotDraft.citations.length > 0 &&
         showCitations && (
           <div className="p-4 space-y-2">
-            <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider flex items-center gap-1.5">
+            <h4 className="text-[10.5px] font-semibold text-[#8e8e93] uppercase tracking-wider flex items-center gap-1.5">
               <Bot className="w-3.5 h-3.5 text-emerald-600" />
               <span>AI Citations ({copilotDraft.citations.length})</span>
             </h4>
@@ -229,15 +233,15 @@ export function CustomerContextPanel({
               {copilotDraft.citations.map((cit, idx) => (
                 <li
                   key={cit.chunkId}
-                  className="text-xs p-2.5 rounded-[10px] bg-[#fcf5eb]/60 border border-[#dedbd6]"
+                  className="text-xs p-2.5 rounded-[10px] bg-[#f6f6f8] border border-black/[0.08] dark:bg-white/[0.04] dark:border-white/[0.08]"
                 >
-                  <p className="font-semibold text-[#111b21]">
+                  <p className="font-semibold text-[#0d0d12] dark:text-zinc-100">
                     {idx + 1}. {cit.documentTitle}
                   </p>
-                  <p className="text-[#5e5e5e] line-clamp-2 mt-0.5 text-[11.5px] leading-relaxed">
+                  <p className="text-[#56576a] line-clamp-2 mt-0.5 text-[11.5px] leading-relaxed dark:text-zinc-400">
                     {cit.snippet}
                   </p>
-                  <p className="text-emerald-700 font-mono text-[10.5px] mt-1 font-medium">
+                  <p className="text-[#00803e] font-mono text-[10.5px] mt-1 font-medium">
                     {Math.round(cit.score * 100)}% match
                   </p>
                 </li>
@@ -249,7 +253,7 @@ export function CustomerContextPanel({
       {/* Internal Private Notes */}
       <div className="p-4">
         <div className="flex items-center justify-between mb-2.5">
-          <h4 className="text-[11px] font-semibold text-[#5e5e5e] uppercase tracking-wider flex items-center gap-1.5">
+          <h4 className="text-[10.5px] font-semibold text-[#8e8e93] uppercase tracking-wider flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-amber-600" />
             <span>Internal Notes {notes.length > 0 && `(${notes.length})`}</span>
           </h4>
@@ -271,11 +275,11 @@ export function CustomerContextPanel({
             <input
               name="noteInput"
               placeholder="Add private note..."
-              className="flex-1 h-8 px-2.5 text-xs rounded-[8px] border border-[#dedbd6] bg-[#fcf5eb]/30 text-[#111b21] placeholder:text-[#5e5e5e]/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#25d366]"
+              className="flex-1 h-8 px-2.5 text-xs rounded-[8px] border border-black/[0.08] bg-white text-[#0d0d12] placeholder:text-[#56576a]/50 shadow-lemni-input focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#25d366] dark:bg-[#15171c] dark:border-white/[0.08] dark:text-zinc-100"
             />
             <button
               type="submit"
-              className="px-3 py-1 text-xs font-semibold rounded-[8px] border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-[#111b21] shadow-2xs transition-colors cursor-pointer"
+              className="px-3 py-1 text-xs font-semibold rounded-full bg-[#0d0d12] hover:bg-[#202028] text-white shadow-lemni-btn transition-colors cursor-pointer dark:bg-white dark:text-[#0d0d12]"
             >
               Add
             </button>
@@ -287,14 +291,14 @@ export function CustomerContextPanel({
             {notes.map((note: NonNullable<ConversationDetailResponse["notes"]>[number]) => (
               <li
                 key={note.id}
-                className="text-xs text-amber-900 bg-amber-50/80 rounded-[12px] p-3 border border-amber-200/70 shadow-2xs leading-relaxed"
+                className="text-xs text-amber-900 bg-amber-500/[0.08] rounded-[10px] p-2.5 border border-amber-500/20 shadow-2xs leading-relaxed dark:text-amber-200"
               >
                 {note.body}
               </li>
             ))}
           </ol>
         ) : (
-          <p className="text-[11.5px] text-[#5e5e5e] italic">No internal notes yet.</p>
+          <p className="text-[11.5px] text-[#56576a] italic">No internal notes yet.</p>
         )}
       </div>
     </div>
