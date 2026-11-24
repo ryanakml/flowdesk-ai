@@ -32,27 +32,42 @@ export function ConversationHeader({
   const initials = (conv.customerName ?? conv.customerPhone).slice(0, 2).toUpperCase();
 
   return (
-    <header className="flex shrink-0 items-center justify-between border-b border-[#dedbd6] bg-white px-4 py-3 shadow-2xs">
-      {/* Customer Identity */}
+    <header className="flex shrink-0 items-center justify-between border-b border-black/[0.06] bg-[#f6f6f8]/85 backdrop-blur-md px-4 py-2.5 h-[56px] shadow-2xs z-10">
+      {/* Customer Identity & Breadcrumb Navigation */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="relative flex-shrink-0" aria-hidden="true">
-          <div className="w-9 h-9 rounded-full bg-[#fcf5eb] border border-[#dedbd6] text-[#111b21] text-xs font-semibold flex items-center justify-center shadow-2xs">
+          <div className="w-8.5 h-8.5 rounded-full bg-white border border-black/[0.08] text-[#0d0d12] text-xs font-semibold flex items-center justify-center shadow-2xs">
             {initials}
           </div>
           <span
-            className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#25d366] border-2 border-white shadow-2xs"
+            className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#25d366] border-2 border-white shadow-2xs"
             title="WhatsApp Cloud Active"
           />
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate text-[14px] font-semibold text-[#111b21] tracking-tight">
+          {/* Breadcrumbs (Lemni dyn style) */}
+          <div className="flex items-center gap-1.5 text-[11px] text-[#56576a]">
+            <span>Inbox</span>
+            <span aria-hidden="true" className="text-black/20">
+              ›
+            </span>
+            <span className="font-semibold text-[#0d0d12] truncate max-w-[200px]">
               {conv.customerName ?? `+${conv.customerPhone}`}
+            </span>
+            <span aria-hidden="true" className="text-black/20">
+              ›
+            </span>
+            <span className="font-sans text-[10.5px]">WhatsApp Official</span>
+          </div>
+
+          <div className="flex items-center gap-2 mt-0.5">
+            <h3 className="truncate text-[13px] font-semibold text-[#0d0d12] tracking-tight">
+              {conv.customerName ? `+${conv.customerPhone}` : conv.customerPhone}
             </h3>
             <span
               className={cn(
-                "capitalize text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                "capitalize text-[9.5px] font-semibold px-2 py-0.2 rounded-full border",
                 conv.status === "new" && "bg-blue-50 text-blue-700 border-blue-200/80",
                 conv.status === "open" && "bg-[#e6ffda] text-[#00803e] border-[#25d366]/30",
                 conv.status === "pending" && "bg-amber-50 text-amber-700 border-amber-200/80",
@@ -63,18 +78,6 @@ export function ConversationHeader({
               {conv.status}
             </span>
           </div>
-
-          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-[#5e5e5e] font-mono">
-            <span>+{conv.customerPhone}</span>
-            <span aria-hidden="true" className="text-[#dedbd6]">
-              •
-            </span>
-            <span className="font-sans">WhatsApp Cloud</span>
-            <span aria-hidden="true" className="text-[#dedbd6]">
-              •
-            </span>
-            <span className="capitalize font-sans">{conv.status}</span>
-          </div>
         </div>
       </div>
 
@@ -83,7 +86,7 @@ export function ConversationHeader({
         {!isAssignedToMe && canAssign && (
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#111b21] hover:bg-[#242c32] text-white shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#0d0d12] hover:bg-[#202028] text-white shadow-lemni-btn transition-all cursor-pointer"
             onClick={onAssignToMe}
             data-testid="btn-assign-me"
           >
@@ -95,7 +98,7 @@ export function ConversationHeader({
         {canResolve && isOpen && (
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#25d366] hover:bg-[#20ba59] active:scale-[0.98] text-[#111b21] border border-[#111b21]/20 shadow-xs transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold bg-[#25d366] hover:bg-[#20ba59] active:scale-[0.98] text-[#0d0d12] shadow-lemni-btn transition-all cursor-pointer"
             onClick={onResolve}
             data-testid="btn-resolve"
           >
@@ -107,7 +110,7 @@ export function ConversationHeader({
         {canResolve && isResolved && (
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-[#111b21] shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-black/[0.08] bg-white hover:bg-[#f6f6f8] text-[#0d0d12] shadow-lemni-btn transition-all cursor-pointer"
             onClick={onReopen}
             data-testid="btn-reopen"
           >
@@ -119,7 +122,7 @@ export function ConversationHeader({
         {onToggleContext && (
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border border-[#dedbd6] bg-white hover:bg-[#fcf5eb] text-xs font-medium text-[#5e5e5e] hover:text-[#111b21] shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-black/[0.08] bg-white hover:bg-[#f6f6f8] text-xs font-medium text-[#56576a] hover:text-[#0d0d12] shadow-2xs transition-colors cursor-pointer"
             onClick={onToggleContext}
             aria-label={contextCollapsed ? "Expand context panel" : "Collapse context panel"}
             data-testid="context-panel-toggle"

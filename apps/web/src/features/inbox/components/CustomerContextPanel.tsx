@@ -51,7 +51,7 @@ export function CustomerContextPanel({
 }: CustomerContextPanelProps) {
   if (loading) {
     return (
-      <div className="scrollbar-hidden h-full overflow-y-auto p-4 space-y-4 bg-white border-l border-[#dedbd6]">
+      <div className="scrollbar-hidden h-full overflow-y-auto p-4 space-y-4 bg-white border-l border-black/[0.06]">
         <Skeleton className="h-5 w-2/3 rounded-md" />
         <Skeleton className="h-3.5 w-1/2 rounded-md" />
         <Skeleton className="h-20 w-full rounded-[12px]" />
@@ -61,10 +61,10 @@ export function CustomerContextPanel({
 
   if (!conv) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-[#5e5e5e] text-xs p-6 bg-white border-l border-[#dedbd6] text-center">
-        <User className="w-8 h-8 text-[#dedbd6] mb-2" />
-        <p className="font-medium text-[#111b21]">No conversation selected</p>
-        <p className="text-[11px] text-[#5e5e5e] mt-0.5">
+      <div className="h-full flex flex-col items-center justify-center text-[#56576a] text-xs p-6 bg-white border-l border-black/[0.06] text-center">
+        <User className="w-8 h-8 text-black/20 mb-2" />
+        <p className="font-medium text-[#0d0d12]">No conversation selected</p>
+        <p className="text-[11px] text-[#56576a] mt-0.5">
           Select a customer to view operational context.
         </p>
       </div>
@@ -72,19 +72,19 @@ export function CustomerContextPanel({
   }
 
   return (
-    <div className="scrollbar-hidden h-full min-w-0 overflow-y-auto bg-white border-l border-[#dedbd6] [overflow-wrap:anywhere] [&_input]:min-w-0 divide-y divide-[#dedbd6]/50">
+    <div className="scrollbar-hidden h-full min-w-0 overflow-y-auto bg-white border-l border-black/[0.06] [overflow-wrap:anywhere] [&_input]:min-w-0 divide-y divide-black/[0.06]">
       {/* Customer Profile Header */}
-      <div className="p-4 bg-[#fafafa]/50">
+      <div className="p-4 bg-[#f6f6f8]/60">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-full bg-white border border-[#dedbd6] text-[#111b21] text-xs font-semibold flex items-center justify-center flex-shrink-0 shadow-2xs">
+          <div className="w-11 h-11 rounded-full bg-white border border-black/[0.08] text-[#0d0d12] text-xs font-semibold flex items-center justify-center flex-shrink-0 shadow-2xs">
             {(conv.customerName ?? conv.customerPhone).slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-semibold text-[#111b21] truncate tracking-tight">
+            <p className="text-[14px] font-semibold text-[#0d0d12] truncate tracking-tight">
               {conv.customerName ?? `+${conv.customerPhone}`}
             </p>
             {conv.customerName && (
-              <p className="text-[11.5px] text-[#5e5e5e] font-mono truncate">
+              <p className="text-[11.5px] text-[#56576a] font-mono truncate">
                 +{conv.customerPhone}
               </p>
             )}

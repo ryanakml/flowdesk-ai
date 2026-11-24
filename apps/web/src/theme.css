@@ -23,6 +23,54 @@
 }
 
 @layer utilities {
+  /* Hardware-grade Physical Inset Shadows (Lemni Reverse-Engineered Standard) */
+  .shadow-lemni-input {
+    box-shadow:
+      0px 1px 2px rgba(95, 122, 143, 0.25),
+      inset -1px -1px 1px rgba(0, 0, 0, 0.03),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 1);
+  }
+  .shadow-lemni-tile {
+    box-shadow:
+      0px 1px 3px rgba(95, 122, 143, 0.22),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 1);
+  }
+  .shadow-lemni-tile-hover {
+    box-shadow:
+      0px 6px 14px rgba(95, 122, 143, 0.22),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 1);
+  }
+  .shadow-lemni-btn {
+    box-shadow:
+      0px 1px 2px rgba(95, 122, 143, 0.25),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 1);
+  }
+  .shadow-lemni-btn-hover {
+    box-shadow:
+      0px 2px 3px rgba(95, 122, 143, 0.25),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 1);
+  }
+  .dark .shadow-lemni-input {
+    box-shadow:
+      0px 1px 2px rgba(0, 0, 0, 0.6),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 0.06);
+  }
+  .dark .shadow-lemni-tile {
+    box-shadow:
+      0px 1px 3px rgba(0, 0, 0, 0.6),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 0.06);
+  }
+  .dark .shadow-lemni-tile-hover {
+    box-shadow:
+      0px 6px 14px rgba(0, 0, 0, 0.8),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 0.08);
+  }
+  .dark .shadow-lemni-btn {
+    box-shadow:
+      0px 1px 2px rgba(0, 0, 0, 0.6),
+      inset 1px 1px 1px 0px rgba(255, 255, 255, 0.06);
+  }
+
   /* Intercom Humanist Systems and Ephemera tokens */
   .bg-warm-canvas {
     background-color: #faf9f6;
